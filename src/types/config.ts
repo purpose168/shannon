@@ -5,7 +5,7 @@
 // as published by the Free Software Foundation.
 
 /**
- * Configuration type definitions
+ * 配置类型定义
  */
 
 export type RuleType =
@@ -53,7 +53,7 @@ export interface Authentication {
 export interface Config {
   rules?: Rules;
   authentication?: Authentication;
-  login?: unknown; // Deprecated
+  login?: unknown; // 已弃用
 }
 
 export interface DistributedConfig {

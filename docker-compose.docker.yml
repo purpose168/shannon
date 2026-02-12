@@ -1,5 +1,5 @@
-# Docker-specific overrides (not used with Podman)
-# This file is automatically included by the shannon script when running Docker
+# Docker 特定的覆盖配置（不与 Podman 一起使用）
+# 此文件在运行 Docker 时由 shannon 脚本自动包含
 services:
   worker:
     extra_hosts:

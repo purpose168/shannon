@@ -5,7 +5,7 @@
 // as published by the Free Software Foundation.
 
 /**
- * Type definitions barrel export
+ * 类型定义桶导出
  */
 
 export * from './deliverables.js';

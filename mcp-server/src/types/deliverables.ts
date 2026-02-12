@@ -5,20 +5,20 @@
 // as published by the Free Software Foundation.
 
 /**
- * Deliverable Type Definitions
+ * 可交付成果类型定义
  *
- * Maps deliverable types to their filenames and defines validation requirements.
- * Must match the exact mappings from tools/save_deliverable.js.
+ * 将可交付成果类型映射到其文件名并定义验证要求。
+ * 必须与 tools/save_deliverable.js 中的映射完全匹配。
  */
 
 export enum DeliverableType {
-  // Pre-recon agent
+  // 预侦察智能体
   CODE_ANALYSIS = 'CODE_ANALYSIS',
 
-  // Recon agent
+  // 侦察智能体
   RECON = 'RECON',
 
-  // Vulnerability analysis agents
+  // 漏洞分析智能体
   INJECTION_ANALYSIS = 'INJECTION_ANALYSIS',
   INJECTION_QUEUE = 'INJECTION_QUEUE',
 
@@ -34,7 +34,7 @@ export enum DeliverableType {
   SSRF_ANALYSIS = 'SSRF_ANALYSIS',
   SSRF_QUEUE = 'SSRF_QUEUE',
 
-  // Exploitation agents
+  // 利用智能体
   INJECTION_EVIDENCE = 'INJECTION_EVIDENCE',
   XSS_EVIDENCE = 'XSS_EVIDENCE',
   AUTH_EVIDENCE = 'AUTH_EVIDENCE',
@@ -43,8 +43,8 @@ export enum DeliverableType {
 }
 
 /**
- * Hard-coded filename mappings from agent prompts
- * Must match tools/save_deliverable.js exactly
+ * 来自智能体提示的硬编码文件名映射
+ * 必须与 tools/save_deliverable.js 完全匹配
  */
 export const DELIVERABLE_FILENAMES: Record<DeliverableType, string> = {
   [DeliverableType.CODE_ANALYSIS]: 'code_analysis_deliverable.md',
@@ -67,7 +67,7 @@ export const DELIVERABLE_FILENAMES: Record<DeliverableType, string> = {
 };
 
 /**
- * Queue types that require JSON validation
+ * 需要 JSON 验证的队列类型
  */
 export const QUEUE_TYPES: DeliverableType[] = [
   DeliverableType.INJECTION_QUEUE,
@@ -78,14 +78,14 @@ export const QUEUE_TYPES: DeliverableType[] = [
 ];
 
 /**
- * Type guard to check if a deliverable type is a queue
+ * 类型守卫，检查可交付成果类型是否为队列
  */
 export function isQueueType(type: string): boolean {
   return QUEUE_TYPES.includes(type as DeliverableType);
 }
 
 /**
- * Vulnerability queue structure
+ * 漏洞队列结构
  */
 export interface VulnerabilityQueue {
   vulnerabilities: VulnerabilityItem[];

@@ -5,22 +5,22 @@
 // as published by the Free Software Foundation.
 
 /**
- * File I/O Utilities
+ * 文件I/O工具
  *
- * Core utility functions for file operations including atomic writes,
- * directory creation, and JSON file handling.
+ * 用于文件操作的核心工具函数，包括原子写入、
+ * 目录创建和JSON文件处理。
  */
 
 import fs from 'fs/promises';
 
 /**
- * Ensure directory exists (idempotent, race-safe)
+ * 确保目录存在（幂等，竞争安全）
  */
 export async function ensureDirectory(dirPath: string): Promise<void> {
   try {
     await fs.mkdir(dirPath, { recursive: true });
   } catch (error) {
-    // Ignore EEXIST errors (race condition safe)
+    // 忽略EEXIST错误（竞争条件安全）
     if ((error as NodeJS.ErrnoException).code !== 'EEXIST') {
       throw error;
     }
@@ -28,32 +28,32 @@ export async function ensureDirectory(dirPath: string): Promise<void> {
 }
 
 /**
- * Atomic write using temp file + rename pattern
- * Guarantees no partial writes or corruption on crash
+ * 使用临时文件+重命名模式的原子写入
+ * 保证崩溃时不会有部分写入或损坏
  */
 export async function atomicWrite(filePath: string, data: object | string): Promise<void> {
   const tempPath = `${filePath}.tmp`;
   const content = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
 
   try {
-    // Write to temp file
+    // 写入临时文件
     await fs.writeFile(tempPath, content, 'utf8');
 
-    // Atomic rename (POSIX guarantee: atomic on same filesystem)
+    // 原子重命名（POSIX保证：在同一文件系统上是原子的）
     await fs.rename(tempPath, filePath);
   } catch (error) {
-    // Clean up temp file on failure
+    // 失败时清理临时文件
     try {
       await fs.unlink(tempPath);
     } catch {
-      // Ignore cleanup errors
+      // 忽略清理错误
     }
     throw error;
   }
 }
 
 /**
- * Read and parse JSON file
+ * 读取并解析JSON文件
  */
 export async function readJson<T = unknown>(filePath: string): Promise<T> {
   const content = await fs.readFile(filePath, 'utf8');
@@ -61,7 +61,7 @@ export async function readJson<T = unknown>(filePath: string): Promise<T> {
 }
 
 /**
- * Check if file exists
+ * 检查文件是否存在
  */
 export async function fileExists(filePath: string): Promise<boolean> {
   try {

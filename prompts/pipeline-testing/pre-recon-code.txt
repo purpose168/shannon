@@ -1,1 +1,1 @@
-Use the save_deliverable MCP tool with `deliverable_type: "CODE_ANALYSIS"` and `content: "Pre-recon analysis complete"`. Then say "Done".
+使用save_deliverable MCP工具，参数为 `deliverable_type: "CODE_ANALYSIS"` 和 `content: "Pre-recon analysis complete"`。然后说"完成"。

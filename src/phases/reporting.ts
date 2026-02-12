@@ -14,7 +14,7 @@ interface DeliverableFile {
   required: boolean;
 }
 
-// Pure function: Assemble final report from specialist deliverables
+// 纯函数：从专业交付物组装最终报告
 export async function assembleFinalReport(sourceDir: string): Promise<string> {
   const deliverableFiles: DeliverableFile[] = [
     { name: 'Injection', path: 'injection_exploitation_evidence.md', required: false },
@@ -52,7 +52,7 @@ export async function assembleFinalReport(sourceDir: string): Promise<string> {
   const finalReportPath = path.join(deliverablesDir, 'comprehensive_security_assessment_report.md');
 
   try {
-    // Ensure deliverables directory exists
+    // 确保交付物目录存在
     await fs.ensureDir(deliverablesDir);
     await fs.writeFile(finalReportPath, finalContent);
     console.log(chalk.green(`✅ Final report assembled at ${finalReportPath}`));
@@ -70,15 +70,14 @@ export async function assembleFinalReport(sourceDir: string): Promise<string> {
 }
 
 /**
- * Inject model information into the final security report.
- * Reads session.json to get the model(s) used, then injects a "Model:" line
- * into the Executive Summary section of the report.
+ * 将模型信息注入到最终安全报告中。
+ * 读取 session.json 获取使用的模型，然后在报告的执行摘要部分注入 "Model:" 行。
  */
 export async function injectModelIntoReport(
   repoPath: string,
   outputPath: string
 ): Promise<void> {
-  // 1. Read session.json to get model information
+  // 1. 读取 session.json 获取模型信息
   const sessionJsonPath = path.join(outputPath, 'session.json');
 
   if (!(await fs.pathExists(sessionJsonPath))) {
@@ -94,7 +93,7 @@ export async function injectModelIntoReport(
 
   const sessionData: SessionData = await fs.readJson(sessionJsonPath);
 
-  // 2. Extract unique models from all agents
+  // 2. 从所有智能体中提取唯一模型
   const models = new Set<string>();
   for (const agent of Object.values(sessionData.metrics.agents)) {
     if (agent.model) {
@@ -110,7 +109,7 @@ export async function injectModelIntoReport(
   const modelStr = Array.from(models).join(', ');
   console.log(chalk.blue(`📝 Injecting model info into report: ${modelStr}`));
 
-  // 3. Read the final report
+  // 3. 读取最终报告
   const reportPath = path.join(repoPath, 'deliverables', 'comprehensive_security_assessment_report.md');
 
   if (!(await fs.pathExists(reportPath))) {
@@ -120,13 +119,13 @@ export async function injectModelIntoReport(
 
   let reportContent = await fs.readFile(reportPath, 'utf8');
 
-  // 4. Find and inject model line after "Assessment Date" in Executive Summary
-  // Pattern: "- Assessment Date: <date>" followed by a newline
+  // 4. 在执行摘要的 "Assessment Date" 后查找并注入模型行
+  // 模式: "- Assessment Date: <date>" 后跟换行
   const assessmentDatePattern = /^(- Assessment Date: .+)$/m;
   const match = reportContent.match(assessmentDatePattern);
 
   if (match) {
-    // Inject model line after Assessment Date
+    // 在 Assessment Date 后注入模型行
     const modelLine = `- Model: ${modelStr}`;
     reportContent = reportContent.replace(
       assessmentDatePattern,
@@ -134,10 +133,10 @@ export async function injectModelIntoReport(
     );
     console.log(chalk.green('✅ Model info injected into Executive Summary'));
   } else {
-    // If no Assessment Date line found, try to add after Executive Summary header
+    // 如果未找到 Assessment Date 行，尝试在执行摘要标题后添加
     const execSummaryPattern = /^## Executive Summary$/m;
     if (reportContent.match(execSummaryPattern)) {
-      // Add model as first item in Executive Summary
+      // 将模型作为执行摘要的第一项添加
       reportContent = reportContent.replace(
         execSummaryPattern,
         `## Executive Summary\n- Model: ${modelStr}`
@@ -149,6 +148,6 @@ export async function injectModelIntoReport(
     }
   }
 
-  // 5. Write modified report back
+  // 5. 将修改后的报告写回
   await fs.writeFile(reportPath, reportContent);
 }

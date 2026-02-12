@@ -1,2 +1,2 @@
-Rules to Avoid:
+避免的规则：
 {{RULES_AVOID}}

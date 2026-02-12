@@ -18,15 +18,15 @@ import type {
   DistributedConfig,
 } from './types/config.js';
 
-// Handle ESM/CJS interop for ajv-formats using require
+// 使用 require 处理 ESM/CJS 互操作
 const require = createRequire(import.meta.url);
 const addFormats: FormatsPlugin = require('ajv-formats');
 
-// Initialize AJV with formats
+// 初始化带有格式的 AJV
 const ajv = new Ajv({ allErrors: true, verbose: true });
 addFormats(ajv);
 
-// Load JSON Schema
+// 加载 JSON Schema
 let configSchema: object;
 let validateSchema: ValidateFunction;
 
@@ -45,24 +45,24 @@ try {
   );
 }
 
-// Security patterns to block
+// 要阻止的安全模式
 const DANGEROUS_PATTERNS: RegExp[] = [
-  /\.\.\//, // Path traversal
-  /[<>]/, // HTML/XML injection
-  /javascript:/i, // JavaScript URLs
-  /data:/i, // Data URLs
-  /file:/i, // File URLs
+  /\.\.\//, // 路径遍历
+  /[<>]/, // HTML/XML 注入
+  /javascript:/i, // JavaScript URL
+  /data:/i, // Data URL
+  /file:/i, // File URL
 ];
 
-// Parse and load YAML configuration file with enhanced safety
+// 解析并加载带有增强安全性的 YAML 配置文件
 export const parseConfig = async (configPath: string): Promise<Config> => {
   try {
-    // File existence check
+    // 文件存在检查
     if (!(await fs.pathExists(configPath))) {
       throw new Error(`Configuration file not found: ${configPath}`);
     }
 
-    // File size check (prevent extremely large files)
+    // 文件大小检查（防止过大的文件）
     const stats = await fs.stat(configPath);
     const maxFileSize = 1024 * 1024; // 1MB
     if (stats.size > maxFileSize) {
@@ -71,20 +71,20 @@ export const parseConfig = async (configPath: string): Promise<Config> => {
       );
     }
 
-    // Read file content
+    // 读取文件内容
     const configContent = await fs.readFile(configPath, 'utf8');
 
-    // Basic content validation
+    // 基本内容验证
     if (!configContent.trim()) {
       throw new Error('Configuration file is empty');
     }
 
-    // Parse YAML with safety options
+    // 使用安全选项解析 YAML
     let config: unknown;
     try {
       config = yaml.load(configContent, {
-        schema: yaml.FAILSAFE_SCHEMA, // Only basic YAML types, no JS evaluation
-        json: false, // Don't allow JSON-specific syntax
+        schema: yaml.FAILSAFE_SCHEMA, // 仅基本 YAML 类型，无 JS 评估
+        json: false, // 不允许 JSON 特定语法
         filename: configPath,
       });
     } catch (yamlError) {
@@ -92,36 +92,36 @@ export const parseConfig = async (configPath: string): Promise<Config> => {
       throw new Error(`YAML parsing failed: ${errMsg}`);
     }
 
-    // Additional safety check
+    // 额外安全检查
     if (config === null || config === undefined) {
       throw new Error('Configuration file resulted in null/undefined after parsing');
     }
 
-    // Validate the configuration structure and content
+    // 验证配置结构和内容
     validateConfig(config as Config);
 
     return config as Config;
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error);
-    // Enhance error message with context
+    // 增强错误消息上下文
     if (
       errMsg.startsWith('Configuration file not found') ||
       errMsg.startsWith('YAML parsing failed') ||
       errMsg.includes('must be') ||
       errMsg.includes('exceeds maximum')
     ) {
-      // These are already well-formatted errors, re-throw as-is
+      // 这些已经是格式良好的错误，原样抛出
       throw error;
     } else {
-      // Wrap other errors with context
+      // 用上下文包装其他错误
       throw new Error(`Failed to parse configuration file '${configPath}': ${errMsg}`);
     }
   }
 };
 
-// Validate overall configuration structure using JSON Schema
+// 使用 JSON Schema 验证整体配置结构
 const validateConfig = (config: Config): void => {
-  // Basic structure validation
+  // 基本结构验证
   if (!config || typeof config !== 'object') {
     throw new Error('Configuration must be a valid object');
   }
@@ -130,7 +130,7 @@ const validateConfig = (config: Config): void => {
     throw new Error('Configuration must be an object, not an array');
   }
 
-  // JSON Schema validation
+  // JSON Schema 验证
   const isValid = validateSchema(config);
   if (!isValid) {
     const errors = validateSchema.errors || [];
@@ -141,15 +141,15 @@ const validateConfig = (config: Config): void => {
     throw new Error(`Configuration validation failed:\n  - ${errorMessages.join('\n  - ')}`);
   }
 
-  // Additional security validation
+  // 额外安全验证
   performSecurityValidation(config);
 
-  // Warn if deprecated fields are used
+  // 如果使用了已弃用的字段则发出警告
   if (config.login) {
     console.warn('⚠️  The "login" section is deprecated. Please use "authentication" instead.');
   }
 
-  // Ensure at least some configuration is provided
+  // 确保提供了至少一些配置
   if (!config.rules && !config.authentication) {
     console.warn(
       '⚠️  Configuration file contains no rules or authentication. The pentest will run without any scoping restrictions or login capabilities.'
@@ -161,13 +161,13 @@ const validateConfig = (config: Config): void => {
   }
 };
 
-// Perform additional security validation beyond JSON Schema
+// 执行 JSON Schema 之外的额外安全验证
 const performSecurityValidation = (config: Config): void => {
-  // Validate authentication section for security issues
+  // 验证身份验证部分的安全问题
   if (config.authentication) {
     const auth = config.authentication;
 
-    // Check for dangerous patterns in credentials
+    // 检查凭证中的危险模式
     if (auth.credentials) {
       for (const pattern of DANGEROUS_PATTERNS) {
         if (pattern.test(auth.credentials.username)) {
@@ -183,7 +183,7 @@ const performSecurityValidation = (config: Config): void => {
       }
     }
 
-    // Check login flow for dangerous patterns
+    // 检查登录流程中的危险模式
     if (auth.login_flow) {
       auth.login_flow.forEach((step, index) => {
         for (const pattern of DANGEROUS_PATTERNS) {
@@ -197,24 +197,24 @@ const performSecurityValidation = (config: Config): void => {
     }
   }
 
-  // Validate rules section for security issues
+  // 验证规则部分的安全问题
   if (config.rules) {
     validateRulesSecurity(config.rules.avoid, 'avoid');
     validateRulesSecurity(config.rules.focus, 'focus');
 
-    // Check for duplicate and conflicting rules
+    // 检查重复和冲突的规则
     checkForDuplicates(config.rules.avoid || [], 'avoid');
     checkForDuplicates(config.rules.focus || [], 'focus');
-    checkForConflicts(config.rules.avoid, config.rules.focus);
+    checkForConflicts(config.rules.avoid || [], config.rules.focus || []);
   }
 };
 
-// Validate rules for security issues
+// 验证规则的安全问题
 const validateRulesSecurity = (rules: Rule[] | undefined, ruleType: string): void => {
   if (!rules) return;
 
   rules.forEach((rule, index) => {
-    // Security validation
+    // 安全验证
     for (const pattern of DANGEROUS_PATTERNS) {
       if (pattern.test(rule.url_path)) {
         throw new Error(
@@ -228,12 +228,12 @@ const validateRulesSecurity = (rules: Rule[] | undefined, ruleType: string): voi
       }
     }
 
-    // Type-specific validation
+    // 类型特定验证
     validateRuleTypeSpecific(rule, ruleType, index);
   });
 };
 
-// Validate rule based on its specific type
+// 根据规则的特定类型进行验证
 const validateRuleTypeSpecific = (rule: Rule, ruleType: string, index: number): void => {
   switch (rule.type) {
     case 'path':
@@ -244,13 +244,13 @@ const validateRuleTypeSpecific = (rule: Rule, ruleType: string, index: number): 
 
     case 'subdomain':
     case 'domain':
-      // Basic domain validation - no slashes allowed
+      // 基本域名验证 - 不允许斜杠
       if (rule.url_path.includes('/')) {
         throw new Error(
           `rules.${ruleType}[${index}].url_path for type '${rule.type}' cannot contain '/' characters`
         );
       }
-      // Must contain at least one dot for domains
+      // 域名必须至少包含一个点
       if (rule.type === 'domain' && !rule.url_path.includes('.')) {
         throw new Error(
           `rules.${ruleType}[${index}].url_path for type 'domain' must be a valid domain name`
@@ -269,7 +269,7 @@ const validateRuleTypeSpecific = (rule: Rule, ruleType: string, index: number): 
     }
 
     case 'header':
-      // Header name validation (basic)
+      // 头部名称验证（基本）
       if (!rule.url_path.match(/^[a-zA-Z0-9\-_]+$/)) {
         throw new Error(
           `rules.${ruleType}[${index}].url_path for type 'header' must be a valid header name (alphanumeric, hyphens, underscores only)`
@@ -278,7 +278,7 @@ const validateRuleTypeSpecific = (rule: Rule, ruleType: string, index: number): 
       break;
 
     case 'parameter':
-      // Parameter name validation (basic)
+      // 参数名称验证（基本）
       if (!rule.url_path.match(/^[a-zA-Z0-9\-_]+$/)) {
         throw new Error(
           `rules.${ruleType}[${index}].url_path for type 'parameter' must be a valid parameter name (alphanumeric, hyphens, underscores only)`
@@ -288,7 +288,7 @@ const validateRuleTypeSpecific = (rule: Rule, ruleType: string, index: number): 
   }
 };
 
-// Check for duplicate rules
+// 检查重复规则
 const checkForDuplicates = (rules: Rule[], ruleType: string): void => {
   const seen = new Set<string>();
   rules.forEach((rule, index) => {
@@ -302,7 +302,7 @@ const checkForDuplicates = (rules: Rule[], ruleType: string): void => {
   });
 };
 
-// Check for conflicting rules between avoid and focus
+// 检查 avoid 和 focus 之间的冲突规则
 const checkForConflicts = (avoidRules: Rule[] = [], focusRules: Rule[] = []): void => {
   const avoidSet = new Set(avoidRules.map((rule) => `${rule.type}:${rule.url_path}`));
 
@@ -316,7 +316,7 @@ const checkForConflicts = (avoidRules: Rule[] = [], focusRules: Rule[] = []): vo
   });
 };
 
-// Sanitize and normalize rule values
+// 清理并标准化规则值
 const sanitizeRule = (rule: Rule): Rule => {
   return {
     description: rule.description.trim(),
@@ -325,7 +325,7 @@ const sanitizeRule = (rule: Rule): Rule => {
   };
 };
 
-// Distribute configuration sections to different agents with sanitization
+// 将配置部分分发给不同的智能体，并进行清理
 export const distributeConfig = (config: Config | null): DistributedConfig => {
   const avoid = config?.rules?.avoid || [];
   const focus = config?.rules?.focus || [];
@@ -338,7 +338,7 @@ export const distributeConfig = (config: Config | null): DistributedConfig => {
   };
 };
 
-// Sanitize and normalize authentication values
+// 清理并标准化身份验证值
 const sanitizeAuthentication = (auth: Authentication): Authentication => {
   return {
     login_type: auth.login_type.toLowerCase().trim() as Authentication['login_type'],

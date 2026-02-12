@@ -1,5 +1,5 @@
-> [!NOTE]
-> **[Shannon Lite achieves a 96.15% success rate on a hint-free, source-aware XBOW benchmark. &rarr;](https://github.com/KeygraphHQ/shannon/tree/main/xben-benchmark-results/README.md)**
+[!NOTE]
+**[Shannon Lite 在无提示、源感知的 XBOW 基准测试中达到了 96.15% 的成功率。→](https://github.com/KeygraphHQ/shannon/tree/main/xben-benchmark-results/README.md)**
 
 
 <div align="center">
@@ -8,180 +8,178 @@
 
 <img src="./assets/shannon-screen.png?v=2" alt="Shannon Screen" width="100%">
 
-# Shannon is your fully autonomous AI pentester.
+# Shannon 是您的全自动 AI 渗透测试工具
 
-Shannon’s job is simple: break your web app before anyone else does. <br />
-The Red Team to your vibe-coding Blue team. <br />
-Every Claude (coder) deserves their Shannon.
+Shannon 的工作很简单：在其他人之前破解您的 web 应用。<br />您的蓝队编码工作的红队搭档。<br />每个 Claude（编码器）都值得拥有他们的 Shannon。
 
 ---
 
-[Website](https://keygraph.io) • [Discord](https://discord.gg/KAqzSHHpRt)
+[网站](https://keygraph.io) • [Discord](https://discord.gg/KAqzSHHpRt)
 
 ---
 </div>
 
-## 🎯 What is Shannon?
+## 🎯 什么是 Shannon？
 
-Shannon is an AI pentester that delivers actual exploits, not just alerts.
+Shannon 是一款 AI 渗透测试工具，提供实际的漏洞利用，而不仅仅是警报。
 
-Shannon's goal is to break your web app before someone else does. It autonomously hunts for attack vectors in your code, then uses its built-in browser to execute real exploits, such as injection attacks, and auth bypass, to prove the vulnerability is actually exploitable.
+Shannon 的目标是在其他人之前破解您的 web 应用。它自主地在您的代码中寻找攻击向量，然后使用内置浏览器执行真实的漏洞利用，例如注入攻击和认证绕过，以证明漏洞确实可以被利用。
 
-**What Problem Does Shannon Solve?**
+**Shannon 解决了什么问题？**
 
-Thanks to tools like Claude Code and Cursor, your team ships code non-stop. But your penetration test? That happens once a year. This creates a *massive* security gap. For the other 364 days, you could be unknowingly shipping vulnerabilities to production.
+借助 Claude Code 和 Cursor 等工具，您的团队可以不间断地交付代码。但您的渗透测试呢？每年只进行一次。这造成了*巨大的*安全缺口。在其他 364 天里，您可能在不知不觉中将漏洞部署到生产环境中。
 
-Shannon closes this gap by acting as your on-demand whitebox pentester. It doesn't just find potential issues. It executes real exploits, providing concrete proof of vulnerabilities. This lets you ship with confidence, knowing every build can be secured.
+Shannon 通过充当您的按需白盒渗透测试工具来填补这一缺口。它不仅仅是发现潜在问题。它执行真实的漏洞利用，提供漏洞的具体证明。这让您可以自信地交付代码，知道每个构建都可以得到安全保障。
 
 > [!NOTE]
-> **From Autonomous Pentesting to Automated Compliance**
+> **从自主渗透测试到自动化合规**
 >
-> Shannon is a core component of the **Keygraph Security and Compliance Platform**.
+> Shannon 是 **Keygraph 安全与合规平台** 的核心组件。
 >
-> While Shannon automates the critical task of penetration testing for your application, our broader platform automates your entire compliance journey—from evidence collection to audit readiness. We're building the "Rippling for Cybersecurity," a single platform to manage your security posture and streamline compliance frameworks like SOC 2 and HIPAA.
+> 虽然 Shannon 自动化了应用程序渗透测试的关键任务，但我们更广泛的平台自动化了您的整个合规之旅——从证据收集到审计准备。我们正在构建 "网络安全的 Rippling"，一个单一平台来管理您的安全状况并简化 SOC 2 和 HIPAA 等合规框架。
 >
-> ➡️ **[Learn more about the Keygraph Platform](https://keygraph.io)**
+> ➡️ **[了解更多关于 Keygraph 平台的信息](https://keygraph.io)**
 
-## 🎬 See Shannon in Action
+## 🎬 观看 Shannon 的实际应用
 
-**Real Results**: Shannon discovered 20+ critical vulnerabilities in OWASP Juice Shop, including complete auth bypass and database exfiltration. [See full report →](sample-reports/shannon-report-juice-shop.md)
+**真实结果**：Shannon 在 OWASP Juice Shop 中发现了 20+ 个关键漏洞，包括完整的认证绕过和数据库窃取。[查看完整报告 →](sample-reports/shannon-report-juice-shop.md)
 
-![Demo](assets/shannon-action.gif)
+![演示](assets/shannon-action.gif)
 
-## ✨ Features
+## ✨ 功能
 
-- **Fully Autonomous Operation**: Launch the pentest with a single command. The AI handles everything from advanced 2FA/TOTP logins (including sign in with Google) and browser navigation to the final report with zero intervention.
-- **Pentester-Grade Reports with Reproducible Exploits**: Delivers a final report focused on proven, exploitable findings, complete with copy-and-paste Proof-of-Concepts to eliminate false positives and provide actionable results.
-- **Critical OWASP Vulnerability Coverage**: Currently identifies and validates the following critical vulnerabilities: Injection, XSS, SSRF, and Broken Authentication/Authorization, with more types in development.
-- **Code-Aware Dynamic Testing**: Analyzes your source code to intelligently guide its attack strategy, then performs live, browser and command line based exploits on the running application to confirm real-world risk.
-- **Powered by Integrated Security Tools**: Enhances its discovery phase by leveraging leading reconnaissance and testing tools—including **Nmap, Subfinder, WhatWeb, and Schemathesis**—for deep analysis of the target environment.
-- **Parallel Processing for Faster Results**: Get your report faster. The system parallelizes the most time-intensive phases, running analysis and exploitation for all vulnerability types concurrently.
+- **完全自主操作**：使用单个命令启动渗透测试。AI 处理从高级 2FA/TOTP 登录（包括 Google 登录）和浏览器导航到最终报告的所有内容，无需任何干预。
+- **具有可重现漏洞利用的渗透测试级报告**：提供专注于已验证、可利用发现的最终报告，包含可复制粘贴的概念验证，以消除误报并提供可操作的结果。
+- **关键 OWASP 漏洞覆盖**：目前识别和验证以下关键漏洞：注入、XSS、SSRF 和认证/授权缺陷，更多类型正在开发中。
+- **代码感知动态测试**：分析您的源代码以智能指导其攻击策略，然后对运行中的应用程序执行基于浏览器和命令行的实时漏洞利用，以确认实际风险。
+- **由集成安全工具提供支持**：通过利用领先的侦察和测试工具（包括 **Nmap、Subfinder、WhatWeb 和 Schemathesis**）来增强其发现阶段，以深入分析目标环境。
+- **并行处理以获得更快的结果**：更快地获得您的报告。系统并行化最耗时的阶段，同时运行所有漏洞类型的分析和利用。
 
-## 📦 Product Line
+## 📦 产品线
 
-Shannon is available in two editions:
+Shannon 有两个版本：
 
-| Edition | License | Best For |
+| 版本 | 许可证 | 最适合 |
 |---------|---------|----------|
-| **Shannon Lite** | AGPL-3.0 | Security teams, independent researchers, testing your own applications |
-| **Shannon Pro** | Commercial | Enterprises requiring advanced features, CI/CD integration, and dedicated support |
+| **Shannon Lite** | AGPL-3.0 | 安全团队、独立研究人员、测试您自己的应用程序 |
+| **Shannon Pro** | 商业 | 需要高级功能、CI/CD 集成和专门支持的企业 |
 
-> **This repository contains Shannon Lite,** which utilizes our core autonomous AI pentesting framework. **Shannon Pro** enhances this foundation with an advanced, LLM-powered data flow analysis engine (inspired by the [LLMDFA paper](https://arxiv.org/abs/2402.10754)) for enterprise-grade code analysis and deeper vulnerability detection.
+> **此存储库包含 Shannon Lite**，它利用我们的核心自主 AI 渗透测试框架。**Shannon Pro** 通过先进的、由 LLM 驱动的数据流分析引擎（灵感来自 [LLMDFA 论文](https://arxiv.org/abs/2402.10754)）增强了这一基础，用于企业级代码分析和更深入的漏洞检测。
 
 > [!IMPORTANT]
-> **White-box only.** Shannon Lite is designed for **white-box (source-available)** application security testing.  
-> It expects access to your application's source code and repository layout.
+> **仅白盒**。Shannon Lite 专为 **白盒（源代码可用）** 应用程序安全测试而设计。<br />
+> 它需要访问您的应用程序的源代码和存储库布局。
 
-[See feature comparison](./SHANNON-PRO.md)
-## 📑 Table of Contents
+[查看功能比较](./SHANNON-PRO.md)
+## 📑 目录
 
-- [What is Shannon?](#-what-is-shannon)
-- [See Shannon in Action](#-see-shannon-in-action)
-- [Features](#-features)
-- [Product Line](#-product-line)
-- [Setup & Usage Instructions](#-setup--usage-instructions)
-  - [Prerequisites](#prerequisites)
-  - [Quick Start](#quick-start)
-  - [Monitoring Progress](#monitoring-progress)
-  - [Stopping Shannon](#stopping-shannon)
-  - [Usage Examples](#usage-examples)
-  - [Configuration (Optional)](#configuration-optional)
-  - [[EXPERIMENTAL - UNSUPPORTED] Router Mode (Alternative Providers)](#experimental---unsupported-router-mode-alternative-providers)
-  - [Output and Results](#output-and-results)
-- [Sample Reports](#-sample-reports)
-- [Architecture](#️-architecture)
-- [Coverage and Roadmap](#-coverage-and-roadmap)
-- [Disclaimers](#️-disclaimers)
-- [License](#-license)
-- [Community & Support](#-community--support)
-- [Get in Touch](#-get-in-touch)
+- [什么是 Shannon？](#-什么是-shannon)
+- [观看 Shannon 的实际应用](#-观看-shannon-的实际应用)
+- [功能](#-功能)
+- [产品线](#-产品线)
+- [设置和使用说明](#-设置-和-使用说明)
+  - [先决条件](#先决条件)
+  - [快速开始](#快速开始)
+  - [监控进度](#监控进度)
+  - [停止 Shannon](#停止-shannon)
+  - [使用示例](#使用示例)
+  - [配置（可选）](#配置-可选)
+  - [[实验性 - 不支持] 路由器模式（替代提供商）](#实验性---不支持-路由器模式-替代提供商)
+  - [输出和结果](#输出和结果)
+- [示例报告](#-示例报告)
+- [架构](#️-架构)
+- [覆盖范围和路线图](#-覆盖范围和路线图)
+- [免责声明](#️-免责声明)
+- [许可证](#-许可证)
+- [社区和支持](#-社区-和-支持)
+- [联系我们](#-联系我们)
 
 ---
 
-## 🚀 Setup & Usage Instructions
+## 🚀 设置和使用说明
 
-### Prerequisites
+### 先决条件
 
-- **Docker** - Container runtime ([Install Docker](https://docs.docker.com/get-docker/))
-- **AI Provider Credentials** (choose one):
-  - **Anthropic API key** (recommended) - Get from [Anthropic Console](https://console.anthropic.com)
-  - **Claude Code OAuth token**
-  - **[EXPERIMENTAL - UNSUPPORTED] Alternative providers via Router Mode** - OpenAI or Google Gemini via OpenRouter (see [Router Mode](#experimental---unsupported-router-mode-alternative-providers))
+- **Docker** - 容器运行时 ([安装 Docker](https://docs.docker.com/get-docker/))
+- **AI 提供商凭证**（选择一个）：
+  - **Anthropic API 密钥**（推荐）- 从 [Anthropic Console](https://console.anthropic.com) 获取
+  - **Claude Code OAuth 令牌**
+  - **[实验性 - 不支持] 通过路由器模式的替代提供商** - 通过 OpenRouter 的 OpenAI 或 Google Gemini（见 [路由器模式](#实验性---不支持-路由器模式-替代提供商)）
 
-### Quick Start
+### 快速开始
 
 ```bash
-# 1. Clone Shannon
+# 1. 克隆 Shannon
 git clone https://github.com/KeygraphHQ/shannon.git
 cd shannon
 
-# 2. Configure credentials (choose one method)
+# 2. 配置凭证（选择一种方法）
 
-# Option A: Export environment variables
-export ANTHROPIC_API_KEY="your-api-key"              # or CLAUDE_CODE_OAUTH_TOKEN
+# 选项 A：导出环境变量
+export ANTHROPIC_API_KEY="your-api-key"              # 或 CLAUDE_CODE_OAUTH_TOKEN
 
-# Option B: Create a .env file
+# 选项 B：创建 .env 文件
 cat > .env << 'EOF'
 ANTHROPIC_API_KEY=your-api-key
 EOF
 
-# 3. Run a pentest
+# 3. 运行渗透测试
 ./shannon start URL=https://your-app.com REPO=your-repo
 ```
 
-Shannon will build the containers, start the workflow, and return a workflow ID. The pentest runs in the background.
+Shannon 将构建容器，启动工作流，并返回工作流 ID。渗透测试在后台运行。
 
-### Monitoring Progress
+### 监控进度
 
 ```bash
-# View real-time worker logs
+# 查看实时工作日志
 ./shannon logs
 
-# Query a specific workflow's progress
+# 查询特定工作流的进度
 ./shannon query ID=shannon-1234567890
 
-# Open the Temporal Web UI for detailed monitoring
+# 打开 Temporal Web UI 进行详细监控
 open http://localhost:8233
 ```
 
-### Stopping Shannon
+### 停止 Shannon
 
 ```bash
-# Stop all containers (preserves workflow data)
+# 停止所有容器（保留工作流数据）
 ./shannon stop
 
-# Full cleanup (removes all data)
+# 完全清理（删除所有数据）
 ./shannon stop CLEAN=true
 ```
 
-### Usage Examples
+### 使用示例
 
 ```bash
-# Basic pentest
+# 基本渗透测试
 ./shannon start URL=https://example.com REPO=repo-name
 
-# With a configuration file
+# 使用配置文件
 ./shannon start URL=https://example.com REPO=repo-name CONFIG=./configs/my-config.yaml
 
-# Custom output directory
+# 自定义输出目录
 ./shannon start URL=https://example.com REPO=repo-name OUTPUT=./my-reports
 ```
 
-### Prepare Your Repository
+### 准备您的存储库
 
-Shannon expects target repositories to be placed under the `./repos/` directory at the project root. The `REPO` flag refers to a folder name inside `./repos/`. Copy the repository you want to scan into `./repos/`, or clone it directly there:
+Shannon 期望目标存储库放置在项目根目录的 `./repos/` 目录下。`REPO` 标志指的是 `./repos/` 内的文件夹名称。将您要扫描的存储库复制到 `./repos/`，或直接克隆到那里：
 
 ```bash
 git clone https://github.com/your-org/your-repo.git ./repos/your-repo
 ```
 
-**For monorepos:**
+**对于单体存储库：**
 
 ```bash
 git clone https://github.com/your-org/your-monorepo.git ./repos/your-monorepo
 ```
 
-**For multi-repository applications** (e.g., separate frontend/backend):
+**对于多存储库应用程序**（例如，分离的前端/后端）：
 
 ```bash
 mkdir ./repos/your-app
@@ -191,37 +189,37 @@ git clone https://github.com/your-org/backend.git
 git clone https://github.com/your-org/api.git
 ```
 
-### Platform-Specific Instructions
+### 平台特定说明
 
-**For Linux (Native Docker):**
+**对于 Linux（原生 Docker）：**
 
-You may need to run commands with `sudo` depending on your Docker setup. If you encounter permission issues with output files, ensure your user has access to the Docker socket.
+根据您的 Docker 设置，您可能需要使用 `sudo` 运行命令。如果您遇到输出文件的权限问题，请确保您的用户有权访问 Docker 套接字。
 
-**For macOS:**
+**对于 macOS：**
 
-Works out of the box with Docker Desktop installed.
+安装 Docker Desktop 后即可直接使用。
 
-**Testing Local Applications:**
+**测试本地应用程序：**
 
-Docker containers cannot reach `localhost` on your host machine. Use `host.docker.internal` in place of `localhost`:
+Docker 容器无法访问主机上的 `localhost`。使用 `host.docker.internal` 代替 `localhost`：
 
 ```bash
 ./shannon start URL=http://host.docker.internal:3000 REPO=repo-name
 ```
 
-### Configuration (Optional)
+### 配置（可选）
 
-While you can run without a config file, creating one enables authenticated testing and customized analysis. Place your configuration files inside the `./configs/` directory — this folder is mounted into the Docker container automatically.
+虽然您可以在没有配置文件的情况下运行，但创建一个配置文件可以启用认证测试和自定义分析。将您的配置文件放在 `./configs/` 目录内 — 此文件夹会自动挂载到 Docker 容器中。
 
-#### Create Configuration File
+#### 创建配置文件
 
-Copy and modify the example configuration:
+复制并修改示例配置：
 
 ```bash
 cp configs/example-config.yaml configs/my-app-config.yaml
 ```
 
-#### Basic Configuration Structure
+#### 基本配置结构
 
 ```yaml
 authentication:
@@ -230,7 +228,7 @@ authentication:
   credentials:
     username: "test@example.com"
     password: "yourpassword"
-    totp_secret: "LB2E2RX7XFHSTGCK"  # Optional for 2FA
+    totp_secret: "LB2E2RX7XFHSTGCK"  # 2FA 可选
 
   login_flow:
     - "Type $username into the email field"
@@ -253,127 +251,127 @@ rules:
       url_path: "/api"
 ```
 
-#### TOTP Setup for 2FA
+#### 2FA 的 TOTP 设置
 
-If your application uses two-factor authentication, simply add the TOTP secret to your config file. The AI will automatically generate the required codes during testing.
+如果您的应用程序使用双因素认证，只需将 TOTP 密钥添加到您的配置文件中。AI 将在测试期间自动生成所需的代码。
 
-### [EXPERIMENTAL - UNSUPPORTED] Router Mode (Alternative Providers)
+### [实验性 - 不支持] 路由器模式（替代提供商）
 
-Shannon can experimentally route requests through alternative AI providers using claude-code-router. This mode is not officially supported and is intended primarily for:
+Shannon 可以通过 claude-code-router 实验性地通过替代 AI 提供商路由请求。此模式不受官方支持，主要用于：
 
-* **Model experimentation** — try Shannon with GPT-5.2 or Gemini 3–family models
+* **模型实验** — 尝试使用 GPT-5.2 或 Gemini 3 系列模型运行 Shannon
 
-#### Quick Setup
+#### 快速设置
 
-1. Add your provider API key to `.env`:
+1. 将您的提供商 API 密钥添加到 `.env`：
 
 ```bash
-# Choose one provider:
+# 选择一个提供商：
 OPENAI_API_KEY=sk-...
-# OR
+# 或
 OPENROUTER_API_KEY=sk-or-...
 
-# Set default model:
-ROUTER_DEFAULT=openai,gpt-5.2  # provider,model format
+# 设置默认模型：
+ROUTER_DEFAULT=openai,gpt-5.2  # provider,model 格式
 ```
 
-2. Run with `ROUTER=true`:
+2. 使用 `ROUTER=true` 运行：
 
 ```bash
 ./shannon start URL=https://example.com REPO=repo-name ROUTER=true
 ```
 
-#### Experimental Models
+#### 实验性模型
 
-| Provider | Models |
+| 提供商 | 模型 |
 |----------|--------|
 | OpenAI | gpt-5.2, gpt-5-mini |
 | OpenRouter | google/gemini-3-flash-preview |
 
-#### Disclaimer
+#### 免责声明
 
-This feature is experimental and unsupported. Output quality depends heavily on the model. Shannon is built on top of the Anthropic Agent SDK and is optimized and primarily tested with Anthropic Claude models. Alternative providers may produce inconsistent results (including failing early phases like Recon) depending on the model and routing setup.
+此功能是实验性的，不受支持。输出质量在很大程度上取决于模型。Shannon 构建在 Anthropic Agent SDK 之上，并针对 Anthropic Claude 模型进行了优化和主要测试。替代提供商可能会产生不一致的结果（包括在侦察等早期阶段失败），具体取决于模型和路由设置。
 
-### Output and Results
+### 输出和结果
 
-All results are saved to `./audit-logs/{hostname}_{sessionId}/` by default. Use `--output <path>` to specify a custom directory.
+所有结果默认保存到 `./audit-logs/{hostname}_{sessionId}/`。使用 `--output <path>` 指定自定义目录。
 
-Output structure:
+输出结构：
 ```
 audit-logs/{hostname}_{sessionId}/
-├── session.json          # Metrics and session data
-├── agents/               # Per-agent execution logs
-├── prompts/              # Prompt snapshots for reproducibility
+├── session.json          # 指标和会话数据
+├── agents/               # 每个智能体的执行日志
+├── prompts/              # 可重现性的提示快照
 └── deliverables/
-    └── comprehensive_security_assessment_report.md   # Final comprehensive security report
+    └── comprehensive_security_assessment_report.md   # 最终综合安全评估报告
 ```
 
 ---
 
-## 📊 Sample Reports
+## 📊 示例报告
 
-> **Looking for quantitative benchmarks?** [See full benchmark methodology and results →](./xben-benchmark-results/README.md)
+> **寻找定量基准？** [查看完整的基准方法和结果 →](./xben-benchmark-results/README.md)
 
-See Shannon's capabilities in action with penetration test results from industry-standard vulnerable applications:
+查看 Shannon 在行业标准易受攻击应用程序上的渗透测试结果：
 
 #### 🧃 **OWASP Juice Shop** • [GitHub](https://github.com/juice-shop/juice-shop)
 
-*A notoriously insecure web application maintained by OWASP, designed to test a tool's ability to uncover a wide range of modern vulnerabilities.*
+*由 OWASP 维护的臭名昭著的不安全 web 应用程序，旨在测试工具发现各种现代漏洞的能力。*
 
-**Performance**: Identified **over 20 high-impact vulnerabilities** across targeted OWASP categories in a single automated run.
+**性能**：在单次自动运行中识别了**超过 20 个高影响漏洞**，涵盖目标 OWASP 类别。
 
-**Key Accomplishments**:
+**关键成就**：
 
-- **Achieved complete authentication bypass** and exfiltrated the entire user database via Injection attack
-- **Executed a full privilege escalation** by creating a new administrator account through a registration workflow bypass
-- **Identified and exploited systemic authorization flaws (IDOR)** to access and modify any user's private data and shopping cart
-- **Discovered a Server-Side Request Forgery (SSRF)** vulnerability, enabling internal network reconnaissance
+- **实现了完整的认证绕过**，并通过注入攻击窃取了整个用户数据库
+- **通过注册工作流绕过创建新管理员账户**，执行了完整的权限提升
+- **识别并利用了系统性授权缺陷 (IDOR)**，以访问和修改任何用户的私人数据和购物车
+- **发现了服务器端请求伪造 (SSRF)** 漏洞，实现了内部网络侦察
 
-📄 **[View Complete Report →](sample-reports/shannon-report-juice-shop.md)**
+📄 **[查看完整报告 →](sample-reports/shannon-report-juice-shop.md)**
 
 ---
 
 #### 🔗 **c{api}tal API** • [GitHub](https://github.com/Checkmarx/capital)
 
-*An intentionally vulnerable API from Checkmarx, designed to test a tool's ability to uncover the OWASP API Security Top 10.*
+*来自 Checkmarx 的故意易受攻击的 API，旨在测试工具发现 OWASP API 安全前 10 名的能力。*
 
-**Performance**: Identified **nearly 15 critical and high-severity vulnerabilities**, leading to full application compromise.
+**性能**：识别了**近 15 个关键和高严重性漏洞**，导致完全的应用程序妥协。
 
-**Key Accomplishments**:
+**关键成就**：
 
-- **Executed a root-level Injection attack** by bypassing a denylist via command chaining in a hidden debug endpoint
-- **Achieved complete authentication bypass** by discovering and targeting a legacy, unpatched v1 API endpoint
-- **Escalated a regular user to full administrator privileges** by exploiting a Mass Assignment vulnerability in the user profile update function
-- **Demonstrated high accuracy** by correctly confirming the application's robust XSS defenses, reporting zero false positives
+- **通过在隐藏调试端点中通过命令链接绕过黑名单**，执行了根级注入攻击
+- **通过发现并针对未修补的旧版 v1 API 端点**，实现了完全的认证绕过
+- **通过利用用户配置文件更新功能中的批量分配漏洞**，将普通用户升级为完整管理员权限
+- **通过正确确认应用程序强大的 XSS 防御**，展示了高准确性，报告零误报
 
-📄 **[View Complete Report →](sample-reports/shannon-report-capital-api.md)**
+📄 **[查看完整报告 →](sample-reports/shannon-report-capital-api.md)**
 
 ---
 
 #### 🚗 **OWASP crAPI** • [GitHub](https://github.com/OWASP/crAPI)
 
-*A modern, intentionally vulnerable API from OWASP, designed to benchmark a tool's effectiveness against the OWASP API Security Top 10.*
+*来自 OWASP 的现代、故意易受攻击的 API，旨在基准测试工具对 OWASP API 安全前 10 名的有效性。*
 
-**Performance**: Identified **over 15 critical and high-severity vulnerabilities**, achieving full application compromise.
+**性能**：识别了**超过 15 个关键和高严重性漏洞**，实现了完全的应用程序妥协。
 
-**Key Accomplishments**:
+**关键成就**：
 
-- **Bypassed authentication using multiple advanced JWT attacks**, including Algorithm Confusion, alg:none, and weak key (kid) injection
-- **Achieved full database compromise via Injection attacks**, exfiltrating user credentials from the PostgreSQL database
-- **Executed a critical Server-Side Request Forgery (SSRF) attack** that successfully forwarded internal authentication tokens to an external service
-- **Demonstrated high accuracy** by correctly identifying the application's robust XSS defenses, reporting zero false positives
+- **使用多种高级 JWT 攻击**（包括算法混淆、alg:none 和弱密钥 (kid) 注入）绕过认证
+- **通过注入攻击实现完全的数据库妥协**，从 PostgreSQL 数据库中窃取用户凭证
+- **执行了关键的服务器端请求伪造 (SSRF) 攻击**，成功将内部认证令牌转发到外部服务
+- **通过正确识别应用程序强大的 XSS 防御**，展示了高准确性，报告零误报
 
-📄 **[View Complete Report →](sample-reports/shannon-report-crapi.md)**
-
----
-
-*These results demonstrate Shannon's ability to move beyond simple scanning, performing deep contextual exploitation with minimal false positives and actionable proof-of-concepts.*
+📄 **[查看完整报告 →](sample-reports/shannon-report-crapi.md)**
 
 ---
 
-## 🏗️ Architecture
+*这些结果展示了 Shannon 超越简单扫描的能力，执行深度上下文漏洞利用，具有最少的误报和可操作的概念验证。*
 
-Shannon emulates a human penetration tester's methodology using a sophisticated multi-agent architecture. It combines white-box source code analysis with black-box dynamic exploitation across four distinct phases:
+---
+
+## 🏗️ 架构
+
+Shannon 使用复杂的多智能体架构模拟人类渗透测试人员的方法。它结合了白盒源代码分析和黑盒动态漏洞利用，分为四个不同的阶段：
 
 ```
                     ┌──────────────────────┐
@@ -403,119 +401,118 @@ Shannon emulates a human penetration tester's methodology using a sophisticated 
                     └──────────────────────┘
 ```
 
-### Architectural Overview
+### 架构概述
 
-Shannon is engineered to emulate the methodology of a human penetration tester. It leverages Anthropic's Claude Agent SDK as its core reasoning engine, but its true strength lies in the sophisticated multi-agent architecture built around it. This architecture combines the deep context of **white-box source code analysis** with the real-world validation of **black-box dynamic exploitation**, managed by an orchestrator through four distinct phases to ensure a focus on minimal false positives and intelligent context management.
+Shannon 被设计为模拟人类渗透测试人员的方法。它利用 Anthropic 的 Claude Agent SDK 作为其核心推理引擎，但其真正的优势在于围绕它构建的复杂多智能体架构。此架构结合了 **白盒源代码分析** 的深度上下文和 **黑盒动态漏洞利用** 的实际验证，由协调器通过四个不同的阶段进行管理，以确保专注于最小化误报和智能上下文管理。
 
 ---
 
-#### **Phase 1: Reconnaissance**
+#### **阶段 1：侦察**
 
-The first phase builds a comprehensive map of the application's attack surface. Shannon analyzes the source code and integrates with tools like Nmap and Subfinder to understand the tech stack and infrastructure. Simultaneously, it performs live application exploration via browser automation to correlate code-level insights with real-world behavior, producing a detailed map of all entry points, API endpoints, and authentication mechanisms for the next phase.
+第一阶段构建应用程序攻击面的综合地图。Shannon 分析源代码并与 Nmap 和 Subfinder 等工具集成，以了解技术栈和基础设施。同时，它通过浏览器自动化执行实时应用程序探索，将代码级洞察与实际行为相关联，为下一阶段生成所有入口点、API 端点和认证机制的详细地图。
 
-#### **Phase 2: Vulnerability Analysis**
+#### **阶段 2：漏洞分析**
 
-To maximize efficiency, this phase operates in parallel. Using the reconnaissance data, specialized agents for each OWASP category hunt for potential flaws in parallel. For vulnerabilities like Injection and SSRF, agents perform a structured data flow analysis, tracing user input to dangerous sinks. This phase produces a key deliverable: a list of **hypothesized exploitable paths** that are passed on for validation.
+为了最大化效率，此阶段并行运行。使用侦察数据，每个 OWASP 类别的专业智能体并行寻找潜在缺陷。对于注入和 SSRF 等漏洞，智能体执行结构化数据流分析，追踪用户输入到危险的接收器。此阶段产生一个关键成果：**假设的可利用路径** 列表，传递给验证阶段。
 
-#### **Phase 3: Exploitation**
+#### **阶段 3：漏洞利用**
 
-Continuing the parallel workflow to maintain speed, this phase is dedicated entirely to turning hypotheses into proof. Dedicated exploit agents receive the hypothesized paths and attempt to execute real-world attacks using browser automation, command-line tools, and custom scripts. This phase enforces a strict **"No Exploit, No Report"** policy: if a hypothesis cannot be successfully exploited to demonstrate impact, it is discarded as a false positive.
+继续并行工作流以保持速度，此阶段完全致力于将假设转化为证据。专用的漏洞利用智能体接收假设的路径，并尝试使用浏览器自动化、命令行工具和自定义脚本执行真实世界的攻击。此阶段强制执行严格的 **"无漏洞利用，无报告"** 策略：如果假设无法成功利用以证明影响，则将其作为误报丢弃。
 
-#### **Phase 4: Reporting**
+#### **阶段 4：报告**
 
-The final phase compiles all validated findings into a professional, actionable report. An agent consolidates the reconnaissance data and the successful exploit evidence, cleaning up any noise or hallucinated artifacts. Only verified vulnerabilities are included, complete with **reproducible, copy-and-paste Proof-of-Concepts**, delivering a final pentest-grade report focused exclusively on proven risks.
+最后阶段将所有验证的发现编译成专业、可操作的报告。智能体整合侦察数据和成功的漏洞利用证据，清理任何噪声或幻觉产物。仅包含经过验证的漏洞，完整的 **可重现、可复制粘贴的概念验证**，交付专注于已验证风险的最终渗透测试级报告。
 
 
-## 📋 Coverage and Roadmap
+## 📋 覆盖范围和路线图
 
-For detailed information about Shannon's security testing coverage and development roadmap, see our [Coverage and Roadmap](./COVERAGE.md) documentation.
+有关 Shannon 的安全测试覆盖范围和开发路线图的详细信息，请参阅我们的 [覆盖范围和路线图](./COVERAGE.md) 文档。
 
-## ⚠️ Disclaimers
+## ⚠️ 免责声明
 
-### Important Usage Guidelines & Disclaimers
+### 重要使用指南和免责声明
 
-Please review the following guidelines carefully before using Shannon (Lite). As a user, you are responsible for your actions and assume all liability.
+在使用 Shannon (Lite) 之前，请仔细阅读以下指南。作为用户，您对自己的行为负责并承担所有责任。
 
-#### **1. Potential for Mutative Effects & Environment Selection**
+#### **1. 潜在的突变效应和环境选择**
 
-This is not a passive scanner. The exploitation agents are designed to **actively execute attacks** to confirm vulnerabilities. This process can have mutative effects on the target application and its data.
+这不是一个被动扫描器。漏洞利用智能体旨在 **主动执行攻击** 以确认漏洞。此过程可能对目标应用程序及其数据产生突变效应。
 
 > [!WARNING]
-> **⚠️ DO NOT run Shannon on production environments.**
+> **⚠️ 不要在生产环境中运行 Shannon。**
 >
-> - It is intended exclusively for use on sandboxed, staging, or local development environments where data integrity is not a concern.
-> - Potential mutative effects include, but are not limited to: creating new users, modifying or deleting data, compromising test accounts, and triggering unintended side effects from injection attacks.
+> - 它专门用于沙盒、暂存或本地开发环境，其中数据完整性不是问题。
+> - 潜在的突变效应包括但不限于：创建新用户、修改或删除数据、损害测试账户以及触发注入攻击的意外副作用。
 
-#### **2. Legal & Ethical Use**
+#### **2. 法律和道德使用**
 
-Shannon is designed for legitimate security auditing purposes only.
+Shannon 专为合法的安全审计目的而设计。
 
 > [!CAUTION]
-> **You must have explicit, written authorization** from the owner of the target system before running Shannon.
+> **您必须获得目标系统所有者的明确书面授权** 才能运行 Shannon。
 >
-> Unauthorized scanning and exploitation of systems you do not own is illegal and can be prosecuted under laws such as the Computer Fraud and Abuse Act (CFAA). Keygraph is not responsible for any misuse of Shannon.
+> 未经授权扫描和利用您不拥有的系统是非法的，并可能根据《计算机欺诈和滥用法案》(CFAA) 等法律被起诉。Keygraph 不对 Shannon 的任何滥用负责。
 
-#### **3. LLM & Automation Caveats**
+#### **3. LLM 和自动化注意事项**
 
-- **Verification is Required**: While significant engineering has gone into our "proof-by-exploitation" methodology to eliminate false positives, the underlying LLMs can still generate hallucinated or weakly-supported content in the final report. **Human oversight is essential** to validate the legitimacy and severity of all reported findings.
-- **Comprehensiveness**: The analysis in Shannon Lite may not be exhaustive due to the inherent limitations of LLM context windows. For a more comprehensive, graph-based analysis of your entire codebase, **Shannon Pro** leverages its advanced data flow analysis engine to ensure deeper and more thorough coverage.
+- **验证是必需的**：虽然我们的 "通过漏洞利用证明" 方法已投入大量工程以消除误报，但底层 LLM 仍可能在最终报告中生成幻觉或支持不足的内容。**人工监督对于验证所有报告发现的合法性和严重性至关重要**。
+- **全面性**：由于 LLM 上下文窗口的固有限制，Shannon Lite 的分析可能不是 exhaustive 的。对于整个代码库的更全面、基于图的分析，**Shannon Pro** 利用其先进的数据流分析引擎来确保更深入和更彻底的覆盖。
 
-#### **4. Scope of Analysis**
+#### **4. 分析范围**
 
-- **Targeted Vulnerabilities**: The current version of Shannon Lite specifically targets the following classes of *exploitable* vulnerabilities:
-  - Broken Authentication & Authorization
-  - Injection
-  - Cross-Site Scripting (XSS)
-  - Server-Side Request Forgery (SSRF)
-- **What Shannon Lite Does Not Cover**: This list is not exhaustive of all potential security risks. Shannon Lite's "proof-by-exploitation" model means it will not report on issues it cannot actively exploit, such as vulnerable third-party libraries or insecure configurations. These types of deep static-analysis findings are a core focus of the advanced analysis engine in **Shannon Pro**.
+- **目标漏洞**：当前版本的 Shannon Lite 专门针对以下类别的 *可利用* 漏洞：
+  - 认证和授权缺陷
+  - 注入
+  - 跨站脚本 (XSS)
+  - 服务器端请求伪造 (SSRF)
+- **Shannon Lite 不覆盖的内容**：此列表并非所有潜在安全风险的详尽列表。Shannon Lite 的 "通过漏洞利用证明" 模型意味着它不会报告它无法主动利用的问题，例如易受攻击的第三方库或不安全的配置。这些类型的深度静态分析发现在 **Shannon Pro** 的高级分析引擎中是核心焦点。
 
-#### **5. Cost & Performance**
+#### **5. 成本和性能**
 
-- **Time**: As of the current version, a full test run typically takes **1 to 1.5 hours** to complete.
-- **Cost**: Running the full test using Anthropic's Claude 4.5 Sonnet model may incur costs of approximately **$50 USD**. Costs vary based on model pricing and application complexity.
+- **时间**：截至当前版本，完整测试运行通常需要 **1 到 1.5 小时** 才能完成。
+- **成本**：使用 Anthropic 的 Claude 4.5 Sonnet 模型运行完整测试可能会产生约 **50 美元** 的成本。成本因模型定价和应用程序复杂性而异。
 
-#### **6. Windows Antivirus False Positives**
+#### **6. Windows 防病毒误报**
 
-Windows Defender may flag files in `xben-benchmark-results/` or `deliverables/` as malware. These are false positives caused by exploit code in the reports. Add an exclusion for the Shannon directory in Windows Defender, or use Docker/WSL2.
-
-
-## 📜 License
-
-Shannon Lite is released under the [GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE).
-
-Shannon is open source (AGPL v3). This license allows you to:
-- Use it freely for all internal security testing.
-- Modify the code privately for internal use without sharing your changes.
-
-The AGPL's sharing requirements primarily apply to organizations offering Shannon as a public or managed service (such as a SaaS platform). In those specific cases, any modifications made to the core software must be open-sourced.
+Windows Defender 可能会将 `xben-benchmark-results/` 或 `deliverables/` 中的文件标记为恶意软件。这些是由报告中的漏洞利用代码引起的误报。在 Windows Defender 中为 Shannon 目录添加排除，或使用 Docker/WSL2。
 
 
-## 👥 Community & Support
+## 📜 许可证
 
-### Community Resources
+Shannon Lite 在 [GNU Affero 通用公共许可证 v3.0 (AGPL-3.0)](LICENSE) 下发布。
 
-**Contributing:** At this time, we’re not accepting external code contributions (PRs).  
-Issues are welcome for bug reports and feature requests.
+Shannon 是开源的（AGPL v3）。此许可证允许您：
+- 免费用于所有内部安全测试。
+- 私下修改代码供内部使用，无需分享您的更改。
 
-- 🐛 **Report bugs** via [GitHub Issues](https://github.com/KeygraphHQ/shannon/issues)
-- 💡 **Suggest features** in [Discussions](https://github.com/KeygraphHQ/shannon/discussions)
-- 💬 **Join our [Discord](https://discord.gg/KAqzSHHpRt)** for real-time community support
-
-### Stay Connected
-
-- 🐦 **Twitter**: [@KeygraphHQ](https://twitter.com/KeygraphHQ)
-- 💼 **LinkedIn**: [Keygraph](https://linkedin.com/company/keygraph)
-- 🌐 **Website**: [keygraph.io](https://keygraph.io)
+AGPL 的共享要求主要适用于将 Shannon 作为公共或托管服务（如 SaaS 平台）提供的组织。在这些特定情况下，对核心软件所做的任何修改都必须开源。
 
 
+## 👥 社区和支持
 
-## 💬 Get in Touch
+### 社区资源
 
-### Interested in Shannon Pro?
+**贡献**：目前，我们不接受外部代码贡献（PR）。<br />欢迎通过问题报告错误和功能请求。
 
-Shannon Pro is designed for organizations serious about application security. It offers enterprise-grade features, dedicated support, and seamless CI/CD integration, all powered by our most advanced LLM-based analysis engine. Find and fix complex vulnerabilities deep in your codebase before they ever reach production.
+- 🐛 **报告错误** 通过 [GitHub Issues](https://github.com/KeygraphHQ/shannon/issues)
+- 💡 **建议功能** 在 [Discussions](https://github.com/KeygraphHQ/shannon/discussions)
+- 💬 **加入我们的 [Discord](https://discord.gg/KAqzSHHpRt)** 以获得实时社区支持
 
-For a detailed breakdown of features, technical differences, and enterprise use cases, see our [complete comparison guide](./SHANNON-PRO.md).
+### 保持联系
+
+- 🐦 **Twitter**：[@KeygraphHQ](https://twitter.com/KeygraphHQ)
+- 💼 **LinkedIn**：[Keygraph](https://linkedin.com/company/keygraph)
+- 🌐 **网站**：[keygraph.io](https://keygraph.io)
+
+
+
+## 💬 联系我们
+
+### 对 Shannon Pro 感兴趣？
+
+Shannon Pro 专为认真对待应用程序安全的组织而设计。它提供企业级功能、专门支持和无缝 CI/CD 集成，全部由我们最先进的基于 LLM 的分析引擎提供支持。在复杂漏洞到达生产环境之前发现并修复它们。
+
+有关功能、技术差异和企业用例的详细分解，请参阅我们的 [完整比较指南](./SHANNON-PRO.md)。
 
 <p align="center">
   <a href="https://docs.google.com/forms/d/e/1FAIpQLSf-cPZcWjlfBJ3TCT8AaWpf8ztsw3FaHzJE4urr55KdlQs6cQ/viewform?usp=header" target="_blank">
@@ -523,13 +520,13 @@ For a detailed breakdown of features, technical differences, and enterprise use 
   </a>
 </p>
 
-**Or contact us directly:**
+**或直接联系我们：**
 
-📧 **Email**: [shannon@keygraph.io](mailto:shannon@keygraph.io)
+📧 **电子邮件**：[shannon@keygraph.io](mailto:shannon@keygraph.io)
 
 ---
 
 <p align="center">
-  <b>Built with ❤️ by the Keygraph team</b><br>
-  <i>Making application security accessible to everyone</i>
+  <b>由 Keygraph 团队用心打造</b><br>
+  <i>让应用程序安全对每个人都可访问</i>
 </p>

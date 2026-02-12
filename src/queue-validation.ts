@@ -73,7 +73,7 @@ export interface SafeValidationResult {
   error?: PentestError;
 }
 
-// Vulnerability type configuration as immutable data
+// 漏洞类型配置为不可变数据
 const VULN_TYPE_CONFIG: VulnTypeConfig = Object.freeze({
   injection: Object.freeze({
     deliverable: 'injection_analysis_deliverable.md',
@@ -97,7 +97,7 @@ const VULN_TYPE_CONFIG: VulnTypeConfig = Object.freeze({
   }),
 }) as VulnTypeConfig;
 
-// Pure function to create validation rule
+// 创建验证规则的纯函数
 function createValidationRule(
   predicate: (existence: FileExistence) => boolean,
   errorMessage: ErrorMessageResolver,
@@ -106,7 +106,7 @@ function createValidationRule(
   return Object.freeze({ predicate, errorMessage, retryable });
 }
 
-// Symmetric deliverable rules: queue and deliverable must exist together (prevents partial analysis from triggering exploitation)
+// 对称交付物规则：队列和交付物必须同时存在（防止部分分析触发利用）
 const fileExistenceRules: readonly ValidationRule[] = Object.freeze([
   createValidationRule(
     ({ deliverableExists, queueExists }) => deliverableExists && queueExists,
@@ -114,7 +114,7 @@ const fileExistenceRules: readonly ValidationRule[] = Object.freeze([
   ),
 ]);
 
-// Generate appropriate error message based on which files are missing
+// 根据缺失的文件生成适当的错误消息
 function getExistenceErrorMessage(existence: FileExistence): string {
   const { deliverableExists, queueExists } = existence;
 
@@ -127,7 +127,7 @@ function getExistenceErrorMessage(existence: FileExistence): string {
   return 'Analysis incomplete: Queue exists but deliverable file missing. Analysis agent must create both files.';
 }
 
-// Pure function to create file paths
+// 创建文件路径的纯函数
 const createPaths = (
   vulnType: VulnType,
   sourceDir: string
@@ -152,7 +152,7 @@ const createPaths = (
   });
 };
 
-// Pure function to check file existence
+// 检查文件存在性的纯函数
 const checkFileExistence = async (
   paths: PathsBase | PathsWithError
 ): Promise<PathsWithExistence | PathsWithError> => {
@@ -169,7 +169,7 @@ const checkFileExistence = async (
   });
 };
 
-// Validates deliverable/queue symmetry - both must exist or neither
+// 验证交付物/队列对称性 - 两者必须同时存在或同时不存在
 const validateExistenceRules = (
   pathsWithExistence: PathsWithExistence | PathsWithError
 ): PathsWithExistence | PathsWithError => {
@@ -177,7 +177,7 @@ const validateExistenceRules = (
 
   const { existence, vulnType } = pathsWithExistence;
 
-  // Find the first rule that fails
+  // 找到第一个失败的规则
   const failedRule = fileExistenceRules.find((rule) => !rule.predicate(existence));
 
   if (failedRule) {
@@ -204,7 +204,7 @@ const validateExistenceRules = (
   return pathsWithExistence;
 };
 
-// Pure function to validate queue structure
+// 验证队列结构的纯函数
 const validateQueueStructure = (content: string): QueueValidationResult => {
   try {
     const parsed = JSON.parse(content) as unknown;
@@ -228,7 +228,7 @@ const validateQueueStructure = (content: string): QueueValidationResult => {
   }
 };
 
-// Queue parse failures are retryable - agent can fix malformed JSON on retry
+// 队列解析失败是可重试的 - 智能体可以在重试时修复格式错误的 JSON
 const validateQueueContent = async (
   pathsWithExistence: PathsWithExistence | PathsWithError
 ): Promise<PathsWithQueue | PathsWithError> => {
@@ -239,14 +239,14 @@ const validateQueueContent = async (
     const queueValidation = validateQueueStructure(queueContent);
 
     if (!queueValidation.valid) {
-      // Rule 6: Both exist, queue invalid
+      // 规则 6: 两者都存在，队列无效
       return {
         error: new PentestError(
           queueValidation.error
             ? `Queue validation failed for ${pathsWithExistence.vulnType}: Invalid JSON structure. Analysis agent must fix queue format.`
             : `Queue validation failed for ${pathsWithExistence.vulnType}: Missing or invalid 'vulnerabilities' array. Analysis agent must fix queue structure.`,
           'validation',
-          true, // retryable
+          true, // 可重试
           {
             vulnType: pathsWithExistence.vulnType,
             queuePath: pathsWithExistence.queue,
@@ -277,7 +277,7 @@ const validateQueueContent = async (
   }
 };
 
-// Final decision: skip if queue says no vulns, proceed if vulns found, error otherwise
+// 最终决策：如果队列为空则跳过，发现漏洞则继续，否则报错
 const determineExploitationDecision = (
   validatedData: PathsWithQueue | PathsWithError
 ): ExploitationDecision => {
@@ -287,8 +287,8 @@ const determineExploitationDecision = (
 
   const hasVulnerabilities = validatedData.queueData.vulnerabilities.length > 0;
 
-  // Rule 4: Both exist, queue valid and populated
-  // Rule 5: Both exist, queue valid but empty
+  // 规则 4: 两者都存在，队列有效且有内容
+  // 规则 5: 两者都存在，队列有效但为空
   return Object.freeze({
     shouldExploit: hasVulnerabilities,
     shouldRetry: false,
@@ -297,7 +297,7 @@ const determineExploitationDecision = (
   });
 };
 
-// Main functional validation pipeline
+// 主要功能验证管道
 export async function validateQueueAndDeliverable(
   vulnType: VulnType,
   sourceDir: string
@@ -311,7 +311,7 @@ export async function validateQueueAndDeliverable(
   );
 }
 
-// Pure function to safely validate (returns result instead of throwing)
+// 安全验证的纯函数（返回结果而不是抛出错误）
 export const safeValidateQueueAndDeliverable = async (
   vulnType: VulnType,
   sourceDir: string

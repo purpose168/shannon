@@ -4,7 +4,7 @@
 // it under the terms of the GNU Affero General Public License version 3
 // as published by the Free Software Foundation.
 
-// Pure functions for processing SDK message types
+// 用于处理 SDK 消息类型的纯函数
 
 import { PentestError } from '../error-handling.js';
 import { filterJsonToolCalls } from '../utils/output-formatter.js';
@@ -37,7 +37,7 @@ import type {
 } from './types.js';
 import type { ChalkInstance } from 'chalk';
 
-// Handles both array and string content formats from SDK
+// 处理 SDK 的数组和字符串内容格式
 export function extractMessageContent(message: AssistantMessage): string {
   const messageContent = message.message;
 
@@ -50,7 +50,7 @@ export function extractMessageContent(message: AssistantMessage): string {
   return String(messageContent.content);
 }
 
-// Extracts only text content (no tool_use JSON) to avoid false positives in error detection
+// 仅提取文本内容（无 tool_use JSON），以避免错误检测中的误报
 export function extractTextOnlyContent(message: AssistantMessage): string {
   const messageContent = message.message;
 
@@ -71,10 +71,10 @@ export function detectApiError(content: string): ApiErrorDetection {
 
   const lowerContent = content.toLowerCase();
 
-  // === BILLING/SPENDING CAP ERRORS (Retryable with long backoff) ===
-  // When Claude Code hits its spending cap, it returns a short message like
-  // "Spending cap reached resets 8am" instead of throwing an error.
-  // These should retry with 5-30 min backoff so workflows can recover when cap resets.
+  // === 计费/支出上限错误（可重试，长时间退避）===
+  // 当 Claude Code 达到支出上限时，它会返回简短消息，如
+  // "Spending cap reached resets 8am" 而不是抛出错误。
+  // 这些应该以 5-30 分钟的退避时间重试，以便工作流可以在上限重置时恢复。
   const BILLING_PATTERNS = [
     'spending cap',
     'spending limit',
@@ -91,23 +91,23 @@ export function detectApiError(content: string): ApiErrorDetection {
     return {
       detected: true,
       shouldThrow: new PentestError(
-        `Billing limit reached: ${content.slice(0, 100)}`,
+        `达到计费限制: ${content.slice(0, 100)}`,
         'billing',
-        true // RETRYABLE - Temporal will use 5-30 min backoff
+        true // 可重试 - Temporal 将使用 5-30 分钟的退避
       ),
     };
   }
 
-  // === SESSION LIMIT (Non-retryable) ===
-  // Different from spending cap - usually means something is fundamentally wrong
+  // === 会话限制（不可重试）===
+  // 与支出上限不同 - 通常意味着存在根本性问题
   if (lowerContent.includes('session limit reached')) {
     return {
       detected: true,
-      shouldThrow: new PentestError('Session limit reached', 'billing', false),
+      shouldThrow: new PentestError('达到会话限制', 'billing', false),
     };
   }
 
-  // Non-fatal API errors - detected but continue
+  // 非致命 API 错误 - 检测到但继续
   if (lowerContent.includes('api error') || lowerContent.includes('terminated')) {
     return { detected: true };
   }
@@ -115,7 +115,7 @@ export function detectApiError(content: string): ApiErrorDetection {
   return { detected: false };
 }
 
-// Maps SDK structured error types to our error handling.
+// 将 SDK 结构化错误类型映射到我们的错误处理
 function handleStructuredError(
   errorType: SDKAssistantMessageError,
   content: string
@@ -125,54 +125,54 @@ function handleStructuredError(
       return {
         detected: true,
         shouldThrow: new PentestError(
-          `Billing error (structured): ${content.slice(0, 100)}`,
+          `计费错误 (结构化): ${content.slice(0, 100)}`,
           'billing',
-          true // Retryable with backoff
+          true // 可重试，带退避
         ),
       };
     case 'rate_limit':
       return {
         detected: true,
         shouldThrow: new PentestError(
-          `Rate limit hit (structured): ${content.slice(0, 100)}`,
+          `达到速率限制 (结构化): ${content.slice(0, 100)}`,
           'network',
-          true // Retryable with backoff
+          true // 可重试，带退避
         ),
       };
     case 'authentication_failed':
       return {
         detected: true,
         shouldThrow: new PentestError(
-          `Authentication failed: ${content.slice(0, 100)}`,
+          `认证失败: ${content.slice(0, 100)}`,
           'config',
-          false // Not retryable - needs API key fix
+          false // 不可重试 - 需要 API 密钥修复
         ),
       };
     case 'server_error':
       return {
         detected: true,
         shouldThrow: new PentestError(
-          `Server error (structured): ${content.slice(0, 100)}`,
+          `服务器错误 (结构化): ${content.slice(0, 100)}`,
           'network',
-          true // Retryable
+          true // 可重试
         ),
       };
     case 'invalid_request':
       return {
         detected: true,
         shouldThrow: new PentestError(
-          `Invalid request: ${content.slice(0, 100)}`,
+          `无效请求: ${content.slice(0, 100)}`,
           'config',
-          false // Not retryable - needs code fix
+          false // 不可重试 - 需要代码修复
         ),
       };
     case 'max_output_tokens':
       return {
         detected: true,
         shouldThrow: new PentestError(
-          `Max output tokens reached: ${content.slice(0, 100)}`,
+          `达到最大输出令牌: ${content.slice(0, 100)}`,
           'billing',
-          true // Retryable - may succeed with different content
+          true // 可重试 - 可能以不同内容成功
         ),
       };
     case 'unknown':
@@ -188,9 +188,9 @@ export function handleAssistantMessage(
   const content = extractMessageContent(message);
   const cleanedContent = filterJsonToolCalls(content);
 
-  // Prefer structured error field from SDK, fall back to text-sniffing
-  // Use text-only content for error detection to avoid false positives
-  // from tool_use JSON (e.g. security reports containing "usage limit")
+  // 优先使用 SDK 的结构化错误字段，回退到文本嗅探
+  // 使用纯文本内容进行错误检测，以避免来自 tool_use JSON 的误报
+  // （例如，包含 "usage limit" 的安全报告）
   let errorDetection: ApiErrorDetection;
   if (message.error) {
     errorDetection = handleStructuredError(message.error, content);
@@ -210,7 +210,7 @@ export function handleAssistantMessage(
     },
   };
 
-  // Only add shouldThrow if it exists (exactOptionalPropertyTypes compliance)
+  // 仅在存在时添加 shouldThrow（符合 exactOptionalPropertyTypes）
   if (errorDetection.shouldThrow) {
     result.shouldThrow = errorDetection.shouldThrow;
   }
@@ -218,7 +218,7 @@ export function handleAssistantMessage(
   return result;
 }
 
-// Final message of a query with cost/duration info
+// 查询的最终消息，包含成本/持续时间信息
 export function handleResultMessage(message: ResultMessage): ResultData {
   const result: ResultData = {
     result: message.result || null,
@@ -227,16 +227,16 @@ export function handleResultMessage(message: ResultMessage): ResultData {
     permissionDenials: message.permission_denials?.length || 0,
   };
 
-  // Only add subtype if it exists (exactOptionalPropertyTypes compliance)
+  // 仅在存在时添加 subtype（符合 exactOptionalPropertyTypes）
   if (message.subtype) {
     result.subtype = message.subtype;
   }
 
-  // Capture stop_reason for diagnostics (helps debug early stops, budget exceeded, etc.)
+  // 捕获 stop_reason 用于诊断（有助于调试过早停止、预算超出等）
   if (message.stop_reason !== undefined) {
     result.stop_reason = message.stop_reason;
     if (message.stop_reason && message.stop_reason !== 'end_turn') {
-      console.log(chalk.yellow(`    Stop reason: ${message.stop_reason}`));
+      console.log(chalk.yellow(`    停止原因: ${message.stop_reason}`));
     }
   }
 
@@ -251,7 +251,7 @@ export function handleToolUseMessage(message: ToolUseMessage): ToolUseData {
   };
 }
 
-// Truncates long results for display (500 char limit), preserves full content for logging
+// 截断长结果用于显示（500 字符限制），保留完整内容用于日志记录
 export function handleToolResultMessage(message: ToolResultMessage): ToolResultData {
   const content = message.content;
   const contentStr =
@@ -259,7 +259,7 @@ export function handleToolResultMessage(message: ToolResultMessage): ToolResultD
 
   const displayContent =
     contentStr.length > 500
-      ? `${contentStr.slice(0, 500)}...\n[Result truncated - ${contentStr.length} total chars]`
+      ? `${contentStr.slice(0, 500)}...\n[结果已截断 - 共 ${contentStr.length} 字符]`
       : contentStr;
 
   return {
@@ -269,14 +269,14 @@ export function handleToolResultMessage(message: ToolResultMessage): ToolResultD
   };
 }
 
-// Output helper for console logging
+// 控制台日志的输出辅助函数
 function outputLines(lines: string[]): void {
   for (const line of lines) {
     console.log(line);
   }
 }
 
-// Message dispatch result types
+// 消息分发结果类型
 export type MessageDispatchAction =
   | { type: 'continue'; apiErrorDetected?: boolean | undefined; model?: string | undefined }
   | { type: 'complete'; result: string | null; cost: number }
@@ -290,7 +290,7 @@ export interface MessageDispatchDeps {
   auditLogger: AuditLogger;
 }
 
-// Dispatches SDK messages to appropriate handlers and formatters
+// 将 SDK 消息分发到适当的处理程序和格式化程序
 export async function dispatchMessage(
   message: { type: string; subtype?: string },
   turnCount: number,
@@ -321,7 +321,7 @@ export async function dispatchMessage(
       await auditLogger.logLlmResponse(turnCount, assistantResult.content);
 
       if (assistantResult.apiErrorDetected) {
-        console.log(chalk.red(`    API Error detected in assistant response`));
+        console.log(chalk.red(`    在助手响应中检测到 API 错误`));
         return { type: 'continue', apiErrorDetected: true };
       }
 
@@ -333,13 +333,13 @@ export async function dispatchMessage(
         const initMsg = message as SystemInitMessage;
         const actualModel = getActualModelName(initMsg.model);
         if (!execContext.useCleanOutput) {
-          console.log(chalk.blue(`    Model: ${actualModel}, Permission: ${initMsg.permissionMode}`));
+          console.log(chalk.blue(`    模型: ${actualModel}, 权限: ${initMsg.permissionMode}`));
           if (initMsg.mcp_servers && initMsg.mcp_servers.length > 0) {
             const mcpStatus = initMsg.mcp_servers.map(s => `${s.name}(${s.status})`).join(', ');
             console.log(chalk.blue(`    MCP: ${mcpStatus}`));
           }
         }
-        // Return actual model for tracking in audit logs
+        // 返回实际模型用于审计日志中的跟踪
         return { type: 'continue', model: actualModel };
       }
       return { type: 'continue' };

@@ -4,7 +4,7 @@
 // it under the terms of the GNU Affero General Public License version 3
 // as published by the Free Software Foundation.
 
-// Production Claude agent execution with retry, git checkpoints, and audit logging
+// 生产环境 Claude 智能体执行，包含重试、Git 检查点和审计日志
 
 import { fs, path } from 'zx';
 import chalk, { type ChalkInstance } from 'chalk';
@@ -55,7 +55,7 @@ interface StdioMcpServer {
 
 type McpServer = ReturnType<typeof createShannonHelperServer> | StdioMcpServer;
 
-// Configures MCP servers for agent execution, with Docker-specific Chromium handling
+// 为智能体执行配置 MCP 服务器，包含 Docker 特定的 Chromium 处理
 function buildMcpServers(
   sourceDir: string,
   agentName: string | null
@@ -71,11 +71,11 @@ function buildMcpServers(
     const playwrightMcpName = MCP_AGENT_MAPPING[promptName as keyof typeof MCP_AGENT_MAPPING] || null;
 
     if (playwrightMcpName) {
-      console.log(chalk.gray(`    Assigned ${agentName} -> ${playwrightMcpName}`));
+      console.log(chalk.gray(`    已分配 ${agentName} -> ${playwrightMcpName}`));
 
       const userDataDir = `/tmp/${playwrightMcpName}`;
 
-      // Docker uses system Chromium; local dev uses Playwright's bundled browsers
+      // Docker 使用系统 Chromium；本地开发使用 Playwright 的捆绑浏览器
       const isDocker = process.env.SHANNON_DOCKER === 'true';
 
       const mcpArgs: string[] = [
@@ -84,7 +84,7 @@ function buildMcpServers(
         '--user-data-dir', userDataDir,
       ];
 
-      // Docker: Use system Chromium; Local: Use Playwright's bundled browsers
+      // Docker: 使用系统 Chromium；本地: 使用 Playwright 的捆绑浏览器
       if (isDocker) {
         mcpArgs.push('--executable-path', '/usr/bin/chromium-browser');
         mcpArgs.push('--browser', 'chromium');
@@ -144,7 +144,7 @@ async function writeErrorLog(
     await fs.appendFile(logPath, JSON.stringify(errorLog) + '\n');
   } catch (logError) {
     const logErrMsg = logError instanceof Error ? logError.message : String(logError);
-    console.log(chalk.gray(`    (Failed to write error log: ${logErrMsg})`));
+    console.log(chalk.gray(`    (无法写入错误日志: ${logErrMsg})`));
   }
 }
 
@@ -153,47 +153,47 @@ export async function validateAgentOutput(
   agentName: string | null,
   sourceDir: string
 ): Promise<boolean> {
-  console.log(chalk.blue(`    Validating ${agentName} agent output`));
+  console.log(chalk.blue(`    验证 ${agentName} 智能体输出`));
 
   try {
-    // Check if agent completed successfully
+    // 检查智能体是否成功完成
     if (!result.success || !result.result) {
-      console.log(chalk.red(`    Validation failed: Agent execution was unsuccessful`));
+      console.log(chalk.red(`    验证失败: 智能体执行未成功`));
       return false;
     }
 
-    // Get validator function for this agent
+    // 获取此智能体的验证函数
     const validator = agentName ? AGENT_VALIDATORS[agentName as keyof typeof AGENT_VALIDATORS] : undefined;
 
     if (!validator) {
-      console.log(chalk.yellow(`    No validator found for agent "${agentName}" - assuming success`));
-      console.log(chalk.green(`    Validation passed: Unknown agent with successful result`));
+      console.log(chalk.yellow(`    未找到智能体 "${agentName}" 的验证器 - 假设成功`));
+      console.log(chalk.green(`    验证通过: 未知智能体且结果成功`));
       return true;
     }
 
-    console.log(chalk.blue(`    Using validator for agent: ${agentName}`));
-    console.log(chalk.blue(`    Source directory: ${sourceDir}`));
+    console.log(chalk.blue(`    使用智能体验证器: ${agentName}`));
+    console.log(chalk.blue(`    源目录: ${sourceDir}`));
 
-    // Apply validation function
+    // 应用验证函数
     const validationResult = await validator(sourceDir);
 
     if (validationResult) {
-      console.log(chalk.green(`    Validation passed: Required files/structure present`));
+      console.log(chalk.green(`    验证通过: 存在所需文件/结构`));
     } else {
-      console.log(chalk.red(`    Validation failed: Missing required deliverable files`));
+      console.log(chalk.red(`    验证失败: 缺少所需的可交付文件`));
     }
 
     return validationResult;
 
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error);
-    console.log(chalk.red(`    Validation failed with error: ${errMsg}`));
+    console.log(chalk.red(`    验证失败，错误: ${errMsg}`));
     return false;
   }
 }
 
-// Low-level SDK execution. Handles message streaming, progress, and audit logging.
-// Exported for Temporal activities to call single-attempt execution.
+// 低级 SDK 执行。处理消息流、进度和审计日志。
+// 导出供 Temporal 活动调用单次尝试执行。
 export async function runClaudePrompt(
   prompt: string,
   sourceDir: string,
@@ -215,11 +215,11 @@ export async function runClaudePrompt(
   );
   const auditLogger = createAuditLogger(auditSession);
 
-  console.log(chalk.blue(`  Running Claude Code: ${description}...`));
+  console.log(chalk.blue(`  运行 Claude 代码: ${description}...`));
 
   const mcpServers = buildMcpServers(sourceDir, agentName);
 
-  // Build env vars to pass to SDK subprocesses
+  // 构建传递给 SDK 子进程的环境变量
   const sdkEnv: Record<string, string> = {};
   if (process.env.ANTHROPIC_API_KEY) {
     sdkEnv.ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
@@ -239,7 +239,7 @@ export async function runClaudePrompt(
   };
 
   if (!execContext.useCleanOutput) {
-    console.log(chalk.gray(`    SDK Options: maxTurns=${options.maxTurns}, cwd=${sourceDir}, permissions=BYPASS`));
+    console.log(chalk.gray(`    SDK 选项: maxTurns=${options.maxTurns}, cwd=${sourceDir}, permissions=BYPASS`));
   }
 
   let turnCount = 0;
@@ -263,10 +263,10 @@ export async function runClaudePrompt(
     totalCost = messageLoopResult.cost;
     const model = messageLoopResult.model;
 
-    // === SPENDING CAP SAFEGUARD ===
-    // Defense-in-depth: Detect spending cap that slipped through detectApiError().
-    // When spending cap is hit, Claude returns a short message with $0 cost.
-    // Legitimate agent work NEVER costs $0 with only 1-2 turns.
+    // === 支出上限保护 ===
+    // 纵深防御: 检测通过 detectApiError() 漏掉的支出上限。
+    // 当达到支出上限时，Claude 返回短消息，成本为 $0。
+    // 合法的智能体工作绝不会在只有 1-2 轮的情况下成本为 $0。
     if (turnCount <= 2 && totalCost === 0) {
       const resultLower = (result || '').toLowerCase();
       const BILLING_KEYWORDS = ['spending', 'cap', 'limit', 'budget', 'resets'];
@@ -276,9 +276,9 @@ export async function runClaudePrompt(
 
       if (looksLikeBillingError) {
         throw new PentestError(
-          `Spending cap likely reached (turns=${turnCount}, cost=$0): ${result?.slice(0, 100)}`,
+          `可能达到支出上限 (turns=${turnCount}, cost=$0): ${result?.slice(0, 100)}`,
           'billing',
-          true // Retryable - Temporal will use 5-30 min backoff
+          true // 可重试 - Temporal 将使用 5-30 分钟的退避
         );
       }
     }
@@ -287,7 +287,7 @@ export async function runClaudePrompt(
     timingResults.agents[execContext.agentKey] = duration;
 
     if (apiErrorDetected) {
-      console.log(chalk.yellow(`  API Error detected in ${description} - will validate deliverables before failing`));
+      console.log(chalk.yellow(`  在 ${description} 中检测到 API 错误 - 在失败前将验证可交付成果`));
     }
 
     progress.finish(formatCompletionMessage(execContext, description, turnCount, duration));
@@ -360,14 +360,14 @@ async function processMessageStream(
   let lastHeartbeat = Date.now();
 
   for await (const message of query({ prompt: fullPrompt, options })) {
-    // Heartbeat logging when loader is disabled
+    // 禁用加载器时的心跳日志
     const now = Date.now();
     if (global.SHANNON_DISABLE_LOADER && now - lastHeartbeat > HEARTBEAT_INTERVAL) {
-      console.log(chalk.blue(`    [${Math.floor((now - timer.startTime) / 1000)}s] ${description} running... (Turn ${turnCount})`));
+      console.log(chalk.blue(`    [${Math.floor((now - timer.startTime) / 1000)}秒] ${description} 运行中... (第 ${turnCount} 轮)`));
       lastHeartbeat = now;
     }
 
-    // Increment turn count for assistant messages
+    // 为助手消息增加轮数
     if (message.type === 'assistant') {
       turnCount++;
     }
@@ -392,7 +392,7 @@ async function processMessageStream(
       if (dispatchResult.apiErrorDetected) {
         apiErrorDetected = true;
       }
-      // Capture model from SystemInitMessage, but override with router model if applicable
+      // 从 SystemInitMessage 捕获模型，但如果适用则使用路由器模型覆盖
       if (dispatchResult.model) {
         model = getActualModelName(dispatchResult.model);
       }
@@ -402,7 +402,7 @@ async function processMessageStream(
   return { turnCount, result, apiErrorDetected, cost, model };
 }
 
-// Main entry point for agent execution. Handles retries, git checkpoints, and validation.
+// 智能体执行的主入口点。处理重试、Git 检查点和验证。
 export async function runClaudePromptWithRetry(
   prompt: string,
   sourceDir: string,
@@ -417,7 +417,7 @@ export async function runClaudePromptWithRetry(
   let lastError: Error | undefined;
   let retryContext = context;
 
-  console.log(chalk.cyan(`Starting ${description} with ${maxRetries} max attempts`));
+  console.log(chalk.cyan(`开始 ${description}，最多尝试 ${maxRetries} 次`));
 
   let auditSession: AuditSession | null = null;
   if (sessionMetadata && agentName) {
@@ -444,7 +444,7 @@ export async function runClaudePromptWithRetry(
 
         if (validationPassed) {
           if (result.apiErrorDetected) {
-            console.log(chalk.yellow(`Validation: Ready for exploitation despite API error warnings`));
+            console.log(chalk.yellow(`验证: 尽管有 API 错误警告，但已准备好进行利用`));
           }
 
           if (auditSession && agentName) {
@@ -468,11 +468,11 @@ export async function runClaudePromptWithRetry(
           }
 
           await commitGitSuccess(sourceDir, description);
-          console.log(chalk.green.bold(`${description} completed successfully on attempt ${attempt}/${maxRetries}`));
+          console.log(chalk.green.bold(`${description} 在第 ${attempt}/${maxRetries} 次尝试时成功完成`));
           return result;
-        // Validation failure is retryable - agent might succeed on retry with cleaner workspace
+        // 验证失败是可重试的 - 智能体可能在重试时使用更干净的工作区成功
         } else {
-          console.log(chalk.yellow(`${description} completed but output validation failed`));
+          console.log(chalk.yellow(`${description} 完成但输出验证失败`));
 
           if (auditSession && agentName) {
             await auditSession.endAgent(agentName, {
@@ -480,24 +480,24 @@ export async function runClaudePromptWithRetry(
               duration_ms: result.duration,
               cost_usd: result.partialCost || result.cost || 0,
               success: false,
-              error: 'Output validation failed',
+              error: '输出验证失败',
               isFinalAttempt: attempt === maxRetries
             });
           }
 
           if (result.apiErrorDetected) {
-            console.log(chalk.yellow(`API Error detected with validation failure - treating as retryable`));
-            lastError = new Error('API Error: terminated with validation failure');
+            console.log(chalk.yellow(`检测到 API 错误且验证失败 - 视为可重试`));
+            lastError = new Error('API 错误: 因验证失败而终止');
           } else {
-            lastError = new Error('Output validation failed');
+            lastError = new Error('输出验证失败');
           }
 
           if (attempt < maxRetries) {
-            await rollbackGitWorkspace(sourceDir, 'validation failure');
+            await rollbackGitWorkspace(sourceDir, '验证失败');
             continue;
           } else {
             throw new PentestError(
-              `Agent ${description} failed output validation after ${maxRetries} attempts. Required deliverable files were not created.`,
+              `智能体 ${description} 在 ${maxRetries} 次尝试后失败了输出验证。未创建所需的可交付文件。`,
               'validation',
               false,
               { description, sourceDir, attemptsExhausted: maxRetries }
@@ -522,29 +522,29 @@ export async function runClaudePromptWithRetry(
       }
 
       if (!isRetryableError(err)) {
-        console.log(chalk.red(`${description} failed with non-retryable error: ${err.message}`));
-        await rollbackGitWorkspace(sourceDir, 'non-retryable error cleanup');
+        console.log(chalk.red(`${description} 因不可重试错误而失败: ${err.message}`));
+        await rollbackGitWorkspace(sourceDir, '不可重试错误清理');
         throw err;
       }
 
       if (attempt < maxRetries) {
-        await rollbackGitWorkspace(sourceDir, 'retryable error cleanup');
+        await rollbackGitWorkspace(sourceDir, '可重试错误清理');
 
         const delay = getRetryDelay(err, attempt);
         const delaySeconds = (delay / 1000).toFixed(1);
-        console.log(chalk.yellow(`${description} failed (attempt ${attempt}/${maxRetries})`));
-        console.log(chalk.gray(`    Error: ${err.message}`));
-        console.log(chalk.gray(`    Workspace rolled back, retrying in ${delaySeconds}s...`));
+        console.log(chalk.yellow(`${description} 失败 (尝试 ${attempt}/${maxRetries})`));
+        console.log(chalk.gray(`    错误: ${err.message}`));
+        console.log(chalk.gray(`    工作区已回滚，${delaySeconds}秒后重试...`));
 
         if (err.partialResults) {
-          retryContext = `${context}\n\nPrevious partial results: ${JSON.stringify(err.partialResults)}`;
+          retryContext = `${context}\n\n之前的部分结果: ${JSON.stringify(err.partialResults)}`;
         }
 
         await new Promise(resolve => setTimeout(resolve, delay));
       } else {
-        await rollbackGitWorkspace(sourceDir, 'final failure cleanup');
-        console.log(chalk.red(`${description} failed after ${maxRetries} attempts`));
-        console.log(chalk.red(`    Final error: ${err.message}`));
+        await rollbackGitWorkspace(sourceDir, '最终失败清理');
+        console.log(chalk.red(`${description} 在 ${maxRetries} 次尝试后失败`));
+        console.log(chalk.red(`    最终错误: ${err.message}`));
       }
     }
   }

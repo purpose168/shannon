@@ -1,37 +1,37 @@
-## 🧪 Pipeline Testing: MCP Isolation Test for XSS Agent
+## 🧪 流水线测试：XSS智能体的MCP隔离测试
 
-**MCP Server Assignment:** Using `{{MCP_SERVER}}` for browser automation testing.
+**MCP服务器分配：** 使用 `{{MCP_SERVER}}` 进行浏览器自动化测试。
 
-### Step 1: Test Browser Isolation
-1. Navigate to the test site using your assigned MCP server:
+### 步骤1：测试浏览器隔离
+1. 使用分配的MCP服务器导航到测试站点：
    ```
    {{MCP_SERVER}}__browser_navigate to https://example.org
    ```
 
-2. Take a screenshot to prove isolation:
+2. 拍摄屏幕截图以证明隔离：
    ```
    {{MCP_SERVER}}__browser_take_screenshot with filename "xss-agent-test.png"
    ```
 
-3. Log the test results:
+3. 记录测试结果：
    ```
    console.log("🟡 XSS AGENT - MCP Server: {{MCP_SERVER}} - Successfully navigated to example.org")
    ```
 
-### Step 2: Create Required Deliverables
-Use the save_deliverable MCP tool to create both deliverables:
+### 步骤2：创建所需交付物
+使用save_deliverable MCP工具创建两个交付物：
 
-**1. Analysis Report:**
-Use `save_deliverable` MCP tool with:
+**1. 分析报告：**
+使用 `save_deliverable` MCP工具，参数如下：
 - `deliverable_type: "XSS_ANALYSIS"`
 - `content: "# XSS Analysis Complete (Pipeline Test)\n\n**MCP Server Used:** {{MCP_SERVER}}\n**Test Site:** https://example.org\n**Screenshot:** xss-agent-test.png\n**Status:** Browser isolation test successful"`
 
-**2. Exploitation Queue:**
-Use `save_deliverable` MCP tool with:
+**2. 利用队列：**
+使用 `save_deliverable` MCP工具，参数如下：
 - `deliverable_type: "XSS_QUEUE"`
 - `content: {"vulnerabilities": [{"ID": "XSS-VULN-01", "verdict": "vulnerable", "confidence": "high", "notes": "Test XSS vulnerability for pipeline validation (MCP: {{MCP_SERVER}})", "vulnerability_type": "Reflected", "source": "search parameter", "sink_function": "template.render at search.js:25", "render_context": "HTML_BODY", "mismatch_reason": "User input rendered without HTML encoding", "witness_payload": "<script>alert(1)</script>"}]}`
 
-These tools will automatically create the correct files in `deliverables/`.
+这些工具将自动在 `deliverables/` 中创建正确的文件。
 
-### Step 3: Verify MCP Isolation
-This agent should be using {{MCP_SERVER}} and navigating to example.org independently of other parallel agents.
+### 步骤3：验证MCP隔离
+此智能体应使用 {{MCP_SERVER}} 并独立于其他并行智能体导航到 example.org。

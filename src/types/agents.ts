@@ -5,7 +5,7 @@
 // as published by the Free Software Foundation.
 
 /**
- * Agent type definitions
+ * 智能体类型定义
  */
 
 export type AgentName =
@@ -61,7 +61,7 @@ export interface AgentDefinition {
 }
 
 /**
- * Maps an agent name to its corresponding prompt file name.
+ * 将智能体名称映射到其对应的提示文件名。
  */
 export function getPromptNameForAgent(agentName: AgentName): PromptName {
   const mappings: Record<AgentName, PromptName> = {

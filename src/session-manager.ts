@@ -7,14 +7,14 @@
 import { path } from 'zx';
 import type { AgentName } from './types/index.js';
 
-// Agent definition interface
+// 智能体定义接口
 export interface AgentDefinition {
   name: AgentName;
   displayName: string;
   prerequisites: AgentName[];
 }
 
-// Agent definitions according to PRD
+// 根据 PRD 的智能体定义
 export const AGENTS: Readonly<Record<AgentName, AgentDefinition>> = Object.freeze({
   'pre-recon': {
     name: 'pre-recon',
@@ -83,7 +83,7 @@ export const AGENTS: Readonly<Record<AgentName, AgentDefinition>> = Object.freez
   }
 });
 
-// Agent execution order
+// 智能体执行顺序
 export const AGENT_ORDER: readonly AgentName[] = Object.freeze([
   'pre-recon',
   'recon',
@@ -100,16 +100,16 @@ export const AGENT_ORDER: readonly AgentName[] = Object.freeze([
   'report'
 ] as const);
 
-// Parallel execution groups
+// 并行执行组
 export const getParallelGroups = (): Readonly<{ vuln: AgentName[]; exploit: AgentName[] }> => Object.freeze({
   vuln: ['injection-vuln', 'xss-vuln', 'auth-vuln', 'ssrf-vuln', 'authz-vuln'],
   exploit: ['injection-exploit', 'xss-exploit', 'auth-exploit', 'ssrf-exploit', 'authz-exploit']
 });
 
-// Phase names for metrics aggregation
+// 指标聚合的阶段名称
 export type PhaseName = 'pre-recon' | 'recon' | 'vulnerability-analysis' | 'exploitation' | 'reporting';
 
-// Map agents to their corresponding phases (single source of truth)
+// 将智能体映射到相应的阶段（单一事实来源）
 export const AGENT_PHASE_MAP: Readonly<Record<AgentName, PhaseName>> = Object.freeze({
   'pre-recon': 'pre-recon',
   'recon': 'recon',
@@ -125,5 +125,3 @@ export const AGENT_PHASE_MAP: Readonly<Record<AgentName, PhaseName>> = Object.fr
   'ssrf-exploit': 'exploitation',
   'report': 'reporting',
 });
-
-

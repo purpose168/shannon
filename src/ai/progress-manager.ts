@@ -4,7 +4,7 @@
 // it under the terms of the GNU Affero General Public License version 3
 // as published by the Free Software Foundation.
 
-// Null Object pattern for progress indicator - callers never check for null
+// 进度指示器的空对象模式 - 调用者永远不需要检查 null
 
 import { ProgressIndicator } from '../progress-indicator.js';
 import { extractAgentType } from '../utils/formatting.js';
@@ -49,7 +49,7 @@ class RealProgressManager implements ProgressManager {
   }
 }
 
-/** Null Object implementation - all methods are safe no-ops */
+/** 空对象实现 - 所有方法都是安全的空操作 */
 class NullProgressManager implements ProgressManager {
   start(): void {}
 
@@ -62,7 +62,7 @@ class NullProgressManager implements ProgressManager {
   }
 }
 
-// Returns no-op when disabled
+// 当禁用时返回空操作
 export function createProgressManager(
   context: ProgressContext,
   disableLoader: boolean
@@ -72,5 +72,5 @@ export function createProgressManager(
   }
 
   const agentType = extractAgentType(context.description);
-  return new RealProgressManager(`Running ${agentType}...`);
+  return new RealProgressManager(`运行 ${agentType}...`);
 }

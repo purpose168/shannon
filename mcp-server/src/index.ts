@@ -5,15 +5,14 @@
 // as published by the Free Software Foundation.
 
 /**
- * Shannon Helper MCP Server
+ * Shannon Helper MCP 服务器
  *
- * In-process MCP server providing save_deliverable and generate_totp tools
- * for Shannon penetration testing agents.
+ * 进程内 MCP 服务器，为 Shannon 渗透测试智能体提供 save_deliverable 和 generate_totp 工具。
  *
- * Replaces bash script invocations with native tool access.
+ * 使用原生工具访问替换 bash 脚本调用。
  *
- * Uses factory pattern to create tools with targetDir captured in closure,
- * ensuring thread-safety when multiple workflows run in parallel.
+ * 使用工厂模式创建工具，将 targetDir 捕获在闭包中，
+ * 确保多个工作流并行运行时的线程安全性。
  */
 
 import { createSdkMcpServer } from '@anthropic-ai/claude-agent-sdk';
@@ -21,14 +20,13 @@ import { createSaveDeliverableTool } from './tools/save-deliverable.js';
 import { generateTotpTool } from './tools/generate-totp.js';
 
 /**
- * Create Shannon Helper MCP Server with target directory context
+ * 创建带有目标目录上下文的 Shannon Helper MCP 服务器
  *
- * Each workflow should create its own MCP server instance with its targetDir.
- * The save_deliverable tool captures targetDir in a closure, preventing race
- * conditions when multiple workflows run in parallel.
+ * 每个工作流都应使用其 targetDir 创建自己的 MCP 服务器实例。
+ * save_deliverable 工具将 targetDir 捕获在闭包中，防止多个工作流并行运行时出现竞争条件。
  */
 export function createShannonHelperServer(targetDir: string): ReturnType<typeof createSdkMcpServer> {
-  // Create save_deliverable tool with targetDir in closure (no global variable)
+  // 创建带有 targetDir 的 save_deliverable 工具（无全局变量）
   const saveDeliverableTool = createSaveDeliverableTool(targetDir);
 
   return createSdkMcpServer({
@@ -38,9 +36,9 @@ export function createShannonHelperServer(targetDir: string): ReturnType<typeof 
   });
 }
 
-// Export factory for direct usage if needed
+// 导出工厂以供直接使用（如需）
 export { createSaveDeliverableTool } from './tools/save-deliverable.js';
 export { generateTotpTool } from './tools/generate-totp.js';
 
-// Export types for external use
+// 导出类型以供外部使用
 export * from './types/index.js';

@@ -11,7 +11,7 @@ type ToolName = 'nmap' | 'subfinder' | 'whatweb' | 'schemathesis';
 
 export type ToolAvailability = Record<ToolName, boolean>;
 
-// Check availability of required tools
+// 检查所需工具的可用性
 export const checkToolAvailability = async (): Promise<ToolAvailability> => {
   const tools: ToolName[] = ['nmap', 'subfinder', 'whatweb', 'schemathesis'];
   const availability: ToolAvailability = {
@@ -37,7 +37,7 @@ export const checkToolAvailability = async (): Promise<ToolAvailability> => {
   return availability;
 };
 
-// Handle missing tools with user-friendly messages
+// 处理缺少的工具，提供用户友好的消息
 export const handleMissingTools = (toolAvailability: ToolAvailability): ToolName[] => {
   const missing = (Object.entries(toolAvailability) as Array<[ToolName, boolean]>)
     .filter(([, available]) => !available)
@@ -47,7 +47,7 @@ export const handleMissingTools = (toolAvailability: ToolAvailability): ToolName
     console.log(chalk.yellow(`\n⚠️ Missing tools: ${missing.join(', ')}`));
     console.log(chalk.gray('Some functionality will be limited. Install missing tools for full capability.'));
 
-    // Provide installation hints
+    // 提供安装提示
     const installHints: Record<ToolName, string> = {
       'nmap': 'brew install nmap (macOS) or apt install nmap (Ubuntu)',
       'subfinder': 'go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest',

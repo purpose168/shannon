@@ -1,82 +1,82 @@
 <!-- BEGIN:COMMON -->
-**IF you are not already logged in when you open playwright, these are the login instructions** 
-**NOTE: playwright automatically saves sessions so ensure you are not already logged in before executing these steps**
+**如果你在打开playwright时还没有登录，以下是登录说明**
+**注意：playwright会自动保存会话，因此在执行这些步骤之前确保你尚未登录**
 
 <user_provided_configuration>
 {{user_instructions}}
 </user_provided_configuration>
 
 <authentication_execution>
-Execute the login flow based on the login_type specified in the configuration:
+根据配置中指定的login_type执行登录流程：
 <!-- END:COMMON -->
 
 <!-- BEGIN:FORM -->
-**Form-based authentication:**
-1. Navigate to the specified login_url using Playwright
-2. Execute each step in the login_flow array sequentially:
-   - Replace $username with the provided username credential
-   - Replace $password with the provided password credential
-   - Replace $totp with generated code using the `generate_totp` MCP tool with the TOTP secret: {{totp_secret}}
-   - Perform the specified actions (type text, click buttons, etc.)
-3. Wait for page navigation/loading to complete after each critical step
-4. Handle any consent dialogs or "Continue as [user]" prompts by clicking appropriate buttons
+**基于表单的认证：**
+1. 使用Playwright导航到指定的login_url
+2. 按顺序执行login_flow数组中的每个步骤：
+   - 将$username替换为提供的用户名凭证
+   - 将$password替换为提供的密码凭证
+   - 将$totp替换为使用`generate_totp` MCP工具生成的代码，使用TOTP密钥：{{totp_secret}}
+   - 执行指定的操作（输入文本，点击按钮等）
+3. 在每个关键步骤后等待页面导航/加载完成
+4. 通过点击适当的按钮处理任何同意对话框或"以[用户]身份继续"提示
 <!-- END:FORM -->
 
 <!-- BEGIN:SSO -->
-**SSO authentication:**
-1. Navigate to the specified login_url using Playwright
-2. Execute each step in the login_flow array sequentially:
-   - Click the SSO provider button (e.g., "Sign in with Google")
-   - Handle account selection if prompted
-   - Replace $username with the provided username credential in provider login
-   - Replace $password with the provided password credential in provider login
-   - Replace $totp with generated code using the `generate_totp` MCP tool with the TOTP secret: {{totp_secret}}
-   - Handle OAuth consent screens by clicking "Allow", "Accept", or "Continue", and hitting check boxes as needed.
-   - Handle "Continue as [username]" dialogs by clicking "Continue"
-3. Wait for OAuth callback and final redirect to complete
-4. Ensure all consent and authorization steps are explicitly handled
+**SSO认证：**
+1. 使用Playwright导航到指定的login_url
+2. 按顺序执行login_flow数组中的每个步骤：
+   - 点击SSO提供商按钮（例如，"使用Google登录"）
+   - 如果提示，处理账户选择
+   - 在提供商登录中使用提供的用户名凭证替换$username
+   - 在提供商登录中使用提供的密码凭证替换$password
+   - 将$totp替换为使用`generate_totp` MCP工具生成的代码，使用TOTP密钥：{{totp_secret}}
+   - 通过点击"允许"、"接受"或"继续"来处理OAuth同意屏幕，并根据需要勾选复选框
+   - 通过点击"继续"处理"以[用户名]身份继续"对话框
+3. 等待OAuth回调和最终重定向完成
+4. 确保所有同意和授权步骤都得到明确处理
 <!-- END:SSO -->
 
 <!-- BEGIN:VERIFICATION -->
 </authentication_execution>
 
 <success_verification>
-After completing the login flow, verify successful authentication:
+完成登录流程后，验证成功认证：
 
-1. **Check Success Condition:**
-   - IF success_condition.type == "url_contains": Verify current URL contains the specified value
-   - IF success_condition.type == "url_equals_exactly": Verify current URL exactly matches the specified value
-   - IF success_condition.type == "element_present": Verify the specified element exists on the page
+1. **检查成功条件：**
+   - 如果 success_condition.type == "url_contains"：验证当前URL包含指定的值
+   - 如果 success_condition.type == "url_equals_exactly"：验证当前URL与指定的值完全匹配
+   - 如果 success_condition.type == "element_present"：验证页面上存在指定的元素
 
-2. **Confirm Authentication State:**
-   - Page should NOT be on a login screen
-   - Page should NOT show authentication errors
-   - Page should display authenticated user content/interface
+2. **确认认证状态：**
+   - 页面不应在登录屏幕上
+   - 页面不应显示认证错误
+   - 页面应显示已认证用户内容/界面
 
-3. **Verification Success:** 
-   - Login is successful - proceed with your primary task
-   - You now have an authenticated browser session to work with
+3. **验证成功：**
+   - 登录成功 - 继续执行你的主要任务
+   - 你现在有一个已认证的浏览器会话可以使用
 
-4. **Verification Failure:**
-   - Retry the entire login flow ONCE with 5-second wait between attempts
-   - If second attempt fails, report authentication failure and stop task execution
-   - Do NOT proceed with authenticated actions if login verification fails
+4. **验证失败：**
+   - 重试整个登录流程一次，尝试之间等待5秒
+   - 如果第二次尝试失败，报告认证失败并停止任务执行
+   - 如果登录验证失败，不要继续执行已认证的操作
 
 </success_verification>
 
 <error_handling>
-If login execution fails:
-1. Log the specific step that failed and any error messages
-2. Check for unexpected dialogs, pop-ups, or consent screens that may need handling
-3. Retry the complete login flow once after a 5-second delay
-4. If retry fails, report login failure and halt task execution
-5. Do NOT attempt to proceed with the primary task if authentication is unsuccessful
+如果登录执行失败：
+1. 记录失败的具体步骤和任何错误消息
+2. 检查可能需要处理的意外对话框、弹出窗口或同意屏幕
+3. 在5秒延迟后重试完整的登录流程一次
+4. 如果重试失败，报告登录失败并停止任务执行
+5. 如果认证不成功，不要尝试继续执行主要任务
 
-Common issues to watch for:
-- OAuth consent screens requiring explicit "Allow" or "Accept" clicks
-- "Continue as [user]" or account selection prompts
-- TOTP/2FA code timing issues requiring regeneration
-- Page loading delays requiring explicit waits
-- Redirect handling for multi-step authentication flows
+需要注意的常见问题：
+- 需要明确点击"允许"或"接受"的OAuth同意屏幕
+- "以[用户]身份继续"或账户选择提示
+- 需要重新生成的TOTP/2FA代码计时问题
+- 需要明确等待的页面加载延迟
+- 多步认证流程的重定向处理
 </error_handling>
 <!-- END:VERIFICATION -->

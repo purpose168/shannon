@@ -5,11 +5,11 @@
 // as published by the Free Software Foundation.
 
 /**
- * generate_totp MCP Tool
+ * generate_totp MCP 工具
  *
- * Generates 6-digit TOTP codes for authentication.
- * Replaces tools/generate-totp-standalone.mjs bash script.
- * Based on RFC 6238 (TOTP) and RFC 4226 (HOTP).
+ * 生成 6 位 TOTP 验证码用于认证。
+ * 替代 tools/generate-totp-standalone.mjs bash 脚本。
+ * 基于 RFC 6238 (TOTP) 和 RFC 4226 (HOTP)。
  */
 
 import { tool } from '@anthropic-ai/claude-agent-sdk';
@@ -20,35 +20,35 @@ import { base32Decode, validateTotpSecret } from '../validation/totp-validator.j
 import { createCryptoError, createGenericError } from '../utils/error-formatter.js';
 
 /**
- * Input schema for generate_totp tool
+ * generate_totp 工具的输入模式
  */
 export const GenerateTotpInputSchema = z.object({
   secret: z
     .string()
     .min(1)
-    .regex(/^[A-Z2-7]+$/i, 'Must be base32-encoded')
-    .describe('Base32-encoded TOTP secret'),
+    .regex(/^[A-Z2-7]+$/i, '必须是 base32 编码')
+    .describe('Base32 编码的 TOTP 密钥'),
 });
 
 export type GenerateTotpInput = z.infer<typeof GenerateTotpInputSchema>;
 
 /**
- * Generate HOTP code (RFC 4226)
- * Ported from generate-totp-standalone.mjs (lines 74-99)
+ * 生成 HOTP 代码 (RFC 4226)
+ * 从 generate-totp-standalone.mjs（第 74-99 行）移植而来
  */
 function generateHOTP(secret: string, counter: number, digits: number = 6): string {
   const key = base32Decode(secret);
 
-  // Convert counter to 8-byte buffer (big-endian)
+  // 将计数器转换为 8 字节缓冲区（大端序）
   const counterBuffer = Buffer.alloc(8);
   counterBuffer.writeBigUInt64BE(BigInt(counter));
 
-  // Generate HMAC-SHA1
+  // 生成 HMAC-SHA1
   const hmac = createHmac('sha1', key);
   hmac.update(counterBuffer);
   const hash = hmac.digest();
 
-  // Dynamic truncation
+  // 动态截断
   const offset = hash[hash.length - 1]! & 0x0f;
   const code =
     ((hash[offset]! & 0x7f) << 24) |
@@ -56,14 +56,14 @@ function generateHOTP(secret: string, counter: number, digits: number = 6): stri
     ((hash[offset + 2]! & 0xff) << 8) |
     (hash[offset + 3]! & 0xff);
 
-  // Generate digits
+  // 生成数字
   const otp = (code % Math.pow(10, digits)).toString().padStart(digits, '0');
   return otp;
 }
 
 /**
- * Generate TOTP code (RFC 6238)
- * Ported from generate-totp-standalone.mjs (lines 101-106)
+ * 生成 TOTP 代码 (RFC 6238)
+ * 从 generate-totp-standalone.mjs（第 101-106 行）移植而来
  */
 function generateTOTP(secret: string, timeStep: number = 30, digits: number = 6): string {
   const currentTime = Math.floor(Date.now() / 1000);
@@ -72,7 +72,7 @@ function generateTOTP(secret: string, timeStep: number = 30, digits: number = 6)
 }
 
 /**
- * Get seconds until TOTP code expires
+ * 获取 TOTP 代码过期前的秒数
  */
 function getSecondsUntilExpiration(timeStep: number = 30): number {
   const currentTime = Math.floor(Date.now() / 1000);
@@ -80,24 +80,24 @@ function getSecondsUntilExpiration(timeStep: number = 30): number {
 }
 
 /**
- * generate_totp tool implementation
+ * generate_totp 工具实现
  */
 export async function generateTotp(args: GenerateTotpInput): Promise<ToolResult> {
   try {
     const { secret } = args;
 
-    // Validate secret (throws on error)
+    // 验证密钥（出错时抛出异常）
     validateTotpSecret(secret);
 
-    // Generate TOTP code
+    // 生成 TOTP 代码
     const totpCode = generateTOTP(secret);
     const expiresIn = getSecondsUntilExpiration();
     const timestamp = new Date().toISOString();
 
-    // Success response
+    // 成功响应
     const successResponse: GenerateTotpResponse = {
       status: 'success',
-      message: 'TOTP code generated successfully',
+      message: 'TOTP 代码生成成功',
       totpCode,
       timestamp,
       expiresIn,
@@ -105,24 +105,24 @@ export async function generateTotp(args: GenerateTotpInput): Promise<ToolResult>
 
     return createToolResult(successResponse);
   } catch (error) {
-    // Check if it's a validation/crypto error
+    // 检查是否为验证/加密错误
     if (error instanceof Error && (error.message.includes('base32') || error.message.includes('TOTP'))) {
       const errorResponse = createCryptoError(error.message, false);
       return createToolResult(errorResponse);
     }
 
-    // Generic error
+    // 通用错误
     const errorResponse = createGenericError(error, false);
     return createToolResult(errorResponse);
   }
 }
 
 /**
- * Tool definition for MCP server - created using SDK's tool() function
+ * MCP 服务器的工具定义 - 使用 SDK 的 tool() 函数创建
  */
 export const generateTotpTool = tool(
   'generate_totp',
-  'Generates 6-digit TOTP code for authentication. Secret must be base32-encoded.',
+  '生成 6 位 TOTP 验证码用于认证。密钥必须是 base32 编码。',
   GenerateTotpInputSchema.shape,
   generateTotp
 );

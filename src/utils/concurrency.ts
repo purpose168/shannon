@@ -5,50 +5,48 @@
 // as published by the Free Software Foundation.
 
 /**
- * Concurrency Control Utilities
+ * 并发控制工具
  *
- * Provides mutex implementation for preventing race conditions during
- * concurrent session operations.
+ * 提供互斥锁实现，用于防止并发会话操作期间的竞争条件。
  */
 
 type UnlockFunction = () => void;
 
 /**
- * SessionMutex - Promise-based mutex for session file operations
+ * SessionMutex - 基于Promise的会话文件操作互斥锁
  *
- * Prevents race conditions when multiple agents or operations attempt to
- * modify the same session data simultaneously. This is particularly important
- * during parallel execution of vulnerability analysis and exploitation phases.
+ * 当多个智能体或操作尝试同时修改相同的会话数据时，防止竞争条件。
+ * 这在漏洞分析和利用阶段的并行执行期间尤为重要。
  *
- * Usage:
+ * 使用方法：
  * ```ts
  * const mutex = new SessionMutex();
  * const unlock = await mutex.lock(sessionId);
  * try {
- *   // Critical section - modify session data
+ *   // 临界区 - 修改会话数据
  * } finally {
- *   unlock(); // Always release the lock
+ *   unlock(); // 始终释放锁
  * }
  * ```
  */
-// Promise-based mutex with queue semantics - safe for parallel agents on same session
+// 基于Promise的互斥锁，带有队列语义 - 对同一会话上的并行智能体安全
 export class SessionMutex {
-  // Map of sessionId -> Promise (represents active lock)
+  // sessionId -> Promise 的映射（代表活动锁）
   private locks: Map<string, Promise<void>> = new Map();
 
-  // Wait for existing lock, then acquire. Queue ensures FIFO ordering.
+  // 等待现有锁，然后获取。队列确保FIFO顺序。
   async lock(sessionId: string): Promise<UnlockFunction> {
     if (this.locks.has(sessionId)) {
-      // Wait for existing lock to be released
+      // 等待现有锁被释放
       await this.locks.get(sessionId);
     }
 
-    // Create new lock promise
+    // 创建新的锁promise
     let resolve: () => void;
     const promise = new Promise<void>((r) => (resolve = r));
     this.locks.set(sessionId, promise);
 
-    // Return unlock function
+    // 返回解锁函数
     return () => {
       this.locks.delete(sessionId);
       resolve!();

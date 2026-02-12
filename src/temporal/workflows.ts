@@ -5,22 +5,22 @@
 // as published by the Free Software Foundation.
 
 /**
- * Temporal workflow for Shannon pentest pipeline.
+ * Shannon 渗透测试管道的 Temporal 工作流。
  *
- * Orchestrates the penetration testing workflow:
- * 1. Pre-Reconnaissance (sequential)
- * 2. Reconnaissance (sequential)
- * 3-4. Vulnerability + Exploitation (5 pipelined pairs in parallel)
- *      Each pair: vuln agent → queue check → conditional exploit
- *      No synchronization barrier - exploits start when their vuln finishes
- * 5. Reporting (sequential)
+ * 编排渗透测试工作流：
+ * 1. 预侦察（顺序）
+ * 2. 侦察（顺序）
+ * 3-4. 漏洞分析 + 利用（5个流水线对并行执行）
+ *      每对：漏洞智能体 → 队列检查 → 条件利用
+ *      无同步障碍 - 利用在其漏洞分析完成后立即开始
+ * 5. 报告生成（顺序）
  *
- * Features:
- * - Queryable state via getProgress
- * - Automatic retry with backoff for transient/billing errors
- * - Non-retryable classification for permanent errors
- * - Audit correlation via workflowId
- * - Graceful failure handling: pipelines continue if one fails
+ * 特性：
+ * - 通过 getProgress 查询状态
+ * - 对临时/计费错误的自动重试和退避
+ * - 对永久错误的不可重试分类
+ * - 通过 workflowId 进行审计关联
+ * - 优雅的故障处理：一个管道失败时其他管道继续
  */
 
 import {
@@ -41,7 +41,7 @@ import {
 } from './shared.js';
 import type { VulnType } from '../queue-validation.js';
 
-// Retry configuration for production (long intervals for billing recovery)
+// 生产环境的重试配置（长时间间隔用于计费恢复）
 const PRODUCTION_RETRY = {
   initialInterval: '5 minutes',
   maximumInterval: '30 minutes',
@@ -58,7 +58,7 @@ const PRODUCTION_RETRY = {
   ],
 };
 
-// Retry configuration for pipeline testing (fast iteration)
+// 管道测试的重试配置（快速迭代）
 const TESTING_RETRY = {
   initialInterval: '10 seconds',
   maximumInterval: '30 seconds',
@@ -67,23 +67,23 @@ const TESTING_RETRY = {
   nonRetryableErrorTypes: PRODUCTION_RETRY.nonRetryableErrorTypes,
 };
 
-// Activity proxy with production retry configuration (default)
+// 带有生产环境重试配置的活动智能体（默认）
 const acts = proxyActivities<typeof activities>({
   startToCloseTimeout: '2 hours',
-  heartbeatTimeout: '60 minutes', // Extended for sub-agent execution (SDK blocks event loop during Task tool calls)
+  heartbeatTimeout: '60 minutes', // 为子智能体执行延长（SDK 在 Task 工具调用期间阻塞事件循环）
   retry: PRODUCTION_RETRY,
 });
 
-// Activity proxy with testing retry configuration (fast)
+// 带有测试重试配置的活动智能体（快速）
 const testActs = proxyActivities<typeof activities>({
   startToCloseTimeout: '30 minutes',
-  heartbeatTimeout: '30 minutes', // Extended for sub-agent execution in testing
+  heartbeatTimeout: '30 minutes', // 为测试中的子智能体执行延长
   retry: TESTING_RETRY,
 });
 
 /**
- * Compute aggregated metrics from the current pipeline state.
- * Called on both success and failure to provide partial metrics.
+ * 从当前管道状态计算聚合指标。
+ * 在成功和失败时都调用以提供部分指标。
  */
 function computeSummary(state: PipelineState): PipelineSummary {
   const metrics = Object.values(state.agentMetrics);
@@ -100,11 +100,11 @@ export async function pentestPipelineWorkflow(
 ): Promise<PipelineState> {
   const { workflowId } = workflowInfo();
 
-  // Select activity proxy based on testing mode
-  // Pipeline testing uses fast retry intervals (10s) for quick iteration
+  // 根据测试模式选择活动智能体
+  // 管道测试使用快速重试间隔（10秒）进行快速迭代
   const a = input.pipelineTestingMode ? testActs : acts;
 
-  // Workflow state (queryable)
+  // 工作流状态（可查询）
   const state: PipelineState = {
     status: 'running',
     currentPhase: null,
@@ -117,16 +117,16 @@ export async function pentestPipelineWorkflow(
     summary: null,
   };
 
-  // Register query handler for real-time progress inspection
+  // 注册用于实时进度检查的查询处理器
   setHandler(getProgress, (): PipelineProgress => ({
     ...state,
     workflowId,
     elapsedMs: Date.now() - state.startTime,
   }));
 
-  // Build ActivityInput with required workflowId for audit correlation
-  // Activities require workflowId (non-optional), PipelineInput has it optional
-  // Use spread to conditionally include optional properties (exactOptionalPropertyTypes)
+  // 构建带有审计关联所需 workflowId 的 ActivityInput
+  // 活动需要 workflowId（非可选），PipelineInput 使其可选
+  // 使用扩展语法有条件地包含可选属性（exactOptionalPropertyTypes）
   const activityInput: ActivityInput = {
     webUrl: input.webUrl,
     repoPath: input.repoPath,
@@ -139,7 +139,7 @@ export async function pentestPipelineWorkflow(
   };
 
   try {
-    // === Phase 1: Pre-Reconnaissance ===
+    // === 阶段 1: 预侦察 ===
     state.currentPhase = 'pre-recon';
     state.currentAgent = 'pre-recon';
     await a.logPhaseTransition(activityInput, 'pre-recon', 'start');
@@ -148,7 +148,7 @@ export async function pentestPipelineWorkflow(
     state.completedAgents.push('pre-recon');
     await a.logPhaseTransition(activityInput, 'pre-recon', 'complete');
 
-    // === Phase 2: Reconnaissance ===
+    // === 阶段 2: 侦察 ===
     state.currentPhase = 'recon';
     state.currentAgent = 'recon';
     await a.logPhaseTransition(activityInput, 'recon', 'start');
@@ -156,28 +156,28 @@ export async function pentestPipelineWorkflow(
     state.completedAgents.push('recon');
     await a.logPhaseTransition(activityInput, 'recon', 'complete');
 
-    // === Phases 3-4: Vulnerability Analysis + Exploitation (Pipelined) ===
-    // Each vuln type runs as an independent pipeline:
-    // vuln agent → queue check → conditional exploit agent
-    // This eliminates the synchronization barrier between phases - each exploit
-    // starts immediately when its vuln agent finishes, not waiting for all.
+    // === 阶段 3-4: 漏洞分析 + 利用（流水线） ===
+    // 每种漏洞类型作为独立管道运行：
+    // 漏洞智能体 → 队列检查 → 条件利用智能体
+    // 这消除了阶段之间的同步障碍 - 每个利用
+    // 在其漏洞智能体完成后立即开始，不等待所有完成。
     state.currentPhase = 'vulnerability-exploitation';
     state.currentAgent = 'pipelines';
     await a.logPhaseTransition(activityInput, 'vulnerability-exploitation', 'start');
 
-    // Helper: Run a single vuln→exploit pipeline
+    // 辅助函数：运行单个漏洞→利用管道
     async function runVulnExploitPipeline(
       vulnType: VulnType,
       runVulnAgent: () => Promise<AgentMetrics>,
       runExploitAgent: () => Promise<AgentMetrics>
     ): Promise<VulnExploitPipelineResult> {
-      // Step 1: Run vulnerability agent
+      // 步骤 1: 运行漏洞智能体
       const vulnMetrics = await runVulnAgent();
 
-      // Step 2: Check exploitation queue (starts immediately after vuln)
+      // 步骤 2: 检查利用队列（漏洞分析后立即开始）
       const decision = await a.checkExploitationQueue(activityInput, vulnType);
 
-      // Step 3: Conditionally run exploit agent
+      // 步骤 3: 有条件地运行利用智能体
       let exploitMetrics: AgentMetrics | null = null;
       if (decision.shouldExploit) {
         exploitMetrics = await runExploitAgent();
@@ -195,8 +195,8 @@ export async function pentestPipelineWorkflow(
       };
     }
 
-    // Run all 5 pipelines in parallel with graceful failure handling
-    // Promise.allSettled ensures other pipelines continue if one fails
+    // 并行运行所有 5 个管道，带有优雅的故障处理
+    // Promise.allSettled 确保一个管道失败时其他管道继续
     const pipelineResults = await Promise.allSettled([
       runVulnExploitPipeline(
         'injection',
@@ -225,25 +225,25 @@ export async function pentestPipelineWorkflow(
       ),
     ]);
 
-    // Aggregate results from all pipelines
+    // 聚合所有管道的结果
     const failedPipelines: string[] = [];
     for (const result of pipelineResults) {
       if (result.status === 'fulfilled') {
         const { vulnType, vulnMetrics, exploitMetrics } = result.value;
 
-        // Record vuln agent metrics
+        // 记录漏洞智能体指标
         if (vulnMetrics) {
           state.agentMetrics[`${vulnType}-vuln`] = vulnMetrics;
           state.completedAgents.push(`${vulnType}-vuln`);
         }
 
-        // Record exploit agent metrics (if it ran)
+        // 记录利用智能体指标（如果运行了）
         if (exploitMetrics) {
           state.agentMetrics[`${vulnType}-exploit`] = exploitMetrics;
           state.completedAgents.push(`${vulnType}-exploit`);
         }
       } else {
-        // Pipeline failed - log error but continue with others
+        // 管道失败 - 记录错误但继续其他管道
         const errorMsg =
           result.reason instanceof Error
             ? result.reason.message
@@ -252,43 +252,43 @@ export async function pentestPipelineWorkflow(
       }
     }
 
-    // Log any pipeline failures (workflow continues despite failures)
+    // 记录任何管道失败（工作流尽管失败仍继续）
     if (failedPipelines.length > 0) {
       console.log(
-        `⚠️ ${failedPipelines.length} pipeline(s) failed:`,
+        `⚠️ ${failedPipelines.length} 个管道失败:`,
         failedPipelines
       );
     }
 
-    // Update phase markers
+    // 更新阶段标记
     state.currentPhase = 'exploitation';
     state.currentAgent = null;
     await a.logPhaseTransition(activityInput, 'vulnerability-exploitation', 'complete');
 
-    // === Phase 5: Reporting ===
+    // === 阶段 5: 报告生成 ===
     state.currentPhase = 'reporting';
     state.currentAgent = 'report';
     await a.logPhaseTransition(activityInput, 'reporting', 'start');
 
-    // First, assemble the concatenated report from exploitation evidence files
+    // 首先，从利用证据文件组装连接的报告
     await a.assembleReportActivity(activityInput);
 
-    // Then run the report agent to add executive summary and clean up
+    // 然后运行报告智能体以添加执行摘要并清理
     state.agentMetrics['report'] = await a.runReportAgent(activityInput);
     state.completedAgents.push('report');
 
-    // Inject model metadata into the final report
+    // 将模型元数据注入最终报告
     await a.injectReportMetadataActivity(activityInput);
 
     await a.logPhaseTransition(activityInput, 'reporting', 'complete');
 
-    // === Complete ===
+    // === 完成 ===
     state.status = 'completed';
     state.currentPhase = null;
     state.currentAgent = null;
     state.summary = computeSummary(state);
 
-    // Log workflow completion summary
+    // 记录工作流完成摘要
     await a.logWorkflowComplete(activityInput, {
       status: 'completed',
       totalDurationMs: state.summary.totalDurationMs,
@@ -309,7 +309,7 @@ export async function pentestPipelineWorkflow(
     state.error = error instanceof Error ? error.message : String(error);
     state.summary = computeSummary(state);
 
-    // Log workflow failure summary
+    // 记录工作流失败摘要
     await a.logWorkflowComplete(activityInput, {
       status: 'failed',
       totalDurationMs: state.summary.totalDurationMs,

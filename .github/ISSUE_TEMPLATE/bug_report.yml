@@ -1,5 +1,5 @@
-name: Bug report
-description: Create a report to help us improve
+name: Bug 报告
+description: 创建一个报告来帮助我们改进
 title: "[BUG]: "
 labels: []
 assignees: []
@@ -7,15 +7,15 @@ body:
   - type: textarea
     id: describe-the-bug
     attributes:
-      label: Describe the bug
-      description: Provide a clear and concise description of the issue.
+      label: 描述 bug
+      description: 提供清晰简洁的问题描述。
     validations:
       required: true
 
   - type: textarea
     id: steps-to-reproduce
     attributes:
-      label: Steps to reproduce
+      label: 复现步骤
       value: |
         1.
         2.
@@ -26,82 +26,82 @@ body:
   - type: textarea
     id: expected-behaviour
     attributes:
-      label: Expected behaviour
-      description: Describe what you expected to happen.
+      label: 预期行为
+      description: 描述你期望发生的事情。
     validations:
       required: true
 
   - type: textarea
     id: actual-behaviour
     attributes:
-      label: Actual behaviour
-      description: Describe what actually happened.
+      label: 实际行为
+      description: 描述实际发生的事情。
     validations:
       required: true
 
   - type: checkboxes
     id: pre-submission-checklist
     attributes:
-      label: Pre-submission checklist (required)
+      label: 提交前检查清单（必填）
       options:
-        - label: I have searched the existing open issues and confirmed this bug has not already been reported.
+        - label: 我已经搜索了现有的开放问题，并确认此 bug 尚未被报告。
           required: true
-        - label: I am running the latest released version of `shannon`.
+        - label: 我正在运行 `shannon` 的最新发布版本。
           required: true
 
   - type: checkboxes
     id: applicable-checklist
     attributes:
-      label: If applicable
+      label: 如适用
       options:
-        - label: I have included relevant error messages, stack traces, or failure details.
-        - label: I have checked the audit logs and pasted the relevant errors.
-        - label: I have inspected the failed Temporal workflow run and included the failure reason.
-        - label: I have included clear steps to reproduce the issue.
-        - label: I have redacted any sensitive information (tokens, URLs, repo names).
+        - label: 我已包含相关的错误消息、堆栈跟踪或失败详细信息。
+        - label: 我已检查审计日志并粘贴了相关错误。
+        - label: 我已检查失败的 Temporal 工作流运行并包含了失败原因。
+        - label: 我已包含清晰的复现步骤。
+        - label: 我已编辑掉任何敏感信息（令牌、URL、仓库名称）。
 
   - type: markdown
     attributes:
       value: |
-        ### Debugging checklist (required)
+        ### 调试检查清单（必填）
 
-        Please include any **error messages, stack traces, or failure details** you find from the steps below.
+        请包含你从以下步骤中找到的任何 **错误消息、堆栈跟踪或失败详细信息**。
 
-        Issues without this information may be difficult to triage.
+        没有此信息的问题可能难以分类。
 
-        - Check the audit logs at: `./audit-logs/target_url_shannon-123/workflow.log`
-          Use `grep` or search to identify errors.
-          Paste the relevant error output below.
-        - Temporal:
-            - Open the Temporal UI: http://localhost:8233/namespaces/default/workflows
-            - Navigate to failed workflow runs
-            - Open the failed workflow run
-            - In Event History, click on the failed event
-            Copy the error message or failure reason here.
+        - 检查审计日志：`./audit-logs/target_url_shannon-123/workflow.log`
+          使用 `grep` 或搜索来识别错误。
+          在下面粘贴相关的错误输出。
+        - Temporal：
+            - 打开 Temporal UI：http://localhost:8233/namespaces/default/workflows
+            - 导航到失败的工作流运行
+            - 打开失败的工作流运行
+            - 在事件历史中，点击失败的事件
+            在下面复制错误消息或失败原因。
 
   - type: textarea
     id: debugging-details
     attributes:
-      label: Debugging details
-      description: Paste any error messages, stack traces, or failure details from the audit logs or Temporal UI.
+      label: 调试详细信息
+      description: 粘贴来自审计日志或 Temporal UI 的任何错误消息、堆栈跟踪或失败详细信息。
 
   - type: textarea
     id: screenshots
     attributes:
-      label: Screenshots
-      description: If applicable, add screenshots of the audit logs or Temporal failure details.
+      label: 截图
+      description: 如适用，添加审计日志或 Temporal 失败详细信息的截图。
 
   - type: markdown
     attributes:
       value: |
-        ### CLI details
+        ### CLI 详细信息
 
-        Provide the following information (redact sensitive data such as repository names, URLs, and tokens):
+        提供以下信息（编辑掉敏感数据，如仓库名称、URL 和令牌）：
 
   - type: dropdown
     id: auth-method
     attributes:
-      label: Authentication method used
+      label: 使用的身份验证方法
       options:
         - CLAUDE_CODE_OAUTH_TOKEN
         - ANTHROPIC_API_KEY
@@ -111,41 +111,41 @@ body:
   - type: input
     id: shannon-command
     attributes:
-      label: Full ./shannon command with all flags used (with redactions)
+      label: 完整的 ./shannon 命令及所有使用的标志（已编辑）
 
   - type: dropdown
     id: experimental-models
     attributes:
-      label: Are you using any experimental models or providers other than default Anthropic models?
+      label: 你是否使用任何实验性模型或默认 Anthropic 模型以外的提供商？
       options:
-        - "No"
-        - "Yes"
+        - "否"
+        - "是"
     validations:
       required: true
 
   - type: input
     id: experimental-model-details
     attributes:
-      label: If Yes, which one (model/provider)?
+      label: 如果是，是哪一个（模型/提供商）？
 
   - type: input
     id: os-version
     attributes:
-      label: "OS (with version)"
-      placeholder: "e.g. macOS 26.2"
+      label: "操作系统（带版本）"
+      placeholder: "例如 macOS 26.2"
     validations:
       required: true
 
   - type: input
     id: docker-version
     attributes:
-      label: "Docker version ('docker -v')"
-      placeholder: "e.g. 25.0.3"
+      label: "Docker 版本 ('docker -v')"
+      placeholder: "例如 25.0.3"
     validations:
       required: true
 
   - type: textarea
     id: additional-context
     attributes:
-      label: Additional context
-      description: Add any other context that may help us analyze the root cause.
+      label: 其他上下文
+      description: 添加任何其他可能有助于我们分析根本原因的上下文。

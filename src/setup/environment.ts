@@ -8,17 +8,17 @@ import { $, fs, path } from 'zx';
 import chalk from 'chalk';
 import { PentestError } from '../error-handling.js';
 
-// Pure function: Setup local repository for testing
+// 纯函数：设置本地仓库用于测试
 export async function setupLocalRepo(repoPath: string): Promise<string> {
   try {
     const sourceDir = path.resolve(repoPath);
 
-    // MCP servers are now configured via mcpServers option in claude-executor.js
-    // No need for pre-setup with claude CLI
+    // MCP 服务器现在通过 claude-executor.js 中的 mcpServers 选项配置
+    // 不需要使用 claude CLI 进行预设置
 
-    // Initialize git repository if not already initialized and create checkpoint
+    // 如果尚未初始化，则初始化 git 仓库并创建检查点
     try {
-      // Check if it's already a git repository
+      // 检查是否已经是 git 仓库
       const isGitRepo = await fs.pathExists(path.join(sourceDir, '.git'));
 
       if (!isGitRepo) {
@@ -26,21 +26,21 @@ export async function setupLocalRepo(repoPath: string): Promise<string> {
         console.log(chalk.blue('✅ Git repository initialized'));
       }
 
-      // Configure git for pentest agent
+      // 为渗透测试智能体配置 git
       await $`cd ${sourceDir} && git config user.name "Pentest Agent"`;
       await $`cd ${sourceDir} && git config user.email "agent@localhost"`;
 
-      // Create initial checkpoint
+      // 创建初始检查点
       await $`cd ${sourceDir} && git add -A && git commit -m "Initial checkpoint: Local repository setup" --allow-empty`;
       console.log(chalk.green('✅ Initial checkpoint created'));
     } catch (gitError) {
       const errMsg = gitError instanceof Error ? gitError.message : String(gitError);
       console.log(chalk.yellow(`⚠️ Git setup warning: ${errMsg}`));
-      // Non-fatal - continue without Git setup
+      // 非致命错误 - 继续执行，不进行 Git 设置
     }
 
-    // MCP tools (save_deliverable, generate_totp) are now available natively via shannon-helper MCP server
-    // No need to copy bash scripts to target repository
+    // MCP 工具（save_deliverable, generate_totp）现在通过 shannon-helper MCP 服务器原生可用
+    // 不需要将 bash 脚本复制到目标仓库
 
     return sourceDir;
   } catch (error) {

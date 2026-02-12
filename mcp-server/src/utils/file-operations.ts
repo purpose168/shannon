@@ -5,34 +5,34 @@
 // as published by the Free Software Foundation.
 
 /**
- * File Operations Utilities
+ * 文件操作工具
  *
- * Handles file system operations for deliverable saving.
- * Ported from tools/save_deliverable.js (lines 117-130).
+ * 处理可交付成果保存的文件系统操作。
+ * 从 tools/save_deliverable.js（第 117-130 行）移植而来。
  */
 
 import { writeFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
 
 /**
- * Save deliverable file to deliverables/ directory
+ * 将可交付成果文件保存到 deliverables/ 目录
  *
- * @param targetDir - Target directory for deliverables (passed explicitly to avoid race conditions)
- * @param filename - Name of the deliverable file
- * @param content - File content to save
+ * @param targetDir - 可交付成果的目标目录（显式传递以避免竞争条件）
+ * @param filename - 可交付成果文件的名称
+ * @param content - 要保存的文件内容
  */
 export function saveDeliverableFile(targetDir: string, filename: string, content: string): string {
   const deliverablesDir = join(targetDir, 'deliverables');
   const filepath = join(deliverablesDir, filename);
 
-  // Ensure deliverables directory exists
+  // 确保 deliverables 目录存在
   try {
     mkdirSync(deliverablesDir, { recursive: true });
   } catch {
-    throw new Error(`Cannot create deliverables directory at ${deliverablesDir}`);
+    throw new Error(`无法在 ${deliverablesDir} 创建 deliverables 目录`);
   }
 
-  // Write file (atomic write - single operation)
+  // 写入文件（原子写入 - 单次操作）
   writeFileSync(filepath, content, 'utf8');
 
   return filepath;

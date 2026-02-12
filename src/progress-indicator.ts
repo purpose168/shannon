@@ -24,7 +24,7 @@ export class ProgressIndicator {
     this.frameIndex = 0;
 
     this.interval = setInterval(() => {
-      // Clear the line and write the spinner
+      // 清除行并写入 spinner
       process.stdout.write(
         `\r${chalk.cyan(this.frames[this.frameIndex])} ${chalk.dim(this.message)}`
       );
@@ -40,7 +40,7 @@ export class ProgressIndicator {
       this.interval = null;
     }
 
-    // Clear the spinner line
+    // 清除 spinner 行
     process.stdout.write('\r' + ' '.repeat(this.message.length + 5) + '\r');
     this.isRunning = false;
   }

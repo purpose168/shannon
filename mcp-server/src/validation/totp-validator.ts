@@ -5,15 +5,15 @@
 // as published by the Free Software Foundation.
 
 /**
- * TOTP Validator
+ * TOTP 验证器
  *
- * Validates TOTP secrets and provides base32 decoding.
- * Ported from tools/generate-totp-standalone.mjs (lines 43-72).
+ * 验证 TOTP 密钥并提供 base32 解码功能。
+ * 从 tools/generate-totp-standalone.mjs（第 43-72 行）移植而来。
  */
 
 /**
- * Base32 decode function
- * Ported from generate-totp-standalone.mjs
+ * Base32 解码函数
+ * 从 generate-totp-standalone.mjs 移植而来
  */
 export function base32Decode(encoded: string): Buffer {
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
@@ -30,7 +30,7 @@ export function base32Decode(encoded: string): Buffer {
   for (const char of cleanInput) {
     const index = alphabet.indexOf(char);
     if (index === -1) {
-      throw new Error(`Invalid base32 character: ${char}`);
+      throw new Error(`无效的 base32 字符: ${char}`);
     }
 
     value = (value << 5) | index;
@@ -46,27 +46,27 @@ export function base32Decode(encoded: string): Buffer {
 }
 
 /**
- * Validate TOTP secret
- * Must be base32-encoded string
+ * 验证 TOTP 密钥
+ * 必须是 base32 编码的字符串
  *
- * @returns true if valid, throws Error if invalid
+ * @returns 如果有效返回 true，如果无效抛出错误
  */
 export function validateTotpSecret(secret: string): boolean {
   if (!secret || secret.length === 0) {
-    throw new Error('TOTP secret cannot be empty');
+    throw new Error('TOTP 密钥不能为空');
   }
 
-  // Check if it's valid base32 (only A-Z and 2-7, case-insensitive)
+  // 检查是否是有效的 base32（仅 A-Z 和 2-7，不区分大小写）
   const base32Regex = /^[A-Z2-7]+$/i;
   if (!base32Regex.test(secret.replace(/[^A-Z2-7]/gi, ''))) {
-    throw new Error('TOTP secret must be base32-encoded (characters A-Z and 2-7)');
+    throw new Error('TOTP 密钥必须是 base32 编码的（字符 A-Z 和 2-7）');
   }
 
-  // Try to decode to ensure it's valid
+  // 尝试解码以确保其有效
   try {
     base32Decode(secret);
   } catch (error) {
-    throw new Error(`Invalid TOTP secret: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`无效的 TOTP 密钥: ${error instanceof Error ? error.message : String(error)}`);
   }
 
   return true;

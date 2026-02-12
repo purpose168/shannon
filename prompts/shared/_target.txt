@@ -1,1 +1,1 @@
-URL: {{WEB_URL}}
+网址：{{WEB_URL}}

@@ -14,13 +14,13 @@ import type {
   PromptErrorResult,
 } from './types/errors.js';
 
-// Temporal error classification for ApplicationFailure wrapping
+// Temporal 错误分类，用于 ApplicationFailure 包装
 export interface TemporalErrorClassification {
   type: string;
   retryable: boolean;
 }
 
-// Custom error class for pentest operations
+// 渗透测试操作的自定义错误类
 export class PentestError extends Error {
   name = 'PentestError' as const;
   type: PentestErrorType;
@@ -42,7 +42,7 @@ export class PentestError extends Error {
   }
 }
 
-// Centralized error logging function
+// 集中式错误日志记录函数
 export async function logError(
   error: Error & { type?: PentestErrorType; retryable?: boolean; context?: PentestErrorContext },
   contextMsg: string,
@@ -59,12 +59,12 @@ export async function logError(
       retryable: error.retryable || false,
     },
   };
-  // Only add stack if it exists
+  // 仅在存在时添加堆栈
   if (error.stack) {
     logEntry.error.stack = error.stack;
   }
 
-  // Console logging with color
+  // 带颜色的控制台日志
   const prefix = error.retryable ? '⚠️' : '❌';
   const color = error.retryable ? chalk.yellow : chalk.red;
   console.log(color(`${prefix} ${contextMsg}:`));
@@ -74,7 +74,7 @@ export async function logError(
     console.log(chalk.gray(`   Context: ${JSON.stringify(error.context)}`));
   }
 
-  // File logging (if source directory available)
+  // 文件日志记录（如果提供了源目录）
   if (sourceDir) {
     try {
       const logPath = path.join(sourceDir, 'error.log');
@@ -88,7 +88,7 @@ export async function logError(
   return logEntry;
 }
 
-// Handle tool execution errors
+// 处理工具执行错误
 export function handleToolError(
   toolName: string,
   error: Error & { code?: string }
@@ -113,7 +113,7 @@ export function handleToolError(
   };
 }
 
-// Handle prompt loading errors
+// 处理提示加载错误
 export function handlePromptError(
   promptName: string,
   error: Error
@@ -129,37 +129,37 @@ export function handlePromptError(
   };
 }
 
-// Patterns that indicate retryable errors
+// 指示可重试错误的模式
 const RETRYABLE_PATTERNS = [
-  // Network and connection errors
+  // 网络和连接错误
   'network',
   'connection',
   'timeout',
   'econnreset',
   'enotfound',
   'econnrefused',
-  // Rate limiting
+  // 速率限制
   'rate limit',
   '429',
   'too many requests',
-  // Server errors
+  // 服务器错误
   'server error',
   '5xx',
   'internal server error',
   'service unavailable',
   'bad gateway',
-  // Claude API errors
+  // Claude API 错误
   'mcp server',
   'model unavailable',
   'service temporarily unavailable',
   'api error',
   'terminated',
-  // Max turns
+  // 最大轮次
   'max turns',
   'maximum turns',
 ];
 
-// Patterns that indicate non-retryable errors (checked before default)
+// 指示不可重试错误的模式（在默认值之前检查）
 const NON_RETRYABLE_PATTERNS = [
   'authentication',
   'invalid prompt',
@@ -169,48 +169,48 @@ const NON_RETRYABLE_PATTERNS = [
   'invalid api key',
 ];
 
-// Conservative retry classification - unknown errors don't retry (fail-safe default)
+// 保守的重试分类 - 未知错误不重试（故障安全默认值）
 export function isRetryableError(error: Error): boolean {
   const message = error.message.toLowerCase();
 
-  // Check for explicit non-retryable patterns first
+  // 首先检查显式不可重试模式
   if (NON_RETRYABLE_PATTERNS.some((pattern) => message.includes(pattern))) {
     return false;
   }
 
-  // Check for retryable patterns
+  // 检查可重试模式
   return RETRYABLE_PATTERNS.some((pattern) => message.includes(pattern));
 }
 
-// Rate limit errors get longer base delay (30s) vs standard exponential backoff (2s)
+// 速率限制错误获得更长的基础延迟（30秒），而标准指数退避（2秒）
 export function getRetryDelay(error: Error, attempt: number): number {
   const message = error.message.toLowerCase();
 
-  // Rate limiting gets longer delays
+  // 速率限制获得更长的延迟
   if (message.includes('rate limit') || message.includes('429')) {
-    return Math.min(30000 + attempt * 10000, 120000); // 30s, 40s, 50s, max 2min
+    return Math.min(30000 + attempt * 10000, 120000); // 30秒, 40秒, 50秒, 最大2分钟
   }
 
-  // Exponential backoff with jitter for other retryable errors
-  const baseDelay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
-  const jitter = Math.random() * 1000; // 0-1s random
-  return Math.min(baseDelay + jitter, 30000); // Max 30s
+  // 其他可重试错误的指数退避与抖动
+  const baseDelay = Math.pow(2, attempt) * 1000; // 2秒, 4秒, 8秒
+  const jitter = Math.random() * 1000; // 0-1秒随机
+  return Math.min(baseDelay + jitter, 30000); // 最大30秒
 }
 
 /**
- * Classifies errors for Temporal workflow retry behavior.
- * Returns error type and whether Temporal should retry.
+ * 为 Temporal 工作流重试行为分类错误。
+ * 返回错误类型和 Temporal 是否应该重试。
  *
- * Used by activities to wrap errors in ApplicationFailure:
- * - Retryable errors: Temporal retries with configured backoff
- * - Non-retryable errors: Temporal fails immediately
+ * 由活动用于将错误包装在 ApplicationFailure 中：
+ * - 可重试错误：Temporal 使用配置的退避策略重试
+ * - 不可重试错误：Temporal 立即失败
  */
 export function classifyErrorForTemporal(error: unknown): TemporalErrorClassification {
   const message = (error instanceof Error ? error.message : String(error)).toLowerCase();
 
-  // === BILLING ERRORS (Retryable with long backoff) ===
-  // Anthropic returns billing as 400 invalid_request_error
-  // Human can add credits OR wait for spending cap to reset (5-30 min backoff)
+  // === 账单错误（可重试）===
+  // Anthropic 将账单错误返回为 400 invalid_request_error
+  // 人类可以添加信用额度或等待支出上限重置（5-30分钟退避）
   if (
     message.includes('billing_error') ||
     message.includes('credit balance is too low') ||
@@ -222,7 +222,7 @@ export function classifyErrorForTemporal(error: unknown): TemporalErrorClassific
     message.includes('quota exceeded') ||
     message.includes('daily rate limit') ||
     message.includes('limit will reset') ||
-    // Claude Code spending cap patterns (returns short message instead of error)
+    // Claude Code 支出上限模式（返回短消息而不是错误）
     message.includes('spending cap') ||
     message.includes('spending limit') ||
     message.includes('cap reached') ||
@@ -232,9 +232,9 @@ export function classifyErrorForTemporal(error: unknown): TemporalErrorClassific
     return { type: 'BillingError', retryable: true };
   }
 
-  // === PERMANENT ERRORS (Non-retryable) ===
+  // === 永久性错误（不可重试）===
 
-  // Authentication (401) - bad API key won't fix itself
+  // 认证（401）- 错误的 API 密钥不会自行修复
   if (
     message.includes('authentication') ||
     message.includes('api key') ||
@@ -244,7 +244,7 @@ export function classifyErrorForTemporal(error: unknown): TemporalErrorClassific
     return { type: 'AuthenticationError', retryable: false };
   }
 
-  // Permission (403) - access won't be granted
+  // 权限（403）- 不会授予访问权限
   if (
     message.includes('permission') ||
     message.includes('forbidden') ||
@@ -253,9 +253,9 @@ export function classifyErrorForTemporal(error: unknown): TemporalErrorClassific
     return { type: 'PermissionError', retryable: false };
   }
 
-  // === OUTPUT VALIDATION ERRORS (Retryable) ===
-  // Agent didn't produce expected deliverables - retry may succeed
-  // IMPORTANT: Must come BEFORE generic 'validation' check below
+  // === 输出验证错误（可重试）===
+  // 智能体未产生预期的交付物 - 重试可能成功
+  // 重要：必须在下面的通用 'validation' 检查之前
   if (
     message.includes('failed output validation') ||
     message.includes('output validation failed')
@@ -263,8 +263,8 @@ export function classifyErrorForTemporal(error: unknown): TemporalErrorClassific
     return { type: 'OutputValidationError', retryable: true };
   }
 
-  // Invalid Request (400) - malformed request is permanent
-  // Note: Checked AFTER billing and AFTER output validation
+  // 无效请求（400）- 格式错误的请求是永久性的
+  // 注意：在账单和输出验证之后检查
   if (
     message.includes('invalid_request_error') ||
     message.includes('malformed') ||
@@ -273,7 +273,7 @@ export function classifyErrorForTemporal(error: unknown): TemporalErrorClassific
     return { type: 'InvalidRequestError', retryable: false };
   }
 
-  // Request Too Large (413) - won't fit no matter how many retries
+  // 请求太大（413）- 无论重试多少次都不会适合
   if (
     message.includes('request_too_large') ||
     message.includes('too large') ||
@@ -282,7 +282,7 @@ export function classifyErrorForTemporal(error: unknown): TemporalErrorClassific
     return { type: 'RequestTooLargeError', retryable: false };
   }
 
-  // Configuration errors - missing files need manual fix
+  // 配置错误 - 缺少文件需要手动修复
   if (
     message.includes('enoent') ||
     message.includes('no such file') ||
@@ -291,7 +291,7 @@ export function classifyErrorForTemporal(error: unknown): TemporalErrorClassific
     return { type: 'ConfigurationError', retryable: false };
   }
 
-  // Execution limits - max turns/budget reached
+  // 执行限制 - 达到最大轮次/预算
   if (
     message.includes('max turns') ||
     message.includes('budget') ||
@@ -302,7 +302,7 @@ export function classifyErrorForTemporal(error: unknown): TemporalErrorClassific
     return { type: 'ExecutionLimitError', retryable: false };
   }
 
-  // Invalid target URL - bad URL format won't fix itself
+  // 无效目标 URL - 错误的 URL 格式不会自行修复
   if (
     message.includes('invalid url') ||
     message.includes('invalid target') ||
@@ -312,8 +312,8 @@ export function classifyErrorForTemporal(error: unknown): TemporalErrorClassific
     return { type: 'InvalidTargetError', retryable: false };
   }
 
-  // === TRANSIENT ERRORS (Retryable) ===
-  // Rate limits (429), server errors (5xx), network issues
-  // Let Temporal retry with configured backoff
+  // === 暂时性错误（可重试）===
+  // 速率限制（429）、服务器错误（5xx）、网络问题
+  // 让 Temporal 使用配置的退避策略重试
   return { type: 'TransientError', retryable: true };
 }

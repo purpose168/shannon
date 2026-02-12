@@ -5,10 +5,10 @@
 // as published by the Free Software Foundation.
 
 /**
- * Workflow Logger
+ * 工作流日志记录器
  *
- * Provides a unified, human-readable log file per workflow.
- * Optimized for `tail -f` viewing during concurrent workflow execution.
+ * 为每个工作流提供统一、人类可读的日志文件。
+ * 针对并发工作流执行期间的 `tail -f` 查看进行了优化。
  */
 
 import fs from 'fs';
@@ -39,7 +39,7 @@ export interface WorkflowSummary {
 }
 
 /**
- * WorkflowLogger - Manages the unified workflow log file
+ * WorkflowLogger - 管理统一的工作流日志文件
  */
 export class WorkflowLogger {
   private sessionMetadata: SessionMetadata;
@@ -53,17 +53,17 @@ export class WorkflowLogger {
   }
 
   /**
-   * Initialize the log stream (creates file and writes header)
+   * 初始化日志流（创建文件并写入头部）
    */
   async initialize(): Promise<void> {
     if (this.initialized) {
       return;
     }
 
-    // Ensure directory exists
+    // 确保目录存在
     await ensureDirectory(path.dirname(this.logPath));
 
-    // Create write stream with append mode
+    // 创建带有追加模式的写入流
     this.stream = fs.createWriteStream(this.logPath, {
       flags: 'a',
       encoding: 'utf8',
@@ -72,7 +72,7 @@ export class WorkflowLogger {
 
     this.initialized = true;
 
-    // Write header only if file is new (empty)
+    // 仅在文件是新的（空）时写入头部
     const stats = await fs.promises.stat(this.logPath).catch(() => null);
     if (!stats || stats.size === 0) {
       await this.writeHeader();
@@ -80,16 +80,16 @@ export class WorkflowLogger {
   }
 
   /**
-   * Write header to log file
+   * 向日志文件写入头部
    */
   private async writeHeader(): Promise<void> {
     const header = [
       `================================================================================`,
-      `Shannon Pentest - Workflow Log`,
+      `Shannon 渗透测试 - 工作流日志`,
       `================================================================================`,
-      `Workflow ID: ${this.sessionMetadata.id}`,
-      `Target URL:  ${this.sessionMetadata.webUrl}`,
-      `Started:     ${formatTimestamp()}`,
+      `工作流 ID: ${this.sessionMetadata.id}`,
+      `目标 URL:  ${this.sessionMetadata.webUrl}`,
+      `开始时间:  ${formatTimestamp()}`,
       `================================================================================`,
       ``,
     ].join('\n');
@@ -98,12 +98,12 @@ export class WorkflowLogger {
   }
 
   /**
-   * Write raw text to log file with immediate flush
+   * 向日志文件写入原始文本并立即刷新
    */
   private writeRaw(text: string): Promise<void> {
     return new Promise((resolve, reject) => {
       if (!this.initialized || !this.stream) {
-        reject(new Error('WorkflowLogger not initialized'));
+        reject(new Error('WorkflowLogger 未初始化'));
         return;
       }
 
@@ -120,7 +120,7 @@ export class WorkflowLogger {
   }
 
   /**
-   * Format timestamp for log line (local time, human readable)
+   * 格式化日志行的时间戳（本地时间，人类可读）
    */
   private formatLogTime(): string {
     const now = new Date();
@@ -128,15 +128,15 @@ export class WorkflowLogger {
   }
 
   /**
-   * Log a phase transition event
+   * 记录阶段转换事件
    */
   async logPhase(phase: string, event: 'start' | 'complete'): Promise<void> {
     await this.ensureInitialized();
 
-    const action = event === 'start' ? 'Starting' : 'Completed';
-    const line = `[${this.formatLogTime()}] [PHASE] ${action}: ${phase}\n`;
+    const action = event === 'start' ? '开始' : '完成';
+    const line = `[${this.formatLogTime()}] [阶段] ${action}: ${phase}\n`;
 
-    // Add blank line before phase start for readability
+    // 为了可读性，在阶段开始前添加空行
     if (event === 'start') {
       await this.writeRaw('\n');
     }
@@ -145,7 +145,7 @@ export class WorkflowLogger {
   }
 
   /**
-   * Log an agent event
+   * 记录智能体事件
    */
   async logAgent(
     agentName: string,
@@ -158,17 +158,17 @@ export class WorkflowLogger {
 
     if (event === 'start') {
       const attempt = details?.attemptNumber ?? 1;
-      message = `${agentName}: Starting (attempt ${attempt})`;
+      message = `${agentName}: 开始（尝试 ${attempt}）`;
     } else {
       const parts: string[] = [agentName + ':'];
 
       if (details?.success === false) {
-        parts.push('Failed');
+        parts.push('失败');
         if (details?.error) {
           parts.push(`- ${details.error}`);
         }
       } else {
-        parts.push('Completed');
+        parts.push('完成');
       }
 
       if (details?.duration_ms !== undefined) {
@@ -183,12 +183,12 @@ export class WorkflowLogger {
       message = parts.join(' ');
     }
 
-    const line = `[${this.formatLogTime()}] [AGENT] ${message}\n`;
+    const line = `[${this.formatLogTime()}] [智能体] ${message}\n`;
     await this.writeRaw(line);
   }
 
   /**
-   * Log a general event
+   * 记录一般事件
    */
   async logEvent(eventType: string, message: string): Promise<void> {
     await this.ensureInitialized();
@@ -198,18 +198,18 @@ export class WorkflowLogger {
   }
 
   /**
-   * Log an error
+   * 记录错误
    */
   async logError(error: Error, context?: string): Promise<void> {
     await this.ensureInitialized();
 
     const contextStr = context ? ` (${context})` : '';
-    const line = `[${this.formatLogTime()}] [ERROR] ${error.message}${contextStr}\n`;
+    const line = `[${this.formatLogTime()}] [错误] ${error.message}${contextStr}\n`;
     await this.writeRaw(line);
   }
 
   /**
-   * Truncate string to max length with ellipsis
+   * 将字符串截断到最大长度并添加省略号
    */
   private truncate(str: string, maxLen: number): string {
     if (str.length <= maxLen) return str;
@@ -217,7 +217,7 @@ export class WorkflowLogger {
   }
 
   /**
-   * Format tool parameters for human-readable display
+   * 格式化工具参数以供人类可读显示
    */
   private formatToolParams(toolName: string, params: unknown): string {
     if (!params || typeof params !== 'object') {
@@ -226,7 +226,7 @@ export class WorkflowLogger {
 
     const p = params as Record<string, unknown>;
 
-    // Tool-specific formatting for common tools
+    // 常见工具的特定格式化
     switch (toolName) {
       case 'Bash':
         if (p.command) {
@@ -282,7 +282,7 @@ export class WorkflowLogger {
         break;
     }
 
-    // Default: show first string-valued param truncated
+    // 默认：显示第一个字符串值参数并截断
     for (const [key, val] of Object.entries(p)) {
       if (typeof val === 'string' && val.length > 0) {
         return `${key}=${this.truncate(val, 60)}`;
@@ -293,53 +293,53 @@ export class WorkflowLogger {
   }
 
   /**
-   * Log tool start event
+   * 记录工具开始事件
    */
   async logToolStart(agentName: string, toolName: string, parameters: unknown): Promise<void> {
     await this.ensureInitialized();
 
     const params = this.formatToolParams(toolName, parameters);
     const paramStr = params ? `: ${params}` : '';
-    const line = `[${this.formatLogTime()}] [${agentName}] [TOOL] ${toolName}${paramStr}\n`;
+    const line = `[${this.formatLogTime()}] [${agentName}] [工具] ${toolName}${paramStr}\n`;
     await this.writeRaw(line);
   }
 
   /**
-   * Log LLM response
+   * 记录 LLM 响应
    */
   async logLlmResponse(agentName: string, turn: number, content: string): Promise<void> {
     await this.ensureInitialized();
 
-    // Show full content, replacing newlines with escaped version for single-line output
+    // 显示完整内容，将换行符替换为转义版本以用于单行输出
     const escaped = content.replace(/\n/g, '\\n');
-    const line = `[${this.formatLogTime()}] [${agentName}] [LLM] Turn ${turn}: ${escaped}\n`;
+    const line = `[${this.formatLogTime()}] [${agentName}] [LLM] 轮次 ${turn}: ${escaped}\n`;
     await this.writeRaw(line);
   }
 
   /**
-   * Log workflow completion with full summary
+   * 记录工作流完成，包含完整摘要
    */
   async logWorkflowComplete(summary: WorkflowSummary): Promise<void> {
     await this.ensureInitialized();
 
-    const status = summary.status === 'completed' ? 'COMPLETED' : 'FAILED';
+    const status = summary.status === 'completed' ? '已完成' : '失败';
 
     await this.writeRaw('\n');
     await this.writeRaw(`================================================================================\n`);
-    await this.writeRaw(`Workflow ${status}\n`);
+    await this.writeRaw(`工作流 ${status}\n`);
     await this.writeRaw(`────────────────────────────────────────\n`);
-    await this.writeRaw(`Workflow ID: ${this.sessionMetadata.id}\n`);
-    await this.writeRaw(`Status:      ${summary.status}\n`);
-    await this.writeRaw(`Duration:    ${formatDuration(summary.totalDurationMs)}\n`);
-    await this.writeRaw(`Total Cost:  $${summary.totalCostUsd.toFixed(4)}\n`);
-    await this.writeRaw(`Agents:      ${summary.completedAgents.length} completed\n`);
+    await this.writeRaw(`工作流 ID: ${this.sessionMetadata.id}\n`);
+    await this.writeRaw(`状态:      ${summary.status}\n`);
+    await this.writeRaw(`持续时间:    ${formatDuration(summary.totalDurationMs)}\n`);
+    await this.writeRaw(`总成本:  $${summary.totalCostUsd.toFixed(4)}\n`);
+    await this.writeRaw(`智能体:      ${summary.completedAgents.length} 已完成\n`);
 
     if (summary.error) {
-      await this.writeRaw(`Error:       ${summary.error}\n`);
+      await this.writeRaw(`错误:       ${summary.error}\n`);
     }
 
     await this.writeRaw(`\n`);
-    await this.writeRaw(`Agent Breakdown:\n`);
+    await this.writeRaw(`智能体明细:\n`);
 
     for (const agentName of summary.completedAgents) {
       const metrics = summary.agentMetrics[agentName];
@@ -356,7 +356,7 @@ export class WorkflowLogger {
   }
 
   /**
-   * Ensure initialized (helper for lazy initialization)
+   * 确保初始化（惰性初始化的辅助方法）
    */
   private async ensureInitialized(): Promise<void> {
     if (!this.initialized) {
@@ -365,7 +365,7 @@ export class WorkflowLogger {
   }
 
   /**
-   * Close the log stream
+   * 关闭日志流
    */
   async close(): Promise<void> {
     if (!this.initialized || !this.stream) {

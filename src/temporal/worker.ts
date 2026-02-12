@@ -6,18 +6,18 @@
 // as published by the Free Software Foundation.
 
 /**
- * Temporal worker for Shannon pentest pipeline.
+ * Shannon 渗透测试管道的 Temporal 工作器。
  *
- * Polls the 'shannon-pipeline' task queue and executes activities.
- * Handles up to 25 concurrent activities to support multiple parallel workflows.
+ * 轮询 'shannon-pipeline' 任务队列并执行活动。
+ * 处理最多 25 个并发活动，以支持多个并行工作流。
  *
- * Usage:
+ * 使用方法：
  *   npm run temporal:worker
- *   # or
+ *   # 或
  *   node dist/temporal/worker.js
  *
- * Environment:
- *   TEMPORAL_ADDRESS - Temporal server address (default: localhost:7233)
+ * 环境变量：
+ *   TEMPORAL_ADDRESS - Temporal 服务器地址（默认：localhost:7233）
  */
 
 import { NativeConnection, Worker, bundleWorkflowCode } from '@temporalio/worker';
@@ -33,12 +33,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 async function runWorker(): Promise<void> {
   const address = process.env.TEMPORAL_ADDRESS || 'localhost:7233';
-  console.log(chalk.cyan(`Connecting to Temporal at ${address}...`));
+  console.log(chalk.cyan(`正在连接到 Temporal 服务器 ${address}...`));
 
   const connection = await NativeConnection.connect({ address });
 
-  // Bundle workflows for Temporal's V8 isolate
-  console.log(chalk.gray('Bundling workflows...'));
+  // 为 Temporal 的 V8 隔离环境打包工作流
+  console.log(chalk.gray('正在打包工作流...'));
   const workflowBundle = await bundleWorkflowCode({
     workflowsPath: path.join(__dirname, 'workflows.js'),
   });
@@ -49,31 +49,31 @@ async function runWorker(): Promise<void> {
     workflowBundle,
     activities,
     taskQueue: 'shannon-pipeline',
-    maxConcurrentActivityTaskExecutions: 25, // Support multiple parallel workflows (5 agents × ~5 workflows)
+    maxConcurrentActivityTaskExecutions: 25, // 支持多个并行工作流（5 个智能体 × ~5 个工作流）
   });
 
-  // Graceful shutdown handling
+  // 优雅关闭处理
   const shutdown = async (): Promise<void> => {
-    console.log(chalk.yellow('\nShutting down worker...'));
+    console.log(chalk.yellow('\n正在关闭工作器...'));
     worker.shutdown();
   };
 
   process.on('SIGINT', shutdown);
   process.on('SIGTERM', shutdown);
 
-  console.log(chalk.green('Shannon worker started'));
-  console.log(chalk.gray('Task queue: shannon-pipeline'));
-  console.log(chalk.gray('Press Ctrl+C to stop\n'));
+  console.log(chalk.green('Shannon 工作器已启动'));
+  console.log(chalk.gray('任务队列: shannon-pipeline'));
+  console.log(chalk.gray('按 Ctrl+C 停止\n'));
 
   try {
     await worker.run();
   } finally {
     await connection.close();
-    console.log(chalk.gray('Worker stopped'));
+    console.log(chalk.gray('工作器已停止'));
   }
 }
 
 runWorker().catch((err) => {
-  console.error(chalk.red('Worker failed:'), err);
+  console.error(chalk.red('工作器失败:'), err);
   process.exit(1);
 });

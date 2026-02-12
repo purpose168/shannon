@@ -1,45 +1,45 @@
-# Example configuration file for pentest-agent
-# Copy this file and modify it for your specific testing needs
+# 渗透测试智能体的示例配置文件
+# 复制此文件并根据您的特定测试需求进行修改
 
 authentication:
-  login_type: form  # Options: 'form' or 'sso'
+  login_type: form  # 选项: 'form' 或 'sso'
   login_url: "https://example.com/login"
   credentials:
     username: "testuser"
     password: "testpassword"
-    totp_secret: "JBSWY3DPEHPK3PXP"  # Optional TOTP secret for 2FA
+    totp_secret: "JBSWY3DPEHPK3PXP"  # 可选的 TOTP 密钥用于双因素认证
   
-  # Natural language instructions for login flow
+  # 登录流程的自然语言说明
   login_flow:
-    - "Type $username into the email field"
-    - "Type $password into the password field"
-    - "Click the 'Sign In' button"
-    - "Enter $totp in the verification code field"
-    - "Click 'Verify'"
+    - "在电子邮件字段中输入 $username"
+    - "在密码字段中输入 $password"
+    - "点击 'Sign In' 按钮"
+    - "在验证码字段中输入 $totp"
+    - "点击 'Verify'"
   
   success_condition:
-    type: url_contains  # Options: 'url_contains' or 'element_present'
+    type: url_contains  # 选项: 'url_contains' 或 'element_present'
     value: "/dashboard"
 
 rules:
   avoid:
-    - description: "Do not test the marketing site subdomain"
+    - description: "不要测试营销网站子域名"
       type: subdomain
       url_path: "www"
     
-    - description: "Skip logout functionality"
+    - description: "跳过登出功能"
       type: path
       url_path: "/logout"
     
-    - description: "No DELETE operations on user API"
+    - description: "不要对用户 API 执行 DELETE 操作"
       type: path
       url_path: "/api/v1/users/*"
   
   focus:
-    - description: "Prioritize beta admin panel subdomain"
+    - description: "优先测试测试版管理面板子域名"
       type: subdomain
       url_path: "beta-admin"
     
-    - description: "Focus on user profile updates"
+    - description: "重点关注用户资料更新"
       type: path
       url_path: "/api/v2/user-profile"

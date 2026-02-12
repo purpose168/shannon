@@ -1,44 +1,44 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://example.com/pentest-config-schema.json",
-  "title": "Penetration Testing Configuration Schema",
-  "description": "Schema for YAML configuration files used in the penetration testing agent",
+  "title": "渗透测试配置模式",
+  "description": "渗透测试智能体中使用的 YAML 配置文件模式",
   "type": "object",
   "properties": {
     "authentication": {
       "type": "object",
-      "description": "Authentication configuration for the target application",
+      "description": "目标应用程序的认证配置",
       "properties": {
         "login_type": {
           "type": "string",
           "enum": ["form", "sso", "api", "basic"],
-          "description": "Type of authentication mechanism"
+          "description": "认证机制类型"
         },
         "login_url": {
           "type": "string",
           "format": "uri",
-          "description": "URL for the login page or endpoint"
+          "description": "登录页面或端点的 URL"
         },
         "credentials": {
           "type": "object",
-          "description": "Login credentials",
+          "description": "登录凭证",
           "properties": {
             "username": {
               "type": "string",
               "minLength": 1,
               "maxLength": 255,
-              "description": "Username or email for authentication"
+              "description": "用于认证的用户名或电子邮件"
             },
             "password": {
               "type": "string",
               "minLength": 1,
               "maxLength": 255,
-              "description": "Password for authentication"
+              "description": "用于认证的密码"
             },
             "totp_secret": {
               "type": "string",
               "pattern": "^[A-Za-z2-7]+=*$",
-              "description": "TOTP secret for two-factor authentication (Base32 encoded, case insensitive)"
+              "description": "双因素认证的 TOTP 密钥（Base32 编码，不区分大小写）"
             }
           },
           "required": ["username", "password"],
@@ -46,7 +46,7 @@
         },
         "login_flow": {
           "type": "array",
-          "description": "Step-by-step instructions for the login process",
+          "description": "登录过程的分步说明",
           "items": {
             "type": "string",
             "minLength": 1,
@@ -57,18 +57,18 @@
         },
         "success_condition": {
           "type": "object",
-          "description": "Condition that indicates successful authentication",
+          "description": "指示认证成功的条件",
           "properties": {
             "type": {
               "type": "string",
               "enum": ["url_contains", "element_present", "url_equals_exactly", "text_contains"],
-              "description": "Type of success condition to check"
+              "description": "要检查的成功条件类型"
             },
             "value": {
               "type": "string",
               "minLength": 1,
               "maxLength": 500,
-              "description": "Value to match against the success condition"
+              "description": "要与成功条件匹配的值"
             }
           },
           "required": ["type", "value"],
@@ -80,11 +80,11 @@
     },
     "rules": {
       "type": "object",
-      "description": "Testing rules that define what to focus on or avoid during penetration testing",
+      "description": "定义渗透测试期间应关注或避免的测试规则",
       "properties": {
         "avoid": {
           "type": "array",
-          "description": "Rules defining areas to avoid during testing",
+          "description": "定义测试期间应避免的区域的规则",
           "items": {
             "$ref": "#/$defs/rule"
           },
@@ -92,7 +92,7 @@
         },
         "focus": {
           "type": "array",
-          "description": "Rules defining areas to focus on during testing",
+          "description": "定义测试期间应关注的区域的规则",
           "items": {
             "$ref": "#/$defs/rule"
           },
@@ -103,7 +103,7 @@
     },
     "login": {
       "type": "object",
-      "description": "Deprecated: Use 'authentication' section instead",
+      "description": "已弃用：请改用 'authentication' 部分",
       "deprecated": true
     }
   },
@@ -116,24 +116,24 @@
   "$defs": {
     "rule": {
       "type": "object",
-      "description": "A single testing rule",
+      "description": "单个测试规则",
       "properties": {
         "description": {
           "type": "string",
           "minLength": 1,
           "maxLength": 200,
-          "description": "Human-readable description of the rule"
+          "description": "规则的人类可读描述"
         },
         "type": {
           "type": "string",
           "enum": ["path", "subdomain", "domain", "method", "header", "parameter"],
-          "description": "Type of rule (what aspect of requests to match against)"
+          "description": "规则类型（要匹配请求的哪个方面）"
         },
         "url_path": {
           "type": "string",
           "minLength": 1,
           "maxLength": 1000,
-          "description": "URL path pattern or value to match"
+          "description": "要匹配的 URL 路径模式或值"
         }
       },
       "required": ["description", "type", "url_path"],

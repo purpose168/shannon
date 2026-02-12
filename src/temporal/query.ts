@@ -6,17 +6,17 @@
 // as published by the Free Software Foundation.
 
 /**
- * Temporal query tool for inspecting Shannon workflow progress.
+ * Shannon 工作流进度检查的 Temporal 查询工具。
  *
- * Queries a running or completed workflow and displays its state.
+ * 查询正在运行或已完成的工作流并显示其状态。
  *
- * Usage:
+ * 使用方法：
  *   npm run temporal:query -- <workflowId>
- *   # or
+ *   # 或
  *   node dist/temporal/query.js <workflowId>
  *
- * Environment:
- *   TEMPORAL_ADDRESS - Temporal server address (default: localhost:7233)
+ * 环境变量：
+ *   TEMPORAL_ADDRESS - Temporal 服务器地址（默认：localhost:7233）
  */
 
 import { Connection, Client } from '@temporalio/client';
@@ -25,10 +25,10 @@ import chalk from 'chalk';
 
 dotenv.config();
 
-// Query name must match the one defined in workflows.ts
+// 查询名称必须与 workflows.ts 中定义的一致
 const PROGRESS_QUERY = 'getProgress';
 
-// Types duplicated from shared.ts to avoid importing workflow APIs
+// 从 shared.ts 复制的类型，以避免导入工作流 API
 interface AgentMetrics {
   durationMs: number;
   inputTokens: number | null;
@@ -52,11 +52,11 @@ interface PipelineProgress {
 }
 
 function showUsage(): void {
-  console.log(chalk.cyan.bold('\nShannon Temporal Query Tool'));
-  console.log(chalk.gray('Query progress of a running workflow\n'));
-  console.log(chalk.yellow('Usage:'));
+  console.log(chalk.cyan.bold('\nShannon Temporal 查询工具'));
+  console.log(chalk.gray('查询正在运行的工作流进度\n'));
+  console.log(chalk.yellow('使用方法:'));
   console.log('  node dist/temporal/query.js <workflowId>\n');
-  console.log(chalk.yellow('Examples:'));
+  console.log(chalk.yellow('示例:'));
   console.log('  node dist/temporal/query.js shannon-1704672000000\n');
 }
 
@@ -79,11 +79,11 @@ function formatDuration(ms: number): string {
   const hours = Math.floor(minutes / 60);
 
   if (hours > 0) {
-    return `${hours}h ${minutes % 60}m`;
+    return `${hours}小时 ${minutes % 60}分钟`;
   } else if (minutes > 0) {
-    return `${minutes}m ${seconds % 60}s`;
+    return `${minutes}分钟 ${seconds % 60}秒`;
   }
-  return `${seconds}s`;
+  return `${seconds}秒`;
 }
 
 async function queryWorkflow(): Promise<void> {
@@ -103,26 +103,26 @@ async function queryWorkflow(): Promise<void> {
     const handle = client.workflow.getHandle(workflowId);
     const progress = await handle.query<PipelineProgress>(PROGRESS_QUERY);
 
-    console.log(chalk.cyan.bold('\nWorkflow Progress'));
+    console.log(chalk.cyan.bold('\n工作流进度'));
     console.log(chalk.gray('\u2500'.repeat(40)));
-    console.log(`${chalk.white('Workflow ID:')} ${progress.workflowId}`);
-    console.log(`${chalk.white('Status:')} ${getStatusColor(progress.status)}`);
+    console.log(`${chalk.white('工作流 ID:')} ${progress.workflowId}`);
+    console.log(`${chalk.white('状态:')} ${getStatusColor(progress.status)}`);
     console.log(
-      `${chalk.white('Current Phase:')} ${progress.currentPhase || 'none'}`
+      `${chalk.white('当前阶段:')} ${progress.currentPhase || '无'}`
     );
     console.log(
-      `${chalk.white('Current Agent:')} ${progress.currentAgent || 'none'}`
+      `${chalk.white('当前智能体:')} ${progress.currentAgent || '无'}`
     );
-    console.log(`${chalk.white('Elapsed:')} ${formatDuration(progress.elapsedMs)}`);
+    console.log(`${chalk.white('已用时间:')} ${formatDuration(progress.elapsedMs)}`);
     console.log(
-      `${chalk.white('Completed:')} ${progress.completedAgents.length}/13 agents`
+      `${chalk.white('已完成:')} ${progress.completedAgents.length}/13 个智能体`
     );
 
     if (progress.completedAgents.length > 0) {
-      console.log(chalk.gray('\nCompleted agents:'));
+      console.log(chalk.gray('\n已完成的智能体:'));
       for (const agent of progress.completedAgents) {
         const metrics = progress.agentMetrics[agent];
-        const duration = metrics ? formatDuration(metrics.durationMs) : 'unknown';
+        const duration = metrics ? formatDuration(metrics.durationMs) : '未知';
         const cost = metrics?.costUsd ? `$${metrics.costUsd.toFixed(4)}` : '';
         const model = metrics?.model ? ` [${metrics.model}]` : '';
         console.log(
@@ -134,17 +134,17 @@ async function queryWorkflow(): Promise<void> {
     }
 
     if (progress.error) {
-      console.log(chalk.red(`\nError: ${progress.error}`));
-      console.log(chalk.red(`Failed agent: ${progress.failedAgent}`));
+      console.log(chalk.red(`\n错误: ${progress.error}`));
+      console.log(chalk.red(`失败的智能体: ${progress.failedAgent}`));
     }
 
     console.log();
   } catch (error) {
     const err = error as Error;
     if (err.message?.includes('not found')) {
-      console.log(chalk.red(`Workflow not found: ${workflowId}`));
+      console.log(chalk.red(`工作流未找到: ${workflowId}`));
     } else {
-      console.error(chalk.red('Query failed:'), err.message);
+      console.error(chalk.red('查询失败:'), err.message);
     }
     process.exit(1);
   } finally {
@@ -153,6 +153,6 @@ async function queryWorkflow(): Promise<void> {
 }
 
 queryWorkflow().catch((err) => {
-  console.error(chalk.red('Query error:'), err);
+  console.error(chalk.red('查询错误:'), err);
   process.exit(1);
 });

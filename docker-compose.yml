@@ -4,7 +4,7 @@ services:
     command: ["server", "start-dev", "--db-filename", "/home/temporal/temporal.db", "--ip", "0.0.0.0"]
     ports:
       - "7233:7233"   # gRPC
-      - "8233:8233"   # Web UI (built-in)
+      - "8233:8233"   # Web UI (内置)
     volumes:
       - temporal-data:/home/temporal
     healthcheck:
@@ -20,9 +20,9 @@ services:
     environment:
       - TEMPORAL_ADDRESS=temporal:7233
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
-      - ANTHROPIC_BASE_URL=${ANTHROPIC_BASE_URL:-}  # Optional: route through claude-code-router
-      - ANTHROPIC_AUTH_TOKEN=${ANTHROPIC_AUTH_TOKEN:-}  # Auth token for router
-      - ROUTER_DEFAULT=${ROUTER_DEFAULT:-}  # Model name when using router (e.g., "gemini,gemini-2.5-pro")
+      - ANTHROPIC_BASE_URL=${ANTHROPIC_BASE_URL:-}  # 可选: 通过 claude-code-router 路由
+      - ANTHROPIC_AUTH_TOKEN=${ANTHROPIC_AUTH_TOKEN:-}  # 路由器的认证令牌
+      - ROUTER_DEFAULT=${ROUTER_DEFAULT:-}  # 使用路由器时的模型名称 (例如: "gemini,gemini-2.5-pro")
       - CLAUDE_CODE_OAUTH_TOKEN=${CLAUDE_CODE_OAUTH_TOKEN:-}
     depends_on:
       temporal:
@@ -39,11 +39,11 @@ services:
     security_opt:
       - seccomp:unconfined
 
-  # Optional: claude-code-router for multi-model support
-  # Start with: ROUTER=true ./shannon start ...
+  # 可选: claude-code-router 用于多模型支持
+  # 启动命令: ROUTER=true ./shannon start ...
   router:
     image: node:20-slim
-    profiles: ["router"]  # Only starts when explicitly requested
+    profiles: ["router"]  # 仅在明确请求时启动
     command: >
       sh -c "apt-get update && apt-get install -y gettext-base &&
              npm install -g @musistudio/claude-code-router &&

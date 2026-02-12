@@ -1,39 +1,39 @@
 ---
-description: Create a PR to main branch using conventional commit style for the title
+description: 使用约定式提交风格为标题创建到 main 分支的 PR
 ---
 
-Create a pull request from the current branch to the `main` branch.
+从当前分支创建一个到 `main` 分支的拉取请求。
 
-## Arguments
+## 参数
 
-The user may provide issue numbers that this PR fixes: `$ARGUMENTS`
+用户可能会提供此 PR 修复的问题编号：`$ARGUMENTS`
 
-- If provided (e.g., `123` or `123,456`), use these issue numbers
-- If not provided, check the branch name for issue numbers (e.g., `fix/123-bug` or `issue-456-feature` → extract `123` or `456`)
-- If no issues are found, omit the "Closes" section
+- 如果提供了（例如 `123` 或 `123,456`），使用这些问题编号
+- 如果未提供，检查分支名称中的问题编号（例如 `fix/123-bug` 或 `issue-456-feature` → 提取 `123` 或 `456`）
+- 如果未找到任何问题，省略 "Closes" 部分
 
-## Steps
+## 步骤
 
-First, analyze the current branch to understand what changes have been made:
-1. Run `git log --oneline -10` to see recent commit history and understand commit style
-2. Run `git log main..HEAD --oneline` to see all commits on this branch that will be included in the PR
-3. Run `git diff main...HEAD --stat` to see a summary of file changes
-4. Run `git branch --show-current` to get the branch name for issue detection (if no explicit issues provided)
+首先，分析当前分支以了解已做出的更改：
+1. 运行 `git log --oneline -10` 查看最近的提交历史并了解提交风格
+2. 运行 `git log main..HEAD --oneline` 查看此分支上将包含在 PR 中的所有提交
+3. 运行 `git diff main...HEAD --stat` 查看文件更改的摘要
+4. 运行 `git branch --show-current` 获取分支名称以进行问题检测（如果未明确提供问题）
 
-Then generate a PR title that:
-- Follows conventional commit format (e.g., `fix:`, `feat:`, `chore:`, `refactor:`)
-- Is concise and accurately describes the changes
-- Matches the style of recent commits in the repository
+然后生成一个 PR 标题，该标题：
+- 遵循约定式提交格式（例如 `fix:`, `feat:`, `chore:`, `refactor:`）
+- 简洁明了且准确描述更改
+- 与存储库中最近提交的风格匹配
 
-Generate a PR body with:
-- A `## Summary` section with 1-3 bullet points describing the changes
-- A `Closes #X` line for each issue number (if any were provided or detected from branch name)
+生成一个 PR 正文，包含：
+- 一个 `## Summary` 部分，用 1-3 个要点描述更改
+- 每个问题编号的 `Closes #X` 行（如果有任何提供的或从分支名称中检测到的）
 
-Finally, create the PR using the gh CLI:
+最后，使用 gh CLI 创建 PR：
 ```
-gh pr create --base main --title "<generated title>" --body "$(cat <<'EOF'
+gh pr create --base main --title "<生成的标题>" --body "$(cat <<'EOF'
 ## Summary
-<bullet points>
+<要点>
 
 Closes #<issue1>
 Closes #<issue2>
@@ -41,10 +41,10 @@ EOF
 )"
 ```
 
-Note: Omit the "Closes" lines entirely if no issues are associated with this PR.
+注意：如果此 PR 未关联任何问题，请完全省略 "Closes" 行。
 
-IMPORTANT:
-- Do NOT include any Claude Code attribution in the PR
-- Keep the summary concise (1-3 bullet points maximum)
-- Use the conventional commit prefix that best matches the changes (fix, feat, chore, refactor, docs, etc.)
-- The `Closes #X` syntax will automatically close the referenced issues when the PR is merged
+重要：
+- 不要在 PR 中包含任何 Claude Code 归因
+- 保持摘要简洁（最多 1-3 个要点）
+- 使用与更改最匹配的约定式提交前缀（fix、feat、chore、refactor、docs 等）
+- `Closes #X` 语法会在 PR 合并时自动关闭引用的问题

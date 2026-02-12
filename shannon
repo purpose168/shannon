@@ -1,21 +1,21 @@
 #!/bin/bash
-# Shannon CLI - AI Penetration Testing Framework
+# Shannon 命令行工具 - AI 渗透测试框架
 
 set -e
 
-# Detect Podman vs Docker and set compose files accordingly
-# Podman doesn't support host-gateway, so we only include the Docker override for actual Docker
+# 检测 Podman 与 Docker 并相应设置 compose 文件
+# Podman 不支持 host-gateway，因此我们只为实际的 Docker 包含 Docker 覆盖配置
 COMPOSE_BASE="docker-compose.yml"
 if command -v podman &>/dev/null; then
-  # Podman detected (either native or via Docker Desktop shim) - use base config only
+  # 检测到 Podman（原生或通过 Docker Desktop 垫片）- 仅使用基础配置
   COMPOSE_OVERRIDE=""
 else
-  # Docker detected - include extra_hosts override for Linux localhost access
+  # 检测到 Docker - 包含 extra_hosts 覆盖以实现 Linux localhost 访问
   COMPOSE_OVERRIDE="-f docker-compose.docker.yml"
 fi
 COMPOSE_FILE="$COMPOSE_BASE"
 
-# Load .env if present
+# 如果存在 .env 文件则加载
 if [ -f .env ]; then
   set -a
   source .env
@@ -32,26 +32,26 @@ show_help() {
   ███████║██║  ██║██║  ██║██║ ╚████║██║ ╚████║╚██████╔╝██║ ╚████║
   ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝  ╚═══╝
 
-           AI Penetration Testing Framework
+           AI 渗透测试框架
 
-Usage:
-  ./shannon start URL=<url> REPO=<name>   Start a pentest workflow
-  ./shannon logs ID=<workflow-id>         Tail logs for a specific workflow
-  ./shannon query ID=<workflow-id>        Query workflow progress
-  ./shannon stop                          Stop all containers
-  ./shannon help                          Show this help message
+使用方法：
+  ./shannon start URL=<url> REPO=<name>   启动渗透测试工作流
+  ./shannon logs ID=<workflow-id>         跟踪特定工作流的日志
+  ./shannon query ID=<workflow-id>        查询工作流进度
+  ./shannon stop                          停止所有容器
+  ./shannon help                          显示此帮助信息
 
-Options for 'start':
-  REPO=<name>            Folder name under ./repos/ (e.g. REPO=repo-name)
-  CONFIG=<path>          Configuration file (YAML)
-  OUTPUT=<path>          Output directory for reports (default: ./audit-logs/)
-  PIPELINE_TESTING=true  Use minimal prompts for fast testing
-  ROUTER=true            Route requests through claude-code-router (multi-model support)
+'start' 选项：
+  REPO=<name>            ./repos/ 下的文件夹名称（例如：REPO=repo-name）
+  CONFIG=<path>          配置文件（YAML）
+  OUTPUT=<path>          报告输出目录（默认：./audit-logs/）
+  PIPELINE_TESTING=true  使用最小提示进行快速测试
+  ROUTER=true            通过 claude-code-router 路由请求（多模型支持）
 
-Options for 'stop':
-  CLEAN=true             Remove all data including volumes
+'stop' 选项：
+  CLEAN=true             删除所有数据，包括卷
 
-Examples:
+示例：
   ./shannon start URL=https://example.com REPO=repo-name
   ./shannon start URL=https://example.com REPO=repo-name CONFIG=./config.yaml
   ./shannon start URL=https://example.com REPO=repo-name OUTPUT=./my-reports
@@ -59,11 +59,11 @@ Examples:
   ./shannon query ID=shannon-1234567890
   ./shannon stop CLEAN=true
 
-Monitor workflows at http://localhost:8233
+在 http://localhost:8233 监控工作流
 EOF
 }
 
-# Parse KEY=value arguments into variables
+# 解析 KEY=value 格式的参数为变量
 parse_args() {
   for arg in "$@"; do
     case "$arg" in
@@ -80,44 +80,44 @@ parse_args() {
   done
 }
 
-# Check if Temporal is running and healthy
+# 检查 Temporal 是否运行且健康
 is_temporal_ready() {
   docker compose -f "$COMPOSE_FILE" $COMPOSE_OVERRIDE exec -T temporal \
     temporal operator cluster health --address localhost:7233 2>/dev/null | grep -q "SERVING"
 }
 
-# Ensure containers are running with correct mounts
+# 确保容器运行且挂载正确
 ensure_containers() {
-  # If custom OUTPUT_DIR is set, always refresh worker to ensure correct volume mount
-  # Docker compose will only recreate if the mount actually changed
+  # 如果设置了自定义 OUTPUT_DIR，始终刷新 worker 以确保正确的卷挂载
+  # Docker compose 只会在挂载实际更改时重新创建
   if [ -n "$OUTPUT_DIR" ]; then
-    echo "Ensuring worker has correct output mount..."
+    echo "确保 worker 有正确的输出挂载..."
     docker compose -f "$COMPOSE_FILE" $COMPOSE_OVERRIDE up -d worker 2>/dev/null || true
   fi
 
-  # Quick check: if Temporal is already healthy, we're good
+  # 快速检查：如果 Temporal 已经健康，我们就完成了
   if is_temporal_ready; then
     return 0
   fi
 
-  # Need to start containers
-  echo "Starting Shannon containers..."
+  # 需要启动容器
+  echo "启动 Shannon 容器..."
   if [ "$REBUILD" = "true" ]; then
-    # Force rebuild without cache (use when code changes aren't being picked up)
-    echo "Rebuilding with --no-cache..."
+    # 强制无缓存重建（当代码更改未被拾取时使用）
+    echo "使用 --no-cache 重建..."
     docker compose -f "$COMPOSE_FILE" $COMPOSE_OVERRIDE build --no-cache worker
   fi
   docker compose -f "$COMPOSE_FILE" $COMPOSE_OVERRIDE up -d --build
 
-  # Wait for Temporal to be ready
-  echo "Waiting for Temporal to be ready..."
+  # 等待 Temporal 准备就绪
+  echo "等待 Temporal 准备就绪..."
   for i in $(seq 1 30); do
     if is_temporal_ready; then
-      echo "Temporal is ready!"
+      echo "Temporal 已就绪！"
       return 0
     fi
     if [ "$i" -eq 30 ]; then
-      echo "Timeout waiting for Temporal"
+      echo "等待 Temporal 超时"
       exit 1
     fi
     sleep 2
@@ -127,105 +127,105 @@ ensure_containers() {
 cmd_start() {
   parse_args "$@"
 
-  # Validate required vars
+  # 验证必需变量
   if [ -z "$URL" ] || [ -z "$REPO" ]; then
-    echo "ERROR: URL and REPO are required"
-    echo "Usage: ./shannon start URL=<url> REPO=<name>"
+    echo "错误: URL 和 REPO 是必需的"
+    echo "使用方法: ./shannon start URL=<url> REPO=<name>"
     exit 1
   fi
 
-  # Check for API key (router mode can use alternative provider API keys)
+  # 检查 API 密钥（路由器模式可以使用替代提供商的 API 密钥）
   if [ -z "$ANTHROPIC_API_KEY" ] && [ -z "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
     if [ "$ROUTER" = "true" ] && { [ -n "$OPENAI_API_KEY" ] || [ -n "$OPENROUTER_API_KEY" ]; }; then
-      # Router mode with alternative provider - set a placeholder for SDK init
+      # 路由器模式与替代提供商 - 为 SDK 初始化设置占位符
       export ANTHROPIC_API_KEY="router-mode"
     else
-      echo "ERROR: Set ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN in .env"
-      echo "       (or use ROUTER=true with OPENAI_API_KEY or OPENROUTER_API_KEY)"
+      echo "错误: 在 .env 中设置 ANTHROPIC_API_KEY 或 CLAUDE_CODE_OAUTH_TOKEN"
+      echo "       (或使用 ROUTER=true 并设置 OPENAI_API_KEY 或 OPENROUTER_API_KEY)"
       exit 1
     fi
   fi
 
-  # Determine container path for REPO
-  # - If REPO is already a container path (/benchmarks/*, /repos/*), use as-is
-  # - Otherwise, treat as a folder name under ./repos/ (mounted at /repos in container)
+  # 确定 REPO 的容器路径
+  # - 如果 REPO 已经是容器路径 (/benchmarks/*, /repos/*)，按原样使用
+  # - 否则，将其视为 ./repos/ 下的文件夹名称（在容器中挂载为 /repos）
   case "$REPO" in
-    /benchmarks/*|/repos/*)
+    /benchmarks/*|/repos/*) 
       CONTAINER_REPO="$REPO"
       ;;
     *)
       if [ ! -d "./repos/$REPO" ]; then
-        echo "ERROR: Repository not found at ./repos/$REPO"
+        echo "错误: 在 ./repos/$REPO 未找到仓库"
         echo ""
-        echo "Place your target repository under the ./repos/ directory"
+        echo "请将目标仓库放在 ./repos/ 目录下"
         exit 1
       fi
       CONTAINER_REPO="/repos/$REPO"
       ;;
   esac
 
-  # Handle custom OUTPUT directory
-  # Export OUTPUT_DIR for docker-compose volume mount BEFORE starting containers
+  # 处理自定义 OUTPUT 目录
+  # 在启动容器之前导出 OUTPUT_DIR 用于 docker-compose 卷挂载
   if [ -n "$OUTPUT" ]; then
-    # Create output directory with write permissions for container user (UID 1001)
+    # 创建输出目录并为容器用户（UID 1001）设置写入权限
     mkdir -p "$OUTPUT"
     chmod 777 "$OUTPUT"
     export OUTPUT_DIR="$OUTPUT"
   fi
 
-  # Handle ROUTER flag - start claude-code-router for multi-model support
+  # 处理 ROUTER 标志 - 启动 claude-code-router 以支持多模型
   if [ "$ROUTER" = "true" ]; then
-    # Check if router is already running
+    # 检查路由器是否已经运行
     if docker compose -f "$COMPOSE_FILE" $COMPOSE_OVERRIDE --profile router ps router 2>/dev/null | grep -q "running"; then
-      echo "Router already running, skipping startup..."
+      echo "路由器已经运行，跳过启动..."
     else
-      echo "Starting claude-code-router..."
+      echo "启动 claude-code-router..."
 
-      # Check for provider API keys
+      # 检查提供商 API 密钥
       if [ -z "$OPENAI_API_KEY" ] && [ -z "$OPENROUTER_API_KEY" ]; then
-        echo "WARNING: No provider API key set (OPENAI_API_KEY or OPENROUTER_API_KEY). Router may not work."
+        echo "警告: 未设置提供商 API 密钥 (OPENAI_API_KEY 或 OPENROUTER_API_KEY)。路由器可能无法工作。"
       fi
 
-      # Start router with profile
+      # 使用配置文件启动路由器
       docker compose -f "$COMPOSE_FILE" $COMPOSE_OVERRIDE --profile router up -d router
 
-      # Give router a few seconds to start (health check disabled for now - TODO: debug later)
-      echo "Waiting for router to start..."
+      # 给路由器几秒钟时间启动（健康检查暂时禁用 - TODO: 稍后调试）
+      echo "等待路由器启动..."
       sleep 5
     fi
 
-    # Set ANTHROPIC_BASE_URL to route through router
+    # 设置 ANTHROPIC_BASE_URL 以通过路由器路由
     export ANTHROPIC_BASE_URL="http://router:3456"
-    # Set auth token to match router's APIKEY
+    # 设置认证令牌以匹配路由器的 APIKEY
     export ANTHROPIC_AUTH_TOKEN="shannon-router-key"
   fi
 
-  # Ensure audit-logs directory exists with write permissions for container user (UID 1001)
+  # 确保 audit-logs 目录存在并为容器用户（UID 1001）设置写入权限
   mkdir -p ./audit-logs
   chmod 777 ./audit-logs
 
-  # Ensure repo deliverables directory is writable by container user (UID 1001)
+  # 确保 repo deliverables 目录可由容器用户（UID 1001）写入
   if [ -d "./repos/$REPO" ]; then
     mkdir -p "./repos/$REPO/deliverables"
     chmod 777 "./repos/$REPO/deliverables"
   fi
 
-  # Ensure containers are running (starts them if needed)
+  # 确保容器运行（如有需要则启动）
   ensure_containers
 
-  # Build optional args
+  # 构建可选参数
   ARGS=""
   [ -n "$CONFIG" ] && ARGS="$ARGS --config $CONFIG"
 
-  # Pass container path for output (where OUTPUT_DIR is mounted)
-  # Also pass display path so client can show the host path to user
+  # 传递输出的容器路径（OUTPUT_DIR 挂载的位置）
+  # 同时传递显示路径，以便客户端可以向用户显示主机路径
   if [ -n "$OUTPUT" ]; then
     ARGS="$ARGS --output /app/output --display-output $OUTPUT"
   fi
 
   [ "$PIPELINE_TESTING" = "true" ] && ARGS="$ARGS --pipeline-testing"
 
-  # Run the client to submit workflow
+  # 运行客户端提交工作流
   docker compose -f "$COMPOSE_FILE" $COMPOSE_OVERRIDE exec -T worker \
     node dist/temporal/client.js "$URL" "$CONTAINER_REPO" $ARGS
 }
@@ -234,21 +234,21 @@ cmd_logs() {
   parse_args "$@"
 
   if [ -z "$ID" ]; then
-    echo "ERROR: ID is required"
-    echo "Usage: ./shannon logs ID=<workflow-id>"
+    echo "错误: ID 是必需的"
+    echo "使用方法: ./shannon logs ID=<workflow-id>"
     exit 1
   fi
 
-  # Auto-discover the workflow log file
-  # 1. Check default location first
-  # 2. Search common output directories
-  # 3. Fall back to find command
+  # 自动发现工作流日志文件
+  # 1. 首先检查默认位置
+  # 2. 搜索常见输出目录
+  # 3. 回退到 find 命令
   WORKFLOW_LOG=""
 
   if [ -f "./audit-logs/${ID}/workflow.log" ]; then
     WORKFLOW_LOG="./audit-logs/${ID}/workflow.log"
   else
-    # Search for the workflow directory (handles custom OUTPUT paths)
+    # 搜索工作流目录（处理自定义 OUTPUT 路径）
     FOUND=$(find . -maxdepth 3 -path "*/${ID}/workflow.log" -type f 2>/dev/null | head -1)
     if [ -n "$FOUND" ]; then
       WORKFLOW_LOG="$FOUND"
@@ -256,16 +256,16 @@ cmd_logs() {
   fi
 
   if [ -n "$WORKFLOW_LOG" ]; then
-    echo "Tailing workflow log: $WORKFLOW_LOG"
+    echo "跟踪工作流日志: $WORKFLOW_LOG"
     tail -f "$WORKFLOW_LOG"
   else
-    echo "ERROR: Workflow log not found for ID: $ID"
+    echo "错误: 未找到 ID 为 $ID 的工作流日志"
     echo ""
-    echo "Possible causes:"
-    echo "  - Workflow hasn't started yet"
-    echo "  - Workflow ID is incorrect"
+    echo "可能的原因:"
+    echo "  - 工作流尚未开始"
+    echo "  - 工作流 ID 不正确"
     echo ""
-    echo "Check: ./shannon query ID=$ID for workflow details"
+    echo "检查: ./shannon query ID=$ID 获取工作流详情"
     exit 1
   fi
 }
@@ -274,8 +274,8 @@ cmd_query() {
   parse_args "$@"
 
   if [ -z "$ID" ]; then
-    echo "ERROR: ID is required"
-    echo "Usage: ./shannon query ID=<workflow-id>"
+    echo "错误: ID 是必需的"
+    echo "使用方法: ./shannon query ID=<workflow-id>"
     exit 1
   fi
 
@@ -293,7 +293,7 @@ cmd_stop() {
   fi
 }
 
-# Main command dispatch
+# 主命令分发
 case "${1:-help}" in
   start)
     shift

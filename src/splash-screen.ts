@@ -12,26 +12,26 @@ import { fs, path } from 'zx';
 
 export const displaySplashScreen = async (): Promise<void> => {
   try {
-    // Get version info from package.json
+    // 从 package.json 获取版本信息
     const packagePath = path.join(import.meta.dirname, '..', 'package.json');
     const packageJson = (await fs.readJSON(packagePath)) as { version?: string };
     const version = packageJson.version || '1.0.0';
 
-    // Create the main SHANNON ASCII art
+    // 创建主要的 SHANNON ASCII 艺术
     const shannonText = figlet.textSync('SHANNON', {
       font: 'ANSI Shadow',
       horizontalLayout: 'default',
       verticalLayout: 'default',
     });
 
-    // Apply golden gradient to SHANNON
+    // 为 SHANNON 应用金色渐变
     const gradientShannon = gradient(['#F4C542', '#FFD700'])(shannonText);
 
-    // Create minimal tagline with styling
+    // 创建带有样式的简约标语
     const tagline = chalk.bold.white('AI Penetration Testing Framework');
     const versionInfo = chalk.gray(`v${version}`);
 
-    // Build the complete splash content
+    // 构建完整的启动屏幕内容
     const content = [
       gradientShannon,
       '',
@@ -45,7 +45,7 @@ export const displaySplashScreen = async (): Promise<void> => {
       '',
     ].join('\n');
 
-    // Create boxed output with minimal styling
+    // 创建带有简约样式的框式输出
     const boxedContent = boxen(content, {
       padding: 1,
       margin: 1,
@@ -54,11 +54,11 @@ export const displaySplashScreen = async (): Promise<void> => {
       dimBorder: false,
     });
 
-    // Clear screen and display splash
+    // 清屏并显示启动屏幕
     console.clear();
     console.log(boxedContent);
 
-    // Add loading animation
+    // 添加加载动画
     const loadingFrames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
     let frameIndex = 0;
 
@@ -77,7 +77,7 @@ export const displaySplashScreen = async (): Promise<void> => {
       }, 2000);
     });
   } catch (error) {
-    // Fallback to simple splash if anything fails
+    // 如果发生任何错误，回退到简单的启动屏幕
     const errMsg = error instanceof Error ? error.message : String(error);
     console.log(chalk.cyan.bold('\n🚀 SHANNON - AI Penetration Testing Framework\n'));
     console.log(chalk.yellow('⚠️  Could not load full splash screen:', errMsg));

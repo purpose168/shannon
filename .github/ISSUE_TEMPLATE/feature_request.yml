@@ -1,5 +1,5 @@
-name: Feature request
-description: Suggest an idea for this project
+name: 功能请求
+description: 为这个项目提出一个想法
 title: "[FEATURE]: "
 labels: []
 assignees: []
@@ -7,27 +7,27 @@ body:
   - type: textarea
     id: problem-description
     attributes:
-      label: Is your feature request related to a problem? Please describe.
-      description: "A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]"
+      label: 你的功能请求是否与某个问题相关？请描述。
+      description: "清晰简洁地描述问题是什么。例如：我总是在 [...] 时感到沮丧"
     validations:
       required: true
 
   - type: textarea
     id: desired-solution
     attributes:
-      label: Describe the solution you'd like
-      description: A clear and concise description of what you want to happen.
+      label: 描述你想要的解决方案
+      description: 清晰简洁地描述你希望发生什么。
     validations:
       required: true
 
   - type: textarea
     id: alternatives-considered
     attributes:
-      label: Describe alternatives you've considered
-      description: A clear and concise description of any alternative solutions or features you've considered.
+      label: 描述你考虑过的替代方案
+      description: 清晰简洁地描述你考虑过的任何替代解决方案或功能。
 
   - type: textarea
     id: additional-context
     attributes:
-      label: Additional context
-      description: Add any other context or screenshots about the feature request here.
+      label: 其他上下文
+      description: 在这里添加关于功能请求的任何其他上下文或截图。

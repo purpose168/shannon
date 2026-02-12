@@ -5,13 +5,13 @@
 // as published by the Free Software Foundation.
 
 /**
- * Formatting Utilities
+ * 格式化工具
  *
- * Generic formatting functions for durations, timestamps, and percentages.
+ * 用于持续时间、时间戳和百分比的通用格式化函数。
  */
 
 /**
- * Format duration in milliseconds to human-readable string
+ * 将毫秒持续时间格式化为人类可读的字符串
  */
 export function formatDuration(ms: number): string {
   if (ms < 1000) {
@@ -29,14 +29,14 @@ export function formatDuration(ms: number): string {
 }
 
 /**
- * Format timestamp to ISO 8601 string
+ * 将时间戳格式化为ISO 8601字符串
  */
 export function formatTimestamp(timestamp: number = Date.now()): string {
   return new Date(timestamp).toISOString();
 }
 
 /**
- * Calculate percentage
+ * 计算百分比
  */
 export function calculatePercentage(part: number, total: number): number {
   if (total === 0) return 0;
@@ -44,7 +44,7 @@ export function calculatePercentage(part: number, total: number): number {
 }
 
 /**
- * Extract agent type from description string for display purposes
+ * 从描述字符串中提取智能体类型以用于显示目的
  */
 export function extractAgentType(description: string): string {
   if (description.includes('Pre-recon')) {

@@ -5,15 +5,15 @@
 // as published by the Free Software Foundation.
 
 /**
- * Error Formatting Utilities
+ * 错误格式化工具
  *
- * Helper functions for creating structured error responses.
+ * 用于创建结构化错误响应的辅助函数。
  */
 
 import type { ErrorResponse } from '../types/tool-responses.js';
 
 /**
- * Create a validation error response
+ * 创建验证错误响应
  */
 export function createValidationError(
   message: string,
@@ -30,7 +30,7 @@ export function createValidationError(
 }
 
 /**
- * Create a crypto error response
+ * 创建加密错误响应
  */
 export function createCryptoError(
   message: string,
@@ -47,7 +47,7 @@ export function createCryptoError(
 }
 
 /**
- * Create a generic error response
+ * 创建通用错误响应
  */
 export function createGenericError(
   error: unknown,

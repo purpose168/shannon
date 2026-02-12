@@ -5,13 +5,12 @@
 // as published by the Free Software Foundation.
 
 /**
- * save_deliverable MCP Tool
+ * save_deliverable MCP 工具
  *
- * Saves deliverable files with automatic validation.
- * Replaces tools/save_deliverable.js bash script.
+ * 保存可交付成果文件并进行自动验证。
+ * 替代 tools/save_deliverable.js bash 脚本。
  *
- * Uses factory pattern to capture targetDir in closure, avoiding race conditions
- * when multiple workflows run in parallel.
+ * 使用工厂模式在闭包中捕获 targetDir，避免多个工作流并行运行时的竞争条件。
  */
 
 import { tool } from '@anthropic-ai/claude-agent-sdk';
@@ -25,19 +24,19 @@ import { saveDeliverableFile } from '../utils/file-operations.js';
 import { createValidationError, createGenericError } from '../utils/error-formatter.js';
 
 /**
- * Input schema for save_deliverable tool
+ * save_deliverable 工具的输入模式
  */
 export const SaveDeliverableInputSchema = z.object({
-  deliverable_type: z.nativeEnum(DeliverableType).describe('Type of deliverable to save'),
-  content: z.string().min(1).optional().describe('File content (markdown for analysis/evidence, JSON for queues). Optional if file_path is provided.'),
-  file_path: z.string().optional().describe('Path to a file whose contents should be used as the deliverable content. Relative paths are resolved against the deliverables directory. Use this instead of content for large reports to avoid output token limits.'),
+  deliverable_type: z.nativeEnum(DeliverableType).describe('要保存的可交付成果类型'),
+  content: z.string().min(1).optional().describe('文件内容（分析/证据为 markdown，队列为 JSON）。如果提供了 file_path，则可选。'),
+  file_path: z.string().optional().describe('其内容应用作可交付成果内容的文件路径。相对路径相对于 deliverables 目录解析。对于大型报告，使用此选项而不是内联 content 以避免输出令牌限制。'),
 });
 
 export type SaveDeliverableInput = z.infer<typeof SaveDeliverableInputSchema>;
 
 /**
- * Check if a path is contained within a base directory.
- * Prevents path traversal attacks (e.g., ../../../etc/passwd).
+ * 检查路径是否包含在基础目录中。
+ * 防止路径遍历攻击（例如，../../../etc/passwd）。
  */
 function isPathContained(basePath: string, targetPath: string): boolean {
   const resolvedBase = path.resolve(basePath);
@@ -46,8 +45,8 @@ function isPathContained(basePath: string, targetPath: string): boolean {
 }
 
 /**
- * Resolve deliverable content from either inline content or a file path.
- * Returns the content string on success, or a ToolResult error on failure.
+ * 从内联内容或文件路径解析可交付成果内容。
+ * 成功时返回内容字符串，失败时返回 ToolResult 错误。
  */
 function resolveContent(
   args: SaveDeliverableInput,
@@ -59,7 +58,7 @@ function resolveContent(
 
   if (!args.file_path) {
     return createToolResult(createValidationError(
-      'Either "content" or "file_path" must be provided',
+      '必须提供 "content" 或 "file_path"',
       true,
       { deliverableType: args.deliverable_type },
     ));
@@ -69,10 +68,10 @@ function resolveContent(
     ? args.file_path
     : path.resolve(targetDir, args.file_path);
 
-  // Security: Prevent path traversal outside targetDir
+  // 安全：防止目标目录外的路径遍历
   if (!isPathContained(targetDir, resolvedPath)) {
     return createToolResult(createValidationError(
-      `Path "${args.file_path}" resolves outside allowed directory`,
+      `路径 "${args.file_path}" 解析到允许的目录外`,
       false,
       { deliverableType: args.deliverable_type, allowedBase: targetDir },
     ));
@@ -82,7 +81,7 @@ function resolveContent(
     return fs.readFileSync(resolvedPath, 'utf-8');
   } catch (readError) {
     return createToolResult(createValidationError(
-      `Failed to read file at ${resolvedPath}: ${readError instanceof Error ? readError.message : String(readError)}`,
+      `无法读取 ${resolvedPath} 处的文件：${readError instanceof Error ? readError.message : String(readError)}`,
       true,
       { deliverableType: args.deliverable_type, filePath: resolvedPath },
     ));
@@ -90,10 +89,10 @@ function resolveContent(
 }
 
 /**
- * Create save_deliverable handler with targetDir captured in closure.
+ * 创建在闭包中捕获 targetDir 的 save_deliverable 处理程序。
  *
- * This factory pattern ensures each MCP server instance has its own targetDir,
- * preventing race conditions when multiple workflows run in parallel.
+ * 此工厂模式确保每个 MCP 服务器实例都有自己的 targetDir，
+ * 防止多个工作流并行运行时的竞争条件。
  */
 function createSaveDeliverableHandler(targetDir: string) {
   return async function saveDeliverable(args: SaveDeliverableInput): Promise<ToolResult> {
@@ -110,7 +109,7 @@ function createSaveDeliverableHandler(targetDir: string) {
         const queueValidation = validateQueueJson(content);
         if (!queueValidation.valid) {
           return createToolResult(createValidationError(
-            queueValidation.message ?? 'Invalid queue JSON',
+            queueValidation.message ?? '无效的队列 JSON',
             true,
             { deliverableType: deliverable_type, expectedFormat: '{"vulnerabilities": [...]}' },
           ));
@@ -122,7 +121,7 @@ function createSaveDeliverableHandler(targetDir: string) {
 
       const successResponse: SaveDeliverableResponse = {
         status: 'success',
-        message: `Deliverable saved successfully: ${filename}`,
+        message: `可交付成果保存成功：${filename}`,
         filepath,
         deliverableType: deliverable_type,
         validated: isQueueType(deliverable_type),
@@ -140,15 +139,15 @@ function createSaveDeliverableHandler(targetDir: string) {
 }
 
 /**
- * Factory function to create save_deliverable tool with targetDir in closure
+ * 工厂函数，创建在闭包中包含 targetDir 的 save_deliverable 工具
  *
- * Each MCP server instance should call this with its own targetDir to ensure
- * deliverables are saved to the correct workflow's directory.
+ * 每个 MCP 服务器实例都应使用自己的 targetDir 调用此函数，以确保
+ * 可交付成果保存到正确的工作流目录。
  */
 export function createSaveDeliverableTool(targetDir: string) {
   return tool(
     'save_deliverable',
-    'Saves deliverable files with automatic validation. Queue files must have {"vulnerabilities": [...]} structure. For large reports, write the file to disk first then pass file_path instead of inline content to avoid output token limits.',
+    '保存可交付成果文件并进行自动验证。队列文件必须具有 {"vulnerabilities": [...]} 结构。对于大型报告，先将文件写入磁盘，然后传递 file_path 而不是内联 content 以避免输出令牌限制。',
     SaveDeliverableInputSchema.shape,
     createSaveDeliverableHandler(targetDir)
   );

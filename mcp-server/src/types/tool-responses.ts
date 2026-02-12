@@ -5,16 +5,16 @@
 // as published by the Free Software Foundation.
 
 /**
- * Tool Response Type Definitions
+ * 工具响应类型定义
  *
- * Defines structured response formats for MCP tools to ensure
- * consistent error handling and success reporting.
+ * 为 MCP 工具定义结构化响应格式，确保
+ * 一致的错误处理和成功报告。
  */
 
 export interface ErrorResponse {
   status: 'error';
   message: string;
-  errorType: string; // ValidationError, FileSystemError, CryptoError, etc.
+  errorType: string; // ValidationError, FileSystemError, CryptoError, 等
   retryable: boolean;
   context?: Record<string, unknown>;
 }
@@ -29,7 +29,7 @@ export interface SaveDeliverableResponse {
   message: string;
   filepath: string;
   deliverableType: string;
-  validated: boolean; // true if queue JSON was validated
+  validated: boolean; // 如果队列 JSON 已验证则为 true
 }
 
 export interface GenerateTotpResponse {
@@ -37,7 +37,7 @@ export interface GenerateTotpResponse {
   message: string;
   totpCode: string;
   timestamp: string;
-  expiresIn: number; // seconds until expiration
+  expiresIn: number; // 到期前的秒数
 }
 
 export type ToolResponse =
@@ -57,8 +57,8 @@ export interface ToolResult {
 }
 
 /**
- * Helper to create tool result from response
- * MCP tools should return this format
+ * 从响应创建工具结果的辅助函数
+ * MCP 工具应返回此格式
  */
 export function createToolResult(response: ToolResponse): ToolResult {
   return {

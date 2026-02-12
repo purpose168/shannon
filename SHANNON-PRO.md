@@ -1,40 +1,40 @@
-# Shannon Pro vs Shannon Lite
+# Shannon Pro 对比 Shannon Lite
 
-## Technical Differences
+## 技术差异
 
-**Shannon Pro** is built on advanced, LLM-powered data flow analysis inspired by the ideas of the [LLM-driven Data-Flow Analysis paper](https://arxiv.org/abs/2402.10754). It traces data flows to identify complex, exploitable vulnerabilities with high precision. It's cloud-based with native CI/CD integration (GitHub Actions, GitLab CI, Jenkins) and supports self-hosted deployment.
+**Shannon Pro** 基于先进的、由 LLM 驱动的数据流分析构建，其灵感来源于 [LLM-driven Data-Flow Analysis 论文](https://arxiv.org/abs/2402.10754)中的思想。它通过追踪数据流来高精度识别复杂的可利用漏洞。它基于云服务，支持原生 CI/CD 集成（GitHub Actions、GitLab CI、Jenkins），并支持自托管部署。
 
-### Feature Comparison
+### 功能对比
 
-| Feature | Shannon Lite<br>(AGPL-3.0) | Shannon Pro<br>(Commercial) |
+| 功能 | Shannon Lite<br>(AGPL-3.0) | Shannon Pro<br>(商业版) |
 |---------|:-------------------------:|:---------------------------:|
-| **Core Scanning** |
-| Source-Sink Analysis | Basic | LLM-powered data flow analysis for high-precision, source-to-sink vulnerability detection |
-| CVSS Scoring | ❌ | ✅ |
-| Remediation Guidance | Basic | Code-level fixes |
-| **Integration** |
-| CI/CD Pipeline Support | ❌ | ✅ |
-| API Access | ❌ | ✅ |
+| **核心扫描** |
+| 源-汇分析 | 基础 | 基于 LLM 的数据流分析，用于高精度的源到汇漏洞检测 |
+| CVSS 评分 | ❌ | ✅ |
+| 修复指导 | 基础 | 代码级修复 |
+| **集成** |
+| CI/CD 管道支持 | ❌ | ✅ |
+| API 访问 | ❌ | ✅ |
 | Jira/Linear/ServiceNow/Slack | ❌ | ✅ |
-| **Deployment** |
-| Hosting | Self-hosted | Cloud or Self-hosted |
-| **Enterprise** |
-| Multi-user & RBAC | ❌ | ✅ |
+| **部署** |
+| 托管方式 | 自托管 | 云托管或自托管 |
+| **企业级** |
+| 多用户与 RBAC | ❌ | ✅ |
 | SSO/SAML | ❌ | ✅ |
-| Audit Logs | ❌ | ✅ |
-| Compliance Reporting | ❌ | ✅ (OWASP, PCI-DSS, SOC2) |
-| **Support** |
-| Support | Community | Dedicated + SLA |
-| **Cost** | Free + API costs | Contact Us |
+| 审计日志 | ❌ | ✅ |
+| 合规报告 | ❌ | ✅ (OWASP, PCI-DSS, SOC2) |
+| **支持** |
+| 支持 | 社区 | 专属支持 + SLA |
+| **成本** | 免费 + API 费用 | 联系我们 |
 
-## Which to Choose?
+## 如何选择？
 
-**Shannon Lite**: Individual researchers, small teams, or testing personal projects  
-**Shannon Pro**: Designed for organizations that want to "shift-left" and integrate security directly into their development lifecycle. Its _advanced LLM-powered data flow analysis engine_ is ideal for catching deep-seated vulnerabilities before they ever reach production, complemented by full CI/CD integration and enterprise support.
+**Shannon Lite**：适合个人研究人员、小型团队或测试个人项目  
+**Shannon Pro**：专为希望"左移"并将安全性直接集成到开发生命周期中的组织设计。其 _先进的 LLM 驱动数据流分析引擎_ 非常适合在漏洞到达生产环境之前捕获深层漏洞，并辅以完整的 CI/CD 集成和企业级支持。
 
-## Interested in Shannon Pro?
+## 对 Shannon Pro 感兴趣？
 
-Shannon Pro offers enterprise-grade features, dedicated support, and seamless CI/CD integration for organizations serious about application security.
+Shannon Pro 为重视应用程序安全的组织提供企业级功能、专属支持和无缝的 CI/CD 集成。
 
 <p align="center">
   <a href="https://docs.google.com/forms/d/e/1FAIpQLSf-cPZcWjlfBJ3TCT8AaWpf8ztsw3FaHzJE4urr55KdlQs6cQ/viewform?usp=header" target="_blank">
@@ -42,6 +42,6 @@ Shannon Pro offers enterprise-grade features, dedicated support, and seamless CI
   </a>
 </p>
 
-**Or contact us directly:**
+**或直接联系我们：**
 
-📧 **Email**: [shannon@keygraph.io](mailto:shannon@keygraph.io)
+📧 **邮箱**：[shannon@keygraph.io](mailto:shannon@keygraph.io)

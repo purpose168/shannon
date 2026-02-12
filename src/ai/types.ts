@@ -4,7 +4,7 @@
 // it under the terms of the GNU Affero General Public License version 3
 // as published by the Free Software Foundation.
 
-// Type definitions for Claude executor message processing pipeline
+// Claude 执行器消息处理管道的类型定义
 
 export interface ExecutionContext {
   isParallelExecution: boolean;
@@ -110,7 +110,7 @@ export interface ApiErrorDetection {
   shouldThrow?: Error;
 }
 
-// Message types from SDK stream
+// 来自 SDK 流的消息类型
 export type SdkMessage =
   | AssistantMessage
   | ResultMessage
@@ -131,7 +131,7 @@ export interface UserMessage {
   type: 'user';
 }
 
-// Dispatch result types for message processing
+// 消息处理的分发结果类型
 export type MessageDispatchResult =
   | { action: 'continue' }
   | { action: 'break'; result: string | null; cost: number }

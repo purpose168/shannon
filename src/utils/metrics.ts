@@ -7,7 +7,7 @@
 import chalk from 'chalk';
 import { formatDuration } from './formatting.js';
 
-// Timing utilities
+// 计时工具
 
 export class Timer {
   name: string;
@@ -48,7 +48,7 @@ interface CostResults {
   total: number;
 }
 
-// Global timing and cost tracker
+// 全局计时和成本跟踪器
 export const timingResults: TimingResults = {
   total: null,
   agents: {},
@@ -59,25 +59,25 @@ export const costResults: CostResults = {
   total: 0,
 };
 
-// Function to display comprehensive timing summary
+// 显示综合计时摘要的函数
 export const displayTimingSummary = (): void => {
   if (!timingResults.total) {
-    console.log(chalk.yellow('No timing data available'));
+    console.log(chalk.yellow('没有可用的计时数据'));
     return;
   }
 
   const totalDuration = timingResults.total.stop();
 
-  console.log(chalk.cyan.bold('\n⏱️  TIMING SUMMARY'));
+  console.log(chalk.cyan.bold('\n⏱️  计时摘要'));
   console.log(chalk.gray('─'.repeat(60)));
 
-  // Total execution time
-  console.log(chalk.cyan(`📊 Total Execution Time: ${formatDuration(totalDuration)}`));
+  // 总执行时间
+  console.log(chalk.cyan(`📊 总执行时间: ${formatDuration(totalDuration)}`));
   console.log();
 
-  // Agent breakdown
+  // 智能体细分
   if (Object.keys(timingResults.agents).length > 0) {
-    console.log(chalk.magenta.bold('🤖 Agent Breakdown:'));
+    console.log(chalk.magenta.bold('🤖 智能体细分:'));
     let agentTotal = 0;
     for (const [agent, duration] of Object.entries(timingResults.agents)) {
       const percentage = ((duration / totalDuration) * 100).toFixed(1);
@@ -91,20 +91,21 @@ export const displayTimingSummary = (): void => {
     }
     console.log(
       chalk.gray(
-        `  ${'Agents Total'.padEnd(20)} ${formatDuration(agentTotal).padStart(8)} (${((agentTotal / totalDuration) * 100).toFixed(1)}%)`
+        `  ${'智能体总计'.padEnd(20)} ${formatDuration(agentTotal).padStart(8)} (${((agentTotal / totalDuration) * 100).toFixed(1)}%)`
       )
     );
   }
 
-  // Cost breakdown
+  // 成本细分
   if (Object.keys(costResults.agents).length > 0) {
-    console.log(chalk.green.bold('\n💰 Cost Breakdown:'));
+    console.log(chalk.green.bold('\n💰 成本细分:'));
     for (const [agent, cost] of Object.entries(costResults.agents)) {
       const displayName = agent.replace(/-/g, ' ');
       console.log(chalk.green(`  ${displayName.padEnd(20)} $${cost.toFixed(4).padStart(8)}`));
     }
-    console.log(chalk.gray(`  ${'Total Cost'.padEnd(20)} $${costResults.total.toFixed(4).padStart(8)}`));
+    console.log(chalk.gray(`  ${'总成本'.padEnd(20)} $${costResults.total.toFixed(4).padStart(8)}`));
   }
 
   console.log(chalk.gray('─'.repeat(60)));
 };
+

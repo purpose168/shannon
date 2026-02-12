@@ -5,7 +5,7 @@
 // as published by the Free Software Foundation.
 
 /**
- * Error type definitions
+ * 错误类型定义
  */
 
 export type PentestErrorType =

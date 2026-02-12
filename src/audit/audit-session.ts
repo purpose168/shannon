@@ -5,10 +5,10 @@
 // as published by the Free Software Foundation.
 
 /**
- * Audit Session - Main Facade
+ * 审计会话 - 主要外观类
  *
- * Coordinates logger, metrics tracker, and concurrency control for comprehensive
- * crash-safe audit logging.
+ * 协调日志记录器、指标跟踪器和并发控制，实现全面的
+ * 崩溃安全审计日志记录。
  */
 
 import { AgentLogger } from './logger.js';
@@ -18,7 +18,7 @@ import { initializeAuditStructure, type SessionMetadata } from './utils.js';
 import { formatTimestamp } from '../utils/formatting.js';
 import { SessionMutex } from '../utils/concurrency.js';
 
-// Global mutex instance
+// 全局互斥锁实例
 const sessionMutex = new SessionMutex();
 
 interface AgentEndResult {
@@ -33,7 +33,7 @@ interface AgentEndResult {
 }
 
 /**
- * AuditSession - Main audit system facade
+ * AuditSession - 主要审计系统外观类
  */
 export class AuditSession {
   private sessionMetadata: SessionMetadata;
@@ -48,42 +48,42 @@ export class AuditSession {
     this.sessionMetadata = sessionMetadata;
     this.sessionId = sessionMetadata.id;
 
-    // Validate required fields
+    // 验证必需字段
     if (!this.sessionId) {
-      throw new Error('sessionMetadata.id is required');
+      throw new Error('sessionMetadata.id 是必需的');
     }
     if (!this.sessionMetadata.webUrl) {
-      throw new Error('sessionMetadata.webUrl is required');
+      throw new Error('sessionMetadata.webUrl 是必需的');
     }
 
-    // Components
+    // 组件
     this.metricsTracker = new MetricsTracker(sessionMetadata);
     this.workflowLogger = new WorkflowLogger(sessionMetadata);
   }
 
   /**
-   * Initialize audit session (creates directories, session.json)
-   * Idempotent and race-safe
+   * 初始化审计会话（创建目录，session.json）
+   * 幂等且线程安全
    */
   async initialize(): Promise<void> {
     if (this.initialized) {
-      return; // Already initialized
+      return; // 已经初始化
     }
 
-    // Create directory structure
+    // 创建目录结构
     await initializeAuditStructure(this.sessionMetadata);
 
-    // Initialize metrics tracker (loads or creates session.json)
+    // 初始化指标跟踪器（加载或创建 session.json）
     await this.metricsTracker.initialize();
 
-    // Initialize workflow logger
+    // 初始化工作流日志记录器
     await this.workflowLogger.initialize();
 
     this.initialized = true;
   }
 
   /**
-   * Ensure initialized (helper for lazy initialization)
+   * 确保初始化（惰性初始化的辅助方法）
    */
   private async ensureInitialized(): Promise<void> {
     if (!this.initialized) {
@@ -92,7 +92,7 @@ export class AuditSession {
   }
 
   /**
-   * Start agent execution
+   * 开始智能体执行
    */
   async startAgent(
     agentName: string,
@@ -101,44 +101,44 @@ export class AuditSession {
   ): Promise<void> {
     await this.ensureInitialized();
 
-    // Save prompt snapshot (only on first attempt)
+    // 保存提示快照（仅在第一次尝试时）
     if (attemptNumber === 1) {
       await AgentLogger.savePrompt(this.sessionMetadata, agentName, promptContent);
     }
 
-    // Track current agent name for workflow logging
+    // 跟踪当前智能体名称用于工作流日志
     this.currentAgentName = agentName;
 
-    // Create and initialize logger for this attempt
+    // 为此尝试创建并初始化日志记录器
     this.currentLogger = new AgentLogger(this.sessionMetadata, agentName, attemptNumber);
     await this.currentLogger.initialize();
 
-    // Start metrics tracking
+    // 开始指标跟踪
     this.metricsTracker.startAgent(agentName, attemptNumber);
 
-    // Log start event
+    // 记录开始事件
     await this.currentLogger.logEvent('agent_start', {
       agentName,
       attemptNumber,
       timestamp: formatTimestamp(),
     });
 
-    // Log to unified workflow log
+    // 记录到统一工作流日志
     await this.workflowLogger.logAgent(agentName, 'start', { attemptNumber });
   }
 
   /**
-   * Log event during agent execution
+   * 在智能体执行期间记录事件
    */
   async logEvent(eventType: string, eventData: unknown): Promise<void> {
     if (!this.currentLogger) {
-      throw new Error('No active logger. Call startAgent() first.');
+      throw new Error('没有活动的日志记录器。请先调用 startAgent()。');
     }
 
-    // Log to agent-specific log file (JSON format)
+    // 记录到智能体特定的日志文件（JSON 格式）
     await this.currentLogger.logEvent(eventType, eventData);
 
-    // Also log to unified workflow log (human-readable format)
+    // 同时记录到统一工作流日志（人类可读格式）
     const data = eventData as Record<string, unknown>;
     const agentName = this.currentAgentName || 'unknown';
     switch (eventType) {
@@ -156,16 +156,16 @@ export class AuditSession {
           String(data.content || '')
         );
         break;
-      // tool_end and error events are intentionally not logged to workflow log
-      // to reduce noise - the agent completion message captures the outcome
+      // tool_end 和 error 事件有意不记录到工作流日志
+      // 以减少噪音 - 智能体完成消息捕获结果
     }
   }
 
   /**
-   * End agent execution (mutex-protected)
+   * 结束智能体执行（互斥锁保护）
    */
   async endAgent(agentName: string, result: AgentEndResult): Promise<void> {
-    // Log end event
+    // 记录结束事件
     if (this.currentLogger) {
       await this.currentLogger.logEvent('agent_end', {
         agentName,
@@ -175,15 +175,15 @@ export class AuditSession {
         timestamp: formatTimestamp(),
       });
 
-      // Close logger
+      // 关闭日志记录器
       await this.currentLogger.close();
       this.currentLogger = null;
     }
 
-    // Reset current agent name
+    // 重置当前智能体名称
     this.currentAgentName = null;
 
-    // Log to unified workflow log
+    // 记录到统一工作流日志
     const agentLogDetails: AgentLogDetails = {
       attemptNumber: result.attemptNumber,
       duration_ms: result.duration_ms,
@@ -193,13 +193,13 @@ export class AuditSession {
     };
     await this.workflowLogger.logAgent(agentName, 'end', agentLogDetails);
 
-    // Mutex-protected update to session.json
+    // 互斥锁保护的 session.json 更新
     const unlock = await sessionMutex.lock(this.sessionId);
     try {
-      // Reload inside mutex to prevent lost updates during parallel exploitation phase
+      // 在互斥锁内重新加载，以防止在并行利用阶段丢失更新
       await this.metricsTracker.reload();
 
-      // Update metrics
+      // 更新指标
       await this.metricsTracker.endAgent(agentName, result);
     } finally {
       unlock();
@@ -207,7 +207,7 @@ export class AuditSession {
   }
 
   /**
-   * Update session status
+   * 更新会话状态
    */
   async updateSessionStatus(status: 'in-progress' | 'completed' | 'failed'): Promise<void> {
     await this.ensureInitialized();
@@ -222,7 +222,7 @@ export class AuditSession {
   }
 
   /**
-   * Get current metrics (read-only)
+   * 获取当前指标（只读）
    */
   async getMetrics(): Promise<unknown> {
     await this.ensureInitialized();
@@ -230,7 +230,7 @@ export class AuditSession {
   }
 
   /**
-   * Log phase start to unified workflow log
+   * 记录阶段开始到统一工作流日志
    */
   async logPhaseStart(phase: string): Promise<void> {
     await this.ensureInitialized();
@@ -238,7 +238,7 @@ export class AuditSession {
   }
 
   /**
-   * Log phase completion to unified workflow log
+   * 记录阶段完成到统一工作流日志
    */
   async logPhaseComplete(phase: string): Promise<void> {
     await this.ensureInitialized();
@@ -246,7 +246,7 @@ export class AuditSession {
   }
 
   /**
-   * Log workflow completion to unified workflow log
+   * 记录工作流完成到统一工作流日志
    */
   async logWorkflowComplete(summary: WorkflowSummary): Promise<void> {
     await this.ensureInitialized();

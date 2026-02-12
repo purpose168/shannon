@@ -5,32 +5,32 @@
 // as published by the Free Software Foundation.
 
 /**
- * Temporal activities for Shannon agent execution.
+ * Shannon 智能体执行的 Temporal 活动。
  *
- * Each activity wraps a single agent execution with:
- * - Heartbeat loop (2s interval) to signal worker liveness
- * - Git checkpoint/rollback/commit per attempt
- * - Error classification for Temporal retry behavior
- * - Audit session logging
+ * 每个活动包装单个智能体执行，包含：
+ * - 心跳循环（2秒间隔）以信号工作器活跃度
+ * - 每次尝试的 Git 检查点/回滚/提交
+ * - 用于 Temporal 重试行为的错误分类
+ * - 审计会话日志记录
  *
- * Temporal handles retries based on error classification:
- * - Retryable: BillingError, TransientError (429, 5xx, network)
- * - Non-retryable: AuthenticationError, PermissionError, ConfigurationError, etc.
+ * Temporal 根据错误分类处理重试：
+ * - 可重试：BillingError、TransientError（429、5xx、网络）
+ * - 不可重试：AuthenticationError、PermissionError、ConfigurationError 等
  */
 
 import { heartbeat, ApplicationFailure, Context } from '@temporalio/activity';
 import chalk from 'chalk';
 
-// Max lengths to prevent Temporal protobuf buffer overflow
+// 防止 Temporal protobuf 缓冲区溢出的最大长度
 const MAX_ERROR_MESSAGE_LENGTH = 2000;
 const MAX_STACK_TRACE_LENGTH = 1000;
 
-// Max retries for output validation errors (agent didn't save deliverables)
-// Lower than default 50 since this is unlikely to self-heal
+// 输出验证错误的最大重试次数（智能体未保存交付物）
+// 低于默认的 50，因为这不太可能自愈
 const MAX_OUTPUT_VALIDATION_RETRIES = 3;
 
 /**
- * Truncate error message to prevent buffer overflow in Temporal serialization.
+ * 截断错误消息以防止 Temporal 序列化中的缓冲区溢出。
  */
 function truncateErrorMessage(message: string): string {
   if (message.length <= MAX_ERROR_MESSAGE_LENGTH) {
@@ -40,7 +40,7 @@ function truncateErrorMessage(message: string): string {
 }
 
 /**
- * Truncate stack trace on an ApplicationFailure to prevent buffer overflow.
+ * 截断 ApplicationFailure 上的堆栈跟踪以防止缓冲区溢出。
  */
 function truncateStackTrace(failure: ApplicationFailure): void {
   if (failure.stack && failure.stack.length > MAX_STACK_TRACE_LENGTH) {
@@ -76,11 +76,11 @@ import type { AgentMetrics } from './shared.js';
 import type { DistributedConfig } from '../types/config.js';
 import type { SessionMetadata } from '../audit/utils.js';
 
-const HEARTBEAT_INTERVAL_MS = 2000; // Must be < heartbeatTimeout (10min production, 5min testing)
+const HEARTBEAT_INTERVAL_MS = 2000; // 必须小于 heartbeatTimeout（生产环境 10 分钟，测试环境 5 分钟）
 
 /**
- * Input for all agent activities.
- * Matches PipelineInput but with required workflowId for audit correlation.
+ * 所有智能体活动的输入。
+ * 匹配 PipelineInput，但带有审计关联所需的必填 workflowId。
  */
 export interface ActivityInput {
   webUrl: string;
@@ -92,18 +92,18 @@ export interface ActivityInput {
 }
 
 /**
- * Core activity implementation.
+ * 核心活动实现。
  *
- * Executes a single agent with:
- * 1. Heartbeat loop for worker liveness
- * 2. Config loading (if configPath provided)
- * 3. Audit session initialization
- * 4. Prompt loading
- * 5. Git checkpoint before execution
- * 6. Agent execution (single attempt)
- * 7. Output validation
- * 8. Git commit on success, rollback on failure
- * 9. Error classification for Temporal retry
+ * 执行单个智能体，包含：
+ * 1. 心跳循环以保持工作器活跃
+ * 2. 配置加载（如果提供了 configPath）
+ * 3. 审计会话初始化
+ * 4. 提示加载
+ * 5. 执行前的 Git 检查点
+ * 6. 智能体执行（单次尝试）
+ * 7. 输出验证
+ * 8. 成功时提交 Git，失败时回滚
+ * 9. 用于 Temporal 重试的错误分类
  */
 async function runAgentActivity(
   agentName: AgentName,
@@ -120,28 +120,28 @@ async function runAgentActivity(
 
   const startTime = Date.now();
 
-  // Get attempt number from Temporal context (tracks retries automatically)
+  // 从 Temporal 上下文获取尝试次数（自动跟踪重试）
   const attemptNumber = Context.current().info.attempt;
 
-  // Heartbeat loop - signals worker is alive to Temporal server
+  // 心跳循环 - 向 Temporal 服务器信号工作器存活
   const heartbeatInterval = setInterval(() => {
     const elapsed = Math.floor((Date.now() - startTime) / 1000);
     heartbeat({ agent: agentName, elapsedSeconds: elapsed, attempt: attemptNumber });
   }, HEARTBEAT_INTERVAL_MS);
 
   try {
-    // 1. Load config (if provided)
+    // 1. 加载配置（如果提供）
     let distributedConfig: DistributedConfig | null = null;
     if (configPath) {
       try {
         const config = await parseConfig(configPath);
         distributedConfig = distributeConfig(config);
       } catch (err) {
-        throw new Error(`Failed to load config ${configPath}: ${err instanceof Error ? err.message : String(err)}`);
+        throw new Error(`加载配置 ${configPath} 失败: ${err instanceof Error ? err.message : String(err)}`);
       }
     }
 
-    // 2. Build session metadata for audit
+    // 2. 构建审计会话元数据
     const sessionMetadata: SessionMetadata = {
       id: workflowId,
       webUrl,
@@ -149,11 +149,11 @@ async function runAgentActivity(
       ...(outputPath && { outputPath }),
     };
 
-    // 3. Initialize audit session (idempotent, safe across retries)
+    // 3. 初始化审计会话（幂等，在重试中安全）
     const auditSession = new AuditSession(sessionMetadata);
     await auditSession.initialize();
 
-    // 4. Load prompt
+    // 4. 加载提示
     const promptName = getPromptNameForAgent(agentName);
     const prompt = await loadPrompt(
       promptName,
@@ -162,11 +162,11 @@ async function runAgentActivity(
       pipelineTestingMode
     );
 
-    // 5. Create git checkpoint before execution
+    // 5. 执行前创建 git 检查点
     await createGitCheckpoint(repoPath, agentName, attemptNumber);
     await auditSession.startAgent(agentName, prompt, attemptNumber);
 
-    // 6. Execute agent (single attempt - Temporal handles retries)
+    // 6. 执行智能体（单次尝试 - Temporal 处理重试）
     const result: ClaudePromptResult = await runClaudePrompt(
       prompt,
       repoPath,
@@ -179,67 +179,67 @@ async function runAgentActivity(
       attemptNumber
     );
 
-    // 6.5. Sanity check: Detect spending cap that slipped through all detection layers
-    // Defense-in-depth: A successful agent execution should never have ≤2 turns with $0 cost
+    // 6.5. 健全性检查：检测所有检测层都漏掉的支出上限
+    // 纵深防御：成功的智能体执行不应出现 ≤2 轮且 $0 成本
     if (result.success && (result.turns ?? 0) <= 2 && (result.cost || 0) === 0) {
       const resultText = result.result || '';
       const looksLikeBillingError = /spending|cap|limit|budget|resets/i.test(resultText);
 
       if (looksLikeBillingError) {
-        await rollbackGitWorkspace(repoPath, 'spending cap detected');
+        await rollbackGitWorkspace(repoPath, '检测到支出上限');
         await auditSession.endAgent(agentName, {
           attemptNumber,
           duration_ms: result.duration,
           cost_usd: 0,
           success: false,
           model: result.model,
-          error: `Spending cap likely reached: ${resultText.slice(0, 100)}`,
+          error: `可能达到支出上限: ${resultText.slice(0, 100)}`,
         });
-        // Throw as billing error so Temporal retries with long backoff
-        throw new Error(`Spending cap likely reached: ${resultText.slice(0, 100)}`);
+        // 抛出账单错误，让 Temporal 用长退避重试
+        throw new Error(`可能达到支出上限: ${resultText.slice(0, 100)}`);
       }
     }
 
-    // 7. Handle execution failure
+    // 7. 处理执行失败
     if (!result.success) {
-      await rollbackGitWorkspace(repoPath, 'execution failure');
+      await rollbackGitWorkspace(repoPath, '执行失败');
       await auditSession.endAgent(agentName, {
         attemptNumber,
         duration_ms: result.duration,
         cost_usd: result.cost || 0,
         success: false,
         model: result.model,
-        error: result.error || 'Execution failed',
+        error: result.error || '执行失败',
       });
-      throw new Error(result.error || 'Agent execution failed');
+      throw new Error(result.error || '智能体执行失败');
     }
 
-    // 8. Validate output
+    // 8. 验证输出
     const validationPassed = await validateAgentOutput(result, agentName, repoPath);
     if (!validationPassed) {
-      await rollbackGitWorkspace(repoPath, 'validation failure');
+      await rollbackGitWorkspace(repoPath, '验证失败');
       await auditSession.endAgent(agentName, {
         attemptNumber,
         duration_ms: result.duration,
         cost_usd: result.cost || 0,
         success: false,
         model: result.model,
-        error: 'Output validation failed',
+        error: '输出验证失败',
       });
 
-      // Limit output validation retries (unlikely to self-heal)
+      // 限制输出验证重试（不太可能自愈）
       if (attemptNumber >= MAX_OUTPUT_VALIDATION_RETRIES) {
         throw ApplicationFailure.nonRetryable(
-          `Agent ${agentName} failed output validation after ${attemptNumber} attempts`,
+          `智能体 ${agentName} 在 ${attemptNumber} 次尝试后输出验证失败`,
           'OutputValidationError',
           [{ agentName, attemptNumber, elapsed: Date.now() - startTime }]
         );
       }
-      // Let Temporal retry (will be classified as OutputValidationError)
-      throw new Error(`Agent ${agentName} failed output validation`);
+      // 让 Temporal 重试（将被分类为 OutputValidationError）
+      throw new Error(`智能体 ${agentName} 输出验证失败`);
     }
 
-    // 9. Success - commit and log
+    // 9. 成功 - 提交并记录
     const commitHash = await getGitCommitHash(repoPath);
     await auditSession.endAgent(agentName, {
       attemptNumber,
@@ -251,38 +251,38 @@ async function runAgentActivity(
     });
     await commitGitSuccess(repoPath, agentName);
 
-    // 10. Return metrics
+    // 10. 返回指标
     return {
       durationMs: Date.now() - startTime,
-      inputTokens: null, // Not currently exposed by SDK wrapper
+      inputTokens: null, // 目前 SDK 包装器未暴露
       outputTokens: null,
       costUsd: result.cost ?? null,
       numTurns: result.turns ?? null,
       model: result.model,
     };
   } catch (error) {
-    // Rollback git workspace before Temporal retry to ensure clean state
+    // Temporal 重试前回滚 git 工作区以确保干净状态
     try {
-      await rollbackGitWorkspace(repoPath, 'error recovery');
+      await rollbackGitWorkspace(repoPath, '错误恢复');
     } catch (rollbackErr) {
-      // Log but don't fail - rollback is best-effort
-      console.error(`Failed to rollback git workspace for ${agentName}:`, rollbackErr);
+      // 记录但不失败 - 回滚是尽力而为
+      console.error(`为 ${agentName} 回滚 git 工作区失败:`, rollbackErr);
     }
 
-    // If error is already an ApplicationFailure (e.g., from our retry limit logic),
-    // re-throw it directly without re-classifying
+    // 如果错误已经是 ApplicationFailure（例如，来自我们的重试限制逻辑），
+    // 直接重新抛出，不重新分类
     if (error instanceof ApplicationFailure) {
       throw error;
     }
 
-    // Classify error for Temporal retry behavior
+    // 为 Temporal 重试行为分类错误
     const classified = classifyErrorForTemporal(error);
-    // Truncate message to prevent protobuf buffer overflow
+    // 截断消息以防止 protobuf 缓冲区溢出
     const rawMessage = error instanceof Error ? error.message : String(error);
     const message = truncateErrorMessage(rawMessage);
 
     if (classified.retryable) {
-      // Temporal will retry with configured backoff
+      // Temporal 将使用配置的退避重试
       const failure = ApplicationFailure.create({
         message,
         type: classified.type,
@@ -291,7 +291,7 @@ async function runAgentActivity(
       truncateStackTrace(failure);
       throw failure;
     } else {
-      // Fail immediately - no retry
+      // 立即失败 - 不重试
       const failure = ApplicationFailure.nonRetryable(message, classified.type, [
         { agentName, attemptNumber, elapsed: Date.now() - startTime },
       ]);
@@ -303,8 +303,8 @@ async function runAgentActivity(
   }
 }
 
-// === Individual Agent Activity Exports ===
-// Each function is a thin wrapper around runAgentActivity with the agent name.
+// === 各个智能体活动导出 ===
+// 每个函数都是围绕 runAgentActivity 的薄包装器，带有智能体名称。
 
 export async function runPreReconAgent(input: ActivityInput): Promise<AgentMetrics> {
   return runAgentActivity('pre-recon', input);
@@ -359,50 +359,50 @@ export async function runReportAgent(input: ActivityInput): Promise<AgentMetrics
 }
 
 /**
- * Assemble the final report by concatenating exploitation evidence files.
- * This must be called BEFORE runReportAgent to create the file that the report agent will modify.
+ * 通过连接利用证据文件组装最终报告。
+ * 必须在 runReportAgent 之前调用，以创建报告智能体将修改的文件。
  */
 export async function assembleReportActivity(input: ActivityInput): Promise<void> {
   const { repoPath } = input;
-  console.log(chalk.blue('📝 Assembling deliverables from specialist agents...'));
+  console.log(chalk.blue('📝 从专业智能体组装交付物...'));
   try {
     await assembleFinalReport(repoPath);
   } catch (error) {
     const err = error as Error;
-    console.log(chalk.yellow(`⚠️ Error assembling final report: ${err.message}`));
-    // Don't throw - the report agent can still create content even if no exploitation files exist
+    console.log(chalk.yellow(`⚠️ 组装最终报告错误: ${err.message}`));
+    // 不抛出 - 即使没有利用文件，报告智能体仍然可以创建内容
   }
 }
 
 /**
- * Inject model metadata into the final report.
- * This must be called AFTER runReportAgent to add the model information to the Executive Summary.
+ * 将模型元数据注入最终报告。
+ * 必须在 runReportAgent 之后调用，以将模型信息添加到执行摘要。
  */
 export async function injectReportMetadataActivity(input: ActivityInput): Promise<void> {
   const { repoPath, outputPath } = input;
   if (!outputPath) {
-    console.log(chalk.yellow('⚠️ No output path provided, skipping model injection'));
+    console.log(chalk.yellow('⚠️ 未提供输出路径，跳过模型注入'));
     return;
   }
   try {
     await injectModelIntoReport(repoPath, outputPath);
   } catch (error) {
     const err = error as Error;
-    console.log(chalk.yellow(`⚠️ Error injecting model into report: ${err.message}`));
-    // Don't throw - this is a non-critical enhancement
+    console.log(chalk.yellow(`⚠️ 将模型注入报告错误: ${err.message}`));
+    // 不抛出 - 这是一个非关键增强
   }
 }
 
 /**
- * Check if exploitation should run for a given vulnerability type.
- * Reads the vulnerability queue file and returns the decision.
+ * 检查是否应该为给定的漏洞类型运行利用。
+ * 读取漏洞队列文件并返回决策。
  *
- * This activity allows the workflow to skip exploit agents entirely
- * when no vulnerabilities were found, saving API calls and time.
+ * 此活动允许工作流在未发现漏洞时完全跳过利用智能体，
+ * 节省 API 调用和时间。
  *
- * Error handling:
- * - Retryable errors (missing files, invalid JSON): re-throw for Temporal retry
- * - Non-retryable errors: skip exploitation gracefully
+ * 错误处理：
+ * - 可重试错误（缺少文件、无效 JSON）：重新抛出以让 Temporal 重试
+ * - 不可重试错误：优雅地跳过利用
  */
 export async function checkExploitationQueue(
   input: ActivityInput,
@@ -416,23 +416,23 @@ export async function checkExploitationQueue(
     const { shouldExploit, vulnerabilityCount } = result.data;
     console.log(
       chalk.blue(
-        `🔍 ${vulnType}: ${shouldExploit ? `${vulnerabilityCount} vulnerabilities found` : 'no vulnerabilities, skipping exploitation'}`
+        `🔍 ${vulnType}: ${shouldExploit ? `发现 ${vulnerabilityCount} 个漏洞` : '未发现漏洞，跳过利用'}`
       )
     );
     return result.data;
   }
 
-  // Validation failed - check if we should retry or skip
+  // 验证失败 - 检查我们是否应该重试或跳过
   const error = result.error;
   if (error?.retryable) {
-    // Re-throw retryable errors so Temporal can retry the vuln agent
-    console.log(chalk.yellow(`⚠️ ${vulnType}: ${error.message} (retrying)`));
+    // 重新抛出可重试错误，让 Temporal 可以重试漏洞智能体
+    console.log(chalk.yellow(`⚠️ ${vulnType}: ${error.message} (重试中)`));
     throw error;
   }
 
-  // Non-retryable error - skip exploitation gracefully
+  // 不可重试错误 - 优雅地跳过利用
   console.log(
-    chalk.yellow(`⚠️ ${vulnType}: ${error?.message ?? 'Unknown error'}, skipping exploitation`)
+    chalk.yellow(`${vulnType}: ${error?.message ?? '未知错误'}, 跳过利用`)
   );
   return {
     shouldExploit: false,
@@ -443,8 +443,8 @@ export async function checkExploitationQueue(
 }
 
 /**
- * Log phase transition to the unified workflow log.
- * Called at phase boundaries for per-workflow logging.
+ * 将阶段转换记录到统一的工作流日志。
+ * 在每个工作流的阶段边界调用。
  */
 export async function logPhaseTransition(
   input: ActivityInput,
@@ -471,8 +471,8 @@ export async function logPhaseTransition(
 }
 
 /**
- * Log workflow completion with full summary to the unified workflow log.
- * Called at the end of the workflow to write a summary breakdown.
+ * 将带有完整摘要的工作流完成记录到统一的工作流日志。
+ * 在工作流结束时调用以写入摘要明细。
  */
 export async function logWorkflowComplete(
   input: ActivityInput,

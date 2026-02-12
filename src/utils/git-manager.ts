@@ -8,8 +8,8 @@ import { $ } from 'zx';
 import chalk from 'chalk';
 
 /**
- * Check if a directory is a git repository.
- * Returns true if the directory contains a .git folder or is inside a git repo.
+ * 检查目录是否是git仓库。
+ * 如果目录包含.git文件夹或位于git仓库内，则返回true。
  */
 export async function isGitRepository(dir: string): Promise<boolean> {
   try {
@@ -27,7 +27,7 @@ interface GitOperationResult {
 }
 
 /**
- * Get list of changed files from git status --porcelain output
+ * 从git status --porcelain输出中获取更改文件列表
  */
 async function getChangedFiles(
   sourceDir: string,
@@ -45,7 +45,7 @@ async function getChangedFiles(
 }
 
 /**
- * Log a summary of changed files with truncation for long lists
+ * 记录更改文件的摘要，对长列表进行截断
  */
 function logChangeSummary(
   changes: string[],
@@ -58,7 +58,7 @@ function logChangeSummary(
     console.log(color(messageWithChanges.replace('{count}', String(changes.length))));
     changes.slice(0, maxToShow).forEach((change) => console.log(chalk.gray(`       ${change}`)));
     if (changes.length > maxToShow) {
-      console.log(chalk.gray(`       ... and ${changes.length - maxToShow} more files`));
+      console.log(chalk.gray(`       ... 以及 ${changes.length - maxToShow} 个更多文件`));
     }
   } else {
     console.log(color(messageWithoutChanges));
@@ -66,7 +66,7 @@ function logChangeSummary(
 }
 
 /**
- * Convert unknown error to GitOperationResult
+ * 将未知错误转换为GitOperationResult
  */
 function toErrorResult(error: unknown): GitOperationResult {
   const errMsg = error instanceof Error ? error.message : String(error);
@@ -76,7 +76,7 @@ function toErrorResult(error: unknown): GitOperationResult {
   };
 }
 
-// Serializes git operations to prevent index.lock conflicts during parallel agent execution
+// 序列化git操作以防止并行智能体执行期间的index.lock冲突
 class GitSemaphore {
   private queue: Array<() => void> = [];
   private running: boolean = false;
@@ -116,7 +116,7 @@ function isGitLockError(errorMessage: string): boolean {
   return GIT_LOCK_ERROR_PATTERNS.some((pattern) => errorMessage.includes(pattern));
 }
 
-// Retries git commands on lock conflicts with exponential backoff
+// 在锁定冲突时使用指数退避重试git命令
 export async function executeGitCommandWithRetry(
   commandArgs: string[],
   sourceDir: string,
@@ -138,7 +138,7 @@ export async function executeGitCommandWithRetry(
           const delay = Math.pow(2, attempt - 1) * 1000;
           console.log(
             chalk.yellow(
-              `    ⚠️ Git lock conflict during ${description} (attempt ${attempt}/${maxRetries}). Retrying in ${delay}ms...`
+              `    ⚠️ Git锁定冲突在 ${description} 期间（尝试 ${attempt}/${maxRetries}）。在 ${delay}ms 后重试...`
             )
           );
           await new Promise((resolve) => setTimeout(resolve, delay));
@@ -148,96 +148,96 @@ export async function executeGitCommandWithRetry(
         throw error;
       }
     }
-    throw new Error(`Git command failed after ${maxRetries} retries`);
+    throw new Error(`Git命令在 ${maxRetries} 次重试后失败`);
   } finally {
     gitSemaphore.release();
   }
 }
 
-// Two-phase reset: hard reset (tracked files) + clean (untracked files)
+// 两阶段重置：硬重置（跟踪文件）+ 清理（未跟踪文件）
 export async function rollbackGitWorkspace(
   sourceDir: string,
   reason: string = 'retry preparation'
 ): Promise<GitOperationResult> {
-  // Skip git operations if not a git repository
+  // 如果不是git仓库，则跳过git操作
   if (!(await isGitRepository(sourceDir))) {
-    console.log(chalk.gray(`    ⏭️  Skipping git rollback (not a git repository)`));
+    console.log(chalk.gray(`    ⏭️  跳过git回滚（不是git仓库）`));
     return { success: true };
   }
 
-  console.log(chalk.yellow(`    🔄 Rolling back workspace for ${reason}`));
+  console.log(chalk.yellow(`    🔄 为 ${reason} 回滚工作区`));
   try {
-    const changes = await getChangedFiles(sourceDir, 'status check for rollback');
+    const changes = await getChangedFiles(sourceDir, '回滚状态检查');
 
     await executeGitCommandWithRetry(
       ['git', 'reset', '--hard', 'HEAD'],
       sourceDir,
-      'hard reset for rollback'
+      '回滚硬重置'
     );
     await executeGitCommandWithRetry(
       ['git', 'clean', '-fd'],
       sourceDir,
-      'cleaning untracked files for rollback'
+      '回滚清理未跟踪文件'
     );
 
     logChangeSummary(
       changes,
-      '    ✅ Rollback completed - removed {count} contaminated changes:',
-      '    ✅ Rollback completed - no changes to remove',
+      '    ✅ 回滚完成 - 移除了 {count} 个受污染的更改:',
+      '    ✅ 回滚完成 - 无更改可移除',
       chalk.yellow,
       3
     );
     return { success: true };
   } catch (error) {
     const result = toErrorResult(error);
-    console.log(chalk.red(`    ❌ Rollback failed after retries: ${result.error?.message}`));
+    console.log(chalk.red(`    ❌ 重试后回滚失败: ${result.error?.message}`));
     return result;
   }
 }
 
-// Creates checkpoint before each attempt. First attempt preserves workspace; retries clean it.
+// 在每次尝试前创建检查点。第一次尝试保留工作区；重试时清理工作区。
 export async function createGitCheckpoint(
   sourceDir: string,
   description: string,
   attempt: number
 ): Promise<GitOperationResult> {
-  // Skip git operations if not a git repository
+  // 如果不是git仓库，则跳过git操作
   if (!(await isGitRepository(sourceDir))) {
-    console.log(chalk.gray(`    ⏭️  Skipping git checkpoint (not a git repository)`));
+    console.log(chalk.gray(`    ⏭️  跳过git检查点（不是git仓库）`));
     return { success: true };
   }
 
-  console.log(chalk.blue(`    📍 Creating checkpoint for ${description} (attempt ${attempt})`));
+  console.log(chalk.blue(`    📍 为 ${description} 创建检查点（尝试 ${attempt}）`));
   try {
-    // First attempt: preserve existing deliverables. Retries: clean workspace to prevent pollution
+    // 第一次尝试：保留现有交付物。重试：清理工作区以防止污染
     if (attempt > 1) {
-      const cleanResult = await rollbackGitWorkspace(sourceDir, `${description} (retry cleanup)`);
+      const cleanResult = await rollbackGitWorkspace(sourceDir, `${description}（重试清理）`);
       if (!cleanResult.success) {
         console.log(
-          chalk.yellow(`    ⚠️ Workspace cleanup failed, continuing anyway: ${cleanResult.error?.message}`)
+          chalk.yellow(`    ⚠️ 工作区清理失败，继续执行: ${cleanResult.error?.message}`)
         );
       }
     }
 
-    const changes = await getChangedFiles(sourceDir, 'status check');
+    const changes = await getChangedFiles(sourceDir, '状态检查');
     const hasChanges = changes.length > 0;
 
-    await executeGitCommandWithRetry(['git', 'add', '-A'], sourceDir, 'staging changes');
+    await executeGitCommandWithRetry(['git', 'add', '-A'], sourceDir, '暂存更改');
     await executeGitCommandWithRetry(
-      ['git', 'commit', '-m', `📍 Checkpoint: ${description} (attempt ${attempt})`, '--allow-empty'],
+      ['git', 'commit', '-m', `📍 检查点: ${description}（尝试 ${attempt}）`, '--allow-empty'],
       sourceDir,
-      'creating commit'
+      '创建提交'
     );
 
     if (hasChanges) {
-      console.log(chalk.blue(`    ✅ Checkpoint created with uncommitted changes staged`));
+      console.log(chalk.blue(`    ✅ 检查点已创建，未提交的更改已暂存`));
     } else {
-      console.log(chalk.blue(`    ✅ Empty checkpoint created (no workspace changes)`));
+      console.log(chalk.blue(`    ✅ 创建了空检查点（无工作区更改）`));
     }
     return { success: true };
   } catch (error) {
     const result = toErrorResult(error);
-    console.log(chalk.yellow(`    ⚠️ Checkpoint creation failed after retries: ${result.error?.message}`));
+    console.log(chalk.yellow(`    ⚠️ 重试后检查点创建失败: ${result.error?.message}`));
     return result;
   }
 }
@@ -246,45 +246,45 @@ export async function commitGitSuccess(
   sourceDir: string,
   description: string
 ): Promise<GitOperationResult> {
-  // Skip git operations if not a git repository
+  // 如果不是git仓库，则跳过git操作
   if (!(await isGitRepository(sourceDir))) {
-    console.log(chalk.gray(`    ⏭️  Skipping git commit (not a git repository)`));
+    console.log(chalk.gray(`    ⏭️  跳过git提交（不是git仓库）`));
     return { success: true };
   }
 
-  console.log(chalk.green(`    💾 Committing successful results for ${description}`));
+  console.log(chalk.green(`    💾 为 ${description} 提交成功结果`));
   try {
-    const changes = await getChangedFiles(sourceDir, 'status check for success commit');
+    const changes = await getChangedFiles(sourceDir, '成功提交状态检查');
 
     await executeGitCommandWithRetry(
       ['git', 'add', '-A'],
       sourceDir,
-      'staging changes for success commit'
+      '暂存成功提交的更改'
     );
     await executeGitCommandWithRetry(
-      ['git', 'commit', '-m', `✅ ${description}: completed successfully`, '--allow-empty'],
+      ['git', 'commit', '-m', `✅ ${description}: 成功完成`, '--allow-empty'],
       sourceDir,
-      'creating success commit'
+      '创建成功提交'
     );
 
     logChangeSummary(
       changes,
-      '    ✅ Success commit created with {count} file changes:',
-      '    ✅ Empty success commit created (agent made no file changes)',
+      '    ✅ 成功提交已创建，包含 {count} 个文件更改:',
+      '    ✅ 创建了空成功提交（智能体未进行文件更改）',
       chalk.green,
       5
     );
     return { success: true };
   } catch (error) {
     const result = toErrorResult(error);
-    console.log(chalk.yellow(`    ⚠️ Success commit failed after retries: ${result.error?.message}`));
+    console.log(chalk.yellow(`    ⚠️ 重试后成功提交失败: ${result.error?.message}`));
     return result;
   }
 }
 
 /**
- * Get current git commit hash.
- * Returns null if not a git repository.
+ * 获取当前git提交哈希。
+ * 如果不是git仓库，则返回null。
  */
 export async function getGitCommitHash(sourceDir: string): Promise<string | null> {
   if (!(await isGitRepository(sourceDir))) {

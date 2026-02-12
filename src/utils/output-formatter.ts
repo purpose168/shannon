@@ -27,7 +27,7 @@ interface ToolCall {
 }
 
 /**
- * Extract domain from URL for display
+ * 从URL中提取域名用于显示
  */
 function extractDomain(url: string): string {
   try {
@@ -39,7 +39,7 @@ function extractDomain(url: string): string {
 }
 
 /**
- * Summarize TodoWrite updates into clean progress indicators
+ * 将TodoWrite更新总结为清晰的进度指示器
  */
 function summarizeTodoUpdate(input: ToolCallInput | undefined): string | null {
   if (!input?.todos || !Array.isArray(input.todos)) {
@@ -50,15 +50,15 @@ function summarizeTodoUpdate(input: ToolCallInput | undefined): string | null {
   const completed = todos.filter((t) => t.status === 'completed');
   const inProgress = todos.filter((t) => t.status === 'in_progress');
 
-  // Show recently completed tasks
+  // 显示最近完成的任务
   if (completed.length > 0) {
-    const recent = completed[completed.length - 1]!;
+    const recent = completed[completed.length - 1];
     return `✅ ${recent.content}`;
   }
 
-  // Show current in-progress task
+  // 显示当前进行中的任务
   if (inProgress.length > 0) {
-    const current = inProgress[0]!;
+    const current = inProgress[0];
     return `🔄 ${current.content}`;
   }
 
@@ -66,10 +66,10 @@ function summarizeTodoUpdate(input: ToolCallInput | undefined): string | null {
 }
 
 /**
- * Get agent prefix for parallel execution
+ * 获取并行执行的智能体前缀
  */
 export function getAgentPrefix(description: string): string {
-  // Map agent names to their prefixes
+  // 将智能体名称映射到其前缀
   const agentPrefixes: Record<string, string> = {
     'injection-vuln': '[Injection]',
     'xss-vuln': '[XSS]',
@@ -83,7 +83,7 @@ export function getAgentPrefix(description: string): string {
     'ssrf-exploit': '[SSRF]',
   };
 
-  // First try to match by agent name directly
+  // 首先尝试通过智能体名称直接匹配
   for (const [agentName, prefix] of Object.entries(agentPrefixes)) {
     const agent = AGENTS[agentName as keyof typeof AGENTS];
     if (agent && description.includes(agent.displayName)) {
@@ -91,10 +91,10 @@ export function getAgentPrefix(description: string): string {
     }
   }
 
-  // Fallback to partial matches for backwards compatibility
+  // 回退到部分匹配以保持向后兼容性
   if (description.includes('injection')) return '[Injection]';
   if (description.includes('xss')) return '[XSS]';
-  if (description.includes('authz')) return '[Authz]'; // Check authz before auth
+  if (description.includes('authz')) return '[Authz]'; // 在auth之前检查authz
   if (description.includes('auth')) return '[Auth]';
   if (description.includes('ssrf')) return '[SSRF]';
 
@@ -102,105 +102,105 @@ export function getAgentPrefix(description: string): string {
 }
 
 /**
- * Format browser tool calls into clean progress indicators
+ * 将浏览器工具调用格式化为清晰的进度指示器
  */
 function formatBrowserAction(toolCall: ToolCall): string {
   const toolName = toolCall.name;
   const input = toolCall.input || {};
 
-  // Core Browser Operations
+  // 核心浏览器操作
   if (toolName === 'mcp__playwright__browser_navigate') {
     const url = input.url || '';
     const domain = extractDomain(url);
-    return `🌐 Navigating to ${domain}`;
+    return `🌐 导航到 ${domain}`;
   }
 
   if (toolName === 'mcp__playwright__browser_navigate_back') {
-    return `⬅️ Going back`;
+    return `⬅️ 返回上一页`;
   }
 
-  // Page Interaction
+  // 页面交互
   if (toolName === 'mcp__playwright__browser_click') {
     const element = input.element || 'element';
-    return `🖱️ Clicking ${element.slice(0, 25)}`;
+    return `🖱️ 点击 ${element.slice(0, 25)}`;
   }
 
   if (toolName === 'mcp__playwright__browser_hover') {
     const element = input.element || 'element';
-    return `👆 Hovering over ${element.slice(0, 20)}`;
+    return `👆 悬停在 ${element.slice(0, 20)}`;
   }
 
   if (toolName === 'mcp__playwright__browser_type') {
     const element = input.element || 'field';
-    return `⌨️ Typing in ${element.slice(0, 20)}`;
+    return `⌨️ 在 ${element.slice(0, 20)} 中输入`;
   }
 
   if (toolName === 'mcp__playwright__browser_press_key') {
     const key = input.key || 'key';
-    return `⌨️ Pressing ${key}`;
+    return `⌨️ 按下 ${key}`;
   }
 
-  // Form Handling
+  // 表单处理
   if (toolName === 'mcp__playwright__browser_fill_form') {
     const fieldCount = input.fields?.length || 0;
-    return `📝 Filling ${fieldCount} form fields`;
+    return `📝 填写 ${fieldCount} 个表单字段`;
   }
 
   if (toolName === 'mcp__playwright__browser_select_option') {
-    return `📋 Selecting dropdown option`;
+    return `📋 选择下拉选项`;
   }
 
   if (toolName === 'mcp__playwright__browser_file_upload') {
-    return `📁 Uploading file`;
+    return `📁 上传文件`;
   }
 
-  // Page Analysis
+  // 页面分析
   if (toolName === 'mcp__playwright__browser_snapshot') {
-    return `📸 Taking page snapshot`;
+    return `📸 拍摄页面快照`;
   }
 
   if (toolName === 'mcp__playwright__browser_take_screenshot') {
-    return `📸 Taking screenshot`;
+    return `📸 拍摄屏幕截图`;
   }
 
   if (toolName === 'mcp__playwright__browser_evaluate') {
-    return `🔍 Running JavaScript analysis`;
+    return `🔍 运行JavaScript分析`;
   }
 
-  // Waiting & Monitoring
+  // 等待和监控
   if (toolName === 'mcp__playwright__browser_wait_for') {
     if (input.text) {
-      return `⏳ Waiting for "${input.text.slice(0, 20)}"`;
+      return `⏳ 等待 "${input.text.slice(0, 20)}"`;
     }
-    return `⏳ Waiting for page response`;
+    return `⏳ 等待页面响应`;
   }
 
   if (toolName === 'mcp__playwright__browser_console_messages') {
-    return `📜 Checking console logs`;
+    return `📜 检查控制台日志`;
   }
 
   if (toolName === 'mcp__playwright__browser_network_requests') {
-    return `🌐 Analyzing network traffic`;
+    return `🌐 分析网络流量`;
   }
 
-  // Tab Management
+  // 标签管理
   if (toolName === 'mcp__playwright__browser_tabs') {
     const action = input.action || 'managing';
-    return `🗂️ ${action} browser tab`;
+    return `🗂️ ${action} 浏览器标签页`;
   }
 
-  // Dialog Handling
+  // 对话框处理
   if (toolName === 'mcp__playwright__browser_handle_dialog') {
-    return `💬 Handling browser dialog`;
+    return `💬 处理浏览器对话框`;
   }
 
-  // Fallback for any missed tools
+  // 对任何遗漏工具的回退
   const actionType = toolName.split('_').pop();
-  return `🌐 Browser: ${actionType}`;
+  return `🌐 浏览器: ${actionType}`;
 }
 
 /**
- * Filter out JSON tool calls from content, with special handling for Task calls
+ * 从内容中过滤出JSON工具调用，对Task调用进行特殊处理
  */
 export function filterJsonToolCalls(content: string | null | undefined): string {
   if (!content || typeof content !== 'string') {
@@ -213,24 +213,24 @@ export function filterJsonToolCalls(content: string | null | undefined): string 
   for (const line of lines) {
     const trimmed = line.trim();
 
-    // Skip empty lines
+    // 跳过空行
     if (trimmed === '') {
       continue;
     }
 
-    // Check if this is a JSON tool call
+    // 检查这是否是JSON工具调用
     if (trimmed.startsWith('{"type":"tool_use"')) {
       try {
         const toolCall = JSON.parse(trimmed) as ToolCall;
 
-        // Special handling for Task tool calls
+        // 对Task工具调用的特殊处理
         if (toolCall.name === 'Task') {
           const description = toolCall.input?.description || 'analysis agent';
-          processedLines.push(`🚀 Launching ${description}`);
+          processedLines.push(`🚀 启动 ${description}`);
           continue;
         }
 
-        // Special handling for TodoWrite tool calls
+        // 对TodoWrite工具调用的特殊处理
         if (toolCall.name === 'TodoWrite') {
           const summary = summarizeTodoUpdate(toolCall.input);
           if (summary) {
@@ -239,7 +239,7 @@ export function filterJsonToolCalls(content: string | null | undefined): string 
           continue;
         }
 
-        // Special handling for browser tool calls
+        // 对浏览器工具调用的特殊处理
         if (toolCall.name.startsWith('mcp__playwright__browser_')) {
           const browserAction = formatBrowserAction(toolCall);
           if (browserAction) {
@@ -248,14 +248,14 @@ export function filterJsonToolCalls(content: string | null | undefined): string 
           continue;
         }
 
-        // Hide all other tool calls (Read, Write, Grep, etc.)
+        // 隐藏所有其他工具调用（Read、Write、Grep等）
         continue;
       } catch {
-        // If JSON parsing fails, treat as regular text
+        // 如果JSON解析失败，将其视为常规文本
         processedLines.push(line);
       }
     } else {
-      // Keep non-JSON lines (assistant text)
+      // 保留非JSON行（助手文本）
       processedLines.push(line);
     }
   }

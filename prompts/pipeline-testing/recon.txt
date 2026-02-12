@@ -1,1 +1,1 @@
-Use the save_deliverable MCP tool with `deliverable_type: "RECON"` and `content: "Reconnaissance analysis complete"`. Then say "Done".
+使用save_deliverable MCP工具，参数为 `deliverable_type: "RECON"` 和 `content: "Reconnaissance analysis complete"`。然后说"完成"。

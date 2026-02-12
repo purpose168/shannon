@@ -5,10 +5,10 @@
 // as published by the Free Software Foundation.
 
 /**
- * Metrics Tracker
+ * 指标跟踪器
  *
- * Manages session.json with comprehensive timing, cost, and validation metrics.
- * Tracks attempt-level data for complete forensic trail.
+ * 管理 session.json，包含全面的计时、成本和验证指标。
+ * 跟踪尝试级别的数据，提供完整的取证跟踪。
  */
 
 import {
@@ -80,7 +80,7 @@ interface ActiveTimer {
 }
 
 /**
- * MetricsTracker - Manages metrics for a session
+ * MetricsTracker - 管理会话的指标
  */
 export class MetricsTracker {
   private sessionMetadata: SessionMetadata;
@@ -94,24 +94,24 @@ export class MetricsTracker {
   }
 
   /**
-   * Initialize session.json (idempotent)
+   * 初始化 session.json（幂等）
    */
   async initialize(): Promise<void> {
-    // Check if session.json already exists
+    // 检查 session.json 是否已存在
     const exists = await fileExists(this.sessionJsonPath);
 
     if (exists) {
-      // Load existing data
+      // 加载现有数据
       this.data = await readJson<SessionData>(this.sessionJsonPath);
     } else {
-      // Create new session.json
+      // 创建新的 session.json
       this.data = this.createInitialData();
       await this.save();
     }
   }
 
   /**
-   * Create initial session.json structure
+   * 创建初始 session.json 结构
    */
   private createInitialData(): SessionData {
     const sessionData: SessionData = {
@@ -124,11 +124,11 @@ export class MetricsTracker {
       metrics: {
         total_duration_ms: 0,
         total_cost_usd: 0,
-        phases: {}, // Phase-level aggregations
-        agents: {}, // Agent-level metrics
+        phases: {}, // 阶段级聚合
+        agents: {}, // 智能体级指标
       },
     };
-    // Only add repoPath if it exists
+    // 仅在存在时添加 repoPath
     if (this.sessionMetadata.repoPath) {
       sessionData.session.repoPath = this.sessionMetadata.repoPath;
     }
@@ -136,7 +136,7 @@ export class MetricsTracker {
   }
 
   /**
-   * Start tracking an agent execution
+   * 开始跟踪智能体执行
    */
   startAgent(agentName: string, attemptNumber: number): void {
     this.activeTimers.set(agentName, {
@@ -146,14 +146,14 @@ export class MetricsTracker {
   }
 
   /**
-   * End agent execution and update metrics
+   * 结束智能体执行并更新指标
    */
   async endAgent(agentName: string, result: AgentEndResult): Promise<void> {
     if (!this.data) {
-      throw new Error('MetricsTracker not initialized');
+      throw new Error('MetricsTracker 未初始化');
     }
 
-    // Initialize agent metrics if not exists
+    // 初始化智能体指标（如果不存在）
     const existingAgent = this.data.metrics.agents[agentName];
     const agent = existingAgent ?? {
       status: 'in-progress' as const,
@@ -163,7 +163,7 @@ export class MetricsTracker {
     };
     this.data.metrics.agents[agentName] = agent;
 
-    // Add attempt to array
+    // 添加尝试数据
     const attempt: AttemptData = {
       attempt_number: result.attemptNumber,
       duration_ms: result.duration_ms,
@@ -182,10 +182,10 @@ export class MetricsTracker {
 
     agent.attempts.push(attempt);
 
-    // Update total cost (includes failed attempts)
+    // 更新总成本（包括失败的尝试）
     agent.total_cost_usd = agent.attempts.reduce((sum, a) => sum + a.cost_usd, 0);
 
-    // If successful, update final metrics and status
+    // 如果成功，更新最终指标和状态
     if (result.success) {
       agent.status = 'success';
       agent.final_duration_ms = result.duration_ms;
@@ -198,24 +198,24 @@ export class MetricsTracker {
         agent.checkpoint = result.checkpoint;
       }
     } else {
-      // If this was the last attempt, mark as failed
+      // 如果这是最后一次尝试，标记为失败
       if (result.isFinalAttempt) {
         agent.status = 'failed';
       }
     }
 
-    // Clear active timer
+    // 清除活动计时器
     this.activeTimers.delete(agentName);
 
-    // Recalculate aggregations
+    // 重新计算聚合数据
     this.recalculateAggregations();
 
-    // Save to disk
+    // 保存到磁盘
     await this.save();
   }
 
   /**
-   * Update session status
+   * 更新会话状态
    */
   async updateSessionStatus(status: 'in-progress' | 'completed' | 'failed'): Promise<void> {
     if (!this.data) return;
@@ -230,19 +230,19 @@ export class MetricsTracker {
   }
 
   /**
-   * Recalculate aggregations (total duration, total cost, phases)
+   * 重新计算聚合数据（总持续时间、总成本、阶段）
    */
   private recalculateAggregations(): void {
     if (!this.data) return;
 
     const agents = this.data.metrics.agents;
 
-    // Only count successful agents
+    // 只计算成功的智能体
     const successfulAgents = Object.entries(agents).filter(
       ([, data]) => data.status === 'success'
     );
 
-    // Calculate total duration and cost
+    // 计算总持续时间和成本
     const totalDuration = successfulAgents.reduce(
       (sum, [, data]) => sum + data.final_duration_ms,
       0
@@ -253,12 +253,12 @@ export class MetricsTracker {
     this.data.metrics.total_duration_ms = totalDuration;
     this.data.metrics.total_cost_usd = totalCost;
 
-    // Calculate phase-level metrics
+    // 计算阶段级指标
     this.data.metrics.phases = this.calculatePhaseMetrics(successfulAgents);
   }
 
   /**
-   * Calculate phase-level metrics
+   * 计算阶段级指标
    */
   private calculatePhaseMetrics(
     successfulAgents: Array<[string, AgentMetrics]>
@@ -271,7 +271,7 @@ export class MetricsTracker {
       'reporting': [],
     };
 
-    // Group agents by phase using imported AGENT_PHASE_MAP
+    // 使用导入的 AGENT_PHASE_MAP 按阶段分组智能体
     for (const [agentName, agentData] of successfulAgents) {
       const phase = AGENT_PHASE_MAP[agentName as AgentName];
       if (phase) {
@@ -279,7 +279,7 @@ export class MetricsTracker {
       }
     }
 
-    // Calculate metrics per phase
+    // 计算每个阶段的指标
     const phaseMetrics: Record<string, PhaseMetrics> = {};
     const totalDuration = this.data!.metrics.total_duration_ms;
 
@@ -301,14 +301,14 @@ export class MetricsTracker {
   }
 
   /**
-   * Get current metrics
+   * 获取当前指标
    */
   getMetrics(): SessionData {
     return JSON.parse(JSON.stringify(this.data)) as SessionData;
   }
 
   /**
-   * Save metrics to session.json (atomic write)
+   * 保存指标到 session.json（原子写入）
    */
   private async save(): Promise<void> {
     if (!this.data) return;
@@ -316,7 +316,7 @@ export class MetricsTracker {
   }
 
   /**
-   * Reload metrics from disk
+   * 从磁盘重新加载指标
    */
   async reload(): Promise<void> {
     this.data = await readJson<SessionData>(this.sessionJsonPath);

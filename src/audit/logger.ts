@@ -5,10 +5,10 @@
 // as published by the Free Software Foundation.
 
 /**
- * Append-Only Agent Logger
+ * 仅追加智能体日志记录器
  *
- * Provides crash-safe, append-only logging for agent execution.
- * Uses file streams with immediate flush to prevent data loss.
+ * 为智能体执行提供崩溃安全、仅追加的日志记录。
+ * 使用带有立即刷新的文件流来防止数据丢失。
  */
 
 import fs from 'fs';
@@ -27,7 +27,7 @@ interface LogEvent {
 }
 
 /**
- * AgentLogger - Manages append-only logging for a single agent execution
+ * AgentLogger - 管理单个智能体执行的仅追加日志记录
  */
 export class AgentLogger {
   private sessionMetadata: SessionMetadata;
@@ -44,41 +44,41 @@ export class AgentLogger {
     this.attemptNumber = attemptNumber;
     this.timestamp = Date.now();
 
-    // Generate log file path
+    // 生成日志文件路径
     this.logPath = generateLogPath(sessionMetadata, agentName, this.timestamp, attemptNumber);
   }
 
   /**
-   * Initialize the log stream (creates file and opens stream)
+   * 初始化日志流（创建文件并打开流）
    */
   async initialize(): Promise<void> {
     if (this.isOpen) {
-      return; // Already initialized
+      return; // 已经初始化
     }
 
-    // Create write stream with append mode and auto-flush
+    // 创建带有追加模式和自动刷新的写入流
     this.stream = fs.createWriteStream(this.logPath, {
-      flags: 'a', // Append mode
+      flags: 'a', // 追加模式
       encoding: 'utf8',
       autoClose: true,
     });
 
     this.isOpen = true;
 
-    // Write header
+    // 写入头部
     await this.writeHeader();
   }
 
   /**
-   * Write header to log file
+   * 向日志文件写入头部
    */
   private async writeHeader(): Promise<void> {
     const header = [
       `========================================`,
-      `Agent: ${this.agentName}`,
-      `Attempt: ${this.attemptNumber}`,
-      `Started: ${formatTimestamp(this.timestamp)}`,
-      `Session: ${this.sessionMetadata.id}`,
+      `智能体: ${this.agentName}`,
+      `尝试: ${this.attemptNumber}`,
+      `开始: ${formatTimestamp(this.timestamp)}`,
+      `会话: ${this.sessionMetadata.id}`,
       `Web URL: ${this.sessionMetadata.webUrl}`,
       `========================================\n`,
     ].join('\n');
@@ -87,12 +87,12 @@ export class AgentLogger {
   }
 
   /**
-   * Write raw text to log file with immediate flush
+   * 向日志文件写入原始文本并立即刷新
    */
   private writeRaw(text: string): Promise<void> {
     return new Promise((resolve, reject) => {
       if (!this.isOpen || !this.stream) {
-        reject(new Error('Logger not initialized'));
+        reject(new Error('日志记录器未初始化'));
         return;
       }
 
@@ -109,8 +109,8 @@ export class AgentLogger {
   }
 
   /**
-   * Log an event (tool_start, tool_end, llm_response, etc.)
-   * Events are logged as JSON for parseability
+   * 记录事件（tool_start, tool_end, llm_response 等）
+   * 事件以 JSON 格式记录以便解析
    */
   async logEvent(eventType: string, eventData: unknown): Promise<void> {
     const event: LogEvent = {
@@ -124,7 +124,7 @@ export class AgentLogger {
   }
 
   /**
-   * Close the log stream
+   * 关闭日志流
    */
   async close(): Promise<void> {
     if (!this.isOpen || !this.stream) {
@@ -140,8 +140,8 @@ export class AgentLogger {
   }
 
   /**
-   * Save prompt snapshot to prompts directory
-   * Static method - doesn't require logger instance
+   * 保存提示快照到提示目录
+   * 静态方法 - 不需要日志记录器实例
    */
   static async savePrompt(
     sessionMetadata: SessionMetadata,
@@ -150,13 +150,13 @@ export class AgentLogger {
   ): Promise<void> {
     const promptPath = generatePromptPath(sessionMetadata, agentName);
 
-    // Create header with metadata
+    // 创建带有元数据的头部
     const header = [
-      `# Prompt Snapshot: ${agentName}`,
+      `# 提示快照: ${agentName}`,
       ``,
-      `**Session:** ${sessionMetadata.id}`,
+      `**会话:** ${sessionMetadata.id}`,
       `**Web URL:** ${sessionMetadata.webUrl}`,
-      `**Saved:** ${formatTimestamp()}`,
+      `**保存:** ${formatTimestamp()}`,
       ``,
       `---`,
       ``,
@@ -164,7 +164,7 @@ export class AgentLogger {
 
     const fullContent = header + promptContent;
 
-    // Use atomic write for safety
+    // 使用原子写入保证安全
     await atomicWrite(promptPath, fullContent);
   }
 }

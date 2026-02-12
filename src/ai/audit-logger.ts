@@ -4,7 +4,7 @@
 // it under the terms of the GNU Affero General Public License version 3
 // as published by the Free Software Foundation.
 
-// Null Object pattern for audit logging - callers never check for null
+// 审计日志的空对象模式 - 调用者永远不需要检查 null
 
 import type { AuditSession } from '../audit/index.js';
 import { formatTimestamp } from '../utils/formatting.js';
@@ -58,7 +58,7 @@ class RealAuditLogger implements AuditLogger {
   }
 }
 
-/** Null Object implementation - all methods are safe no-ops */
+/** 空对象实现 - 所有方法都是安全的空操作 */
 class NullAuditLogger implements AuditLogger {
   async logLlmResponse(_turn: number, _content: string): Promise<void> {}
 
@@ -69,7 +69,8 @@ class NullAuditLogger implements AuditLogger {
   async logError(_error: Error, _duration: number, _turns: number): Promise<void> {}
 }
 
-// Returns no-op when auditSession is null
+// 当 auditSession 为 null 时返回空操作
+
 export function createAuditLogger(auditSession: AuditSession | null): AuditLogger {
   if (auditSession) {
     return new RealAuditLogger(auditSession);

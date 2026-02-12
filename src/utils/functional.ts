@@ -5,17 +5,17 @@
 // as published by the Free Software Foundation.
 
 /**
- * Functional Programming Utilities
+ * 函数式编程工具
  *
- * Generic functional composition patterns for async operations.
+ * 用于异步操作的通用函数组合模式。
  */
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type PipelineFunction = (x: any) => any | Promise<any>;
 
 /**
- * Async pipeline that passes result through a series of functions.
- * Clearer than reduce-based pipe and easier to debug.
+ * 异步管道，将结果通过一系列函数传递。
+ * 比基于reduce的pipe更清晰，更易于调试。
  */
 export async function asyncPipe<TResult>(
   initial: unknown,

@@ -1,120 +1,120 @@
 ---
-description: Review code changes for Shannon-specific patterns, security, and common mistakes
+description: 审查 Shannon 特定模式、安全性和常见错误的代码更改
 ---
 
-Review the current changes (staged or working directory) with focus on Shannon-specific patterns and common mistakes.
+审查当前更改（暂存或工作目录），重点关注 Shannon 特定模式和常见错误。
 
-## Step 1: Gather Changes
-Run these commands to understand the scope:
+## 步骤 1：收集更改
+运行这些命令以了解范围：
 ```bash
 git diff --stat HEAD
 git diff HEAD
 ```
 
-## Step 2: Check Shannon-Specific Patterns
+## 步骤 2：检查 Shannon 特定模式
 
-### Error Handling (CRITICAL)
-- [ ] **All errors use PentestError** - Never use raw `Error`. Use `new PentestError(message, type, retryable, context)`
-- [ ] **Error type is appropriate** - Use correct type: 'config', 'network', 'tool', 'prompt', 'filesystem', 'validation', 'billing', 'unknown'
-- [ ] **Retryable flag matches behavior** - If error will be retried, set `retryable: true`
-- [ ] **Context includes debugging info** - Add relevant paths, tool names, error codes to context object
-- [ ] **Never swallow errors silently** - Always log or propagate errors
+### 错误处理（关键）
+- [ ] **所有错误使用 PentestError** - 永远不要使用原始的 `Error`。使用 `new PentestError(message, type, retryable, context)`
+- [ ] **错误类型适当** - 使用正确的类型：'config', 'network', 'tool', 'prompt', 'filesystem', 'validation', 'billing', 'unknown'
+- [ ] **可重试标志匹配行为** - 如果错误将被重试，设置 `retryable: true`
+- [ ] **上下文包含调试信息** - 向上下文对象添加相关路径、工具名称、错误代码
+- [ ] **永远不要静默吞噬错误** - 始终记录或传播错误
 
-### Audit System & Concurrency (CRITICAL)
-- [ ] **Mutex protection for parallel operations** - Use `sessionMutex.lock()` when updating `session.json` during parallel agent execution
-- [ ] **Reload before modify** - Always call `this.metricsTracker.reload()` before updating metrics in mutex block
-- [ ] **Atomic writes for session.json** - Use `atomicWrite()` for session metadata, never `fs.writeFile()` directly
-- [ ] **Stream drain handling** - Log writes must wait for buffer drain before resolving
-- [ ] **Semaphore release in finally** - Git semaphore must be released in `finally` block
+### 审计系统和并发（关键）
+- [ ] **并行操作的互斥锁保护** - 在并行智能体执行期间更新 `session.json` 时使用 `sessionMutex.lock()`
+- [ ] **修改前重新加载** - 在互斥锁块中更新指标前始终调用 `this.metricsTracker.reload()`
+- [ ] **session.json 的原子写入** - 对会话元数据使用 `atomicWrite()`，永远不要直接使用 `fs.writeFile()`
+- [ ] **流排水处理** - 日志写入必须等待缓冲区排水后再解析
+- [ ] **finally 中的信号量释放** - Git 信号量必须在 `finally` 块中释放
 
-### Claude SDK Integration (CRITICAL)
-- [ ] **MCP server configuration** - Verify Playwright MCP uses `--isolated` and unique `--user-data-dir`
-- [ ] **Prompt variable interpolation** - Check all `{{VARIABLE}}` placeholders are replaced
-- [ ] **Turn counting** - Increment `turnCount` on assistant messages, not tool calls
-- [ ] **Cost tracking** - Extract cost from final `result` message, track even on failure
-- [ ] **API error detection** - Check for "session limit reached" (fatal) vs other errors
+### Claude SDK 集成（关键）
+- [ ] **MCP 服务器配置** - 验证 Playwright MCP 使用 `--isolated` 和唯一的 `--user-data-dir`
+- [ ] **提示变量插值** - 检查所有 `{{VARIABLE}}` 占位符是否被替换
+- [ ] **回合计数** - 在助手消息上递增 `turnCount`，而不是工具调用
+- [ ] **成本跟踪** - 从最终的 `result` 消息中提取成本，即使失败也要跟踪
+- [ ] **API 错误检测** - 检查 "会话限制已达到"（致命）与其他错误
 
-### Configuration & Validation (CRITICAL)
-- [ ] **FAILSAFE_SCHEMA for YAML** - Never use default schema (prevents code execution)
-- [ ] **Security pattern detection** - Check for path traversal (`../`), HTML injection (`<>`), JavaScript URLs
-- [ ] **Rule conflict detection** - Rules cannot appear in both `avoid` AND `focus`
-- [ ] **Duplicate rule detection** - Same `type:url_path` cannot appear twice
-- [ ] **JSON Schema validation before use** - Config must pass AJV validation
+### 配置和验证（关键）
+- [ ] **YAML 的 FAILSAFE_SCHEMA** - 永远不要使用默认模式（防止代码执行）
+- [ ] **安全模式检测** - 检查路径遍历 (`../`)、HTML 注入 (`<>`)、JavaScript URL
+- [ ] **规则冲突检测** - 规则不能同时出现在 `avoid` 和 `focus` 中
+- [ ] **重复规则检测** - 相同的 `type:url_path` 不能出现两次
+- [ ] **使用前的 JSON Schema 验证** - 配置必须通过 AJV 验证
 
-### Session & Agent Management (CRITICAL)
-- [ ] **Deliverable dependencies respected** - Exploitation agents only run if vulnerability queue exists AND has items
-- [ ] **Queue validation before exploitation** - Use `safeValidateQueueAndDeliverable()` to check eligibility
-- [ ] **Git checkpoint before agent run** - Create checkpoint for rollback on failure
-- [ ] **Git rollback on retry** - Call `rollbackGitWorkspace()` before each retry attempt
-- [ ] **Agent prerequisites checked** - Verify prerequisite agents completed before running dependent agent
+### 会话和智能体管理（关键）
+- [ ] **交付物依赖得到尊重** - 只有当漏洞队列存在且有项目时，才运行利用智能体
+- [ ] **利用前的队列验证** - 使用 `safeValidateQueueAndDeliverable()` 检查资格
+- [ ] **智能体运行前的 Git 检查点** - 为失败时的回滚创建检查点
+- [ ] **重试时的 Git 回滚** - 在每次重试尝试前调用 `rollbackGitWorkspace()`
+- [ ] **智能体先决条件检查** - 在运行依赖智能体前验证先决条件智能体已完成
 
-### Parallel Execution
-- [ ] **Promise.allSettled for parallel agents** - Never use `Promise.all` (partial failures should not crash batch)
-- [ ] **Staggered startup** - 2-second delay between parallel agent starts to prevent API throttle
-- [ ] **Individual retry loops** - Each agent retries independently (3 attempts max)
-- [ ] **Results aggregated correctly** - Handle both 'fulfilled' and 'rejected' results from `Promise.allSettled`
+### 并行执行
+- [ ] **并行智能体使用 Promise.allSettled** - 永远不要使用 `Promise.all`（部分失败不应崩溃批处理）
+- [ ] **错开启动** - 并行智能体启动之间 2 秒延迟，防止 API 节流
+- [ ] **独立重试循环** - 每个智能体独立重试（最多 3 次尝试）
+- [ ] **结果正确聚合** - 处理来自 `Promise.allSettled` 的 'fulfilled' 和 'rejected' 结果
 
-## Step 3: TypeScript Safety
+## 步骤 3：TypeScript 安全性
 
-### Type Assertions (WARNING)
-- [ ] **No double casting** - Never use `as unknown as SomeType` (bypasses type safety)
-- [ ] **Validate before casting** - JSON parsed data should be validated (JSON Schema) before `as Type`
-- [ ] **Prefer type guards** - Use `instanceof` or property checks instead of assertions where possible
+### 类型断言（警告）
+- [ ] **无双重转换** - 永远不要使用 `as unknown as SomeType`（绕过类型安全）
+- [ ] **转换前验证** - JSON 解析的数据在 `as Type` 前应验证（JSON Schema）
+- [ ] **优先使用类型保护** - 尽可能使用 `instanceof` 或属性检查代替断言
 
-### Null/Undefined Handling
-- [ ] **Explicit null checks** - Use `if (x === null || x === undefined)` not truthy checks for critical paths
-- [ ] **Nullish coalescing** - Use `??` for null/undefined, not `||` which also catches empty string/0
-- [ ] **Optional chaining** - Use `?.` for nested property access on potentially undefined objects
+### 空值/未定义处理
+- [ ] **显式空值检查** - 对关键路径使用 `if (x === null || x === undefined)` 而不是真值检查
+- [ ] **空值合并** - 对空值/未定义使用 `??`，而不是 `||`（后者也会捕获空字符串/0）
+- [ ] **可选链** - 对可能未定义对象的嵌套属性访问使用 `?.`
 
-### Imports & Types
-- [ ] **Type imports** - Use `import type { ... }` for type-only imports
-- [ ] **No implicit any** - All function parameters and returns must have explicit types
-- [ ] **Readonly for constants** - Use `Object.freeze()` and `Readonly<>` for immutable data
+### 导入和类型
+- [ ] **类型导入** - 对仅类型导入使用 `import type { ... }`
+- [ ] **无隐式 any** - 所有函数参数和返回值必须有显式类型
+- [ ] **常量使用只读** - 对不可变数据使用 `Object.freeze()` 和 `Readonly<>`
 
-## Step 4: Security Review
+## 步骤 4：安全审查
 
-### Defensive Tool Security
-- [ ] **No credentials in logs** - Check that passwords, tokens, TOTP secrets are not logged to audit files
-- [ ] **Config file size limit** - Ensure 1MB max for config files (DoS prevention)
-- [ ] **Safe shell execution** - Command arguments must be escaped/sanitized
+### 防御性工具安全
+- [ ] **日志中无凭据** - 检查密码、令牌、TOTP 密钥未记录到审计文件
+- [ ] **配置文件大小限制** - 确保配置文件最大 1MB（防止 DoS）
+- [ ] **安全的 shell 执行** - 命令参数必须转义/消毒
 
-### Code Injection Prevention
-- [ ] **YAML safe parsing** - FAILSAFE_SCHEMA only
-- [ ] **No eval/Function** - Never use dynamic code evaluation
-- [ ] **Input validation at boundaries** - URLs, paths validated before use
+### 代码注入预防
+- [ ] **YAML 安全解析** - 仅使用 FAILSAFE_SCHEMA
+- [ ] **无 eval/Function** - 永远不要使用动态代码评估
+- [ ] **边界的输入验证** - URL、路径在使用前验证
 
-## Step 5: Common Mistakes to Avoid
+## 步骤 5：应避免的常见错误
 
-### Anti-Patterns Found in Codebase
-- [ ] **Catch + re-throw without context** - Don't just `throw error`, wrap with additional context
-- [ ] **Silent failures in session loading** - Corrupted session files should warn user, not silently reset
-- [ ] **Duplicate retry logic** - Don't implement retry at both caller and callee level
-- [ ] **Hardcoded error message matching** - Prefer error codes over regex on error.message
-- [ ] **Missing timeout on long operations** - Git operations and API calls should have timeouts
+### 代码库中发现的反模式
+- [ ] **无上下文的捕获 + 重新抛出** - 不要只是 `throw error`，用额外上下文包装
+- [ ] **会话加载中的静默失败** - 损坏的会话文件应警告用户，而不是静默重置
+- [ ] **重复重试逻辑** - 不要在调用者和被调用者级别都实现重试
+- [ ] **硬编码错误消息匹配** - 优先使用错误代码而不是对 error.message 使用正则表达式
+- [ ] **长时间操作缺少超时** - Git 操作和 API 调用应具有超时
 
-### Code Quality
-- [ ] **No dead code added** - Remove unused imports, functions, variables
-- [ ] **No over-engineering** - Don't add abstractions for single-use operations
-- [ ] **Comments only where needed** - Self-documenting code preferred over excessive comments
-- [ ] **Consistent file naming** - kebab-case for files (e.g., `queue-validation.ts`)
+### 代码质量
+- [ ] **未添加死代码** - 删除未使用的导入、函数、变量
+- [ ] **无过度工程** - 不为单次使用操作添加抽象
+- [ ] **仅在需要时添加注释** - 自文档化代码优于过多注释
+- [ ] **一致的文件命名** - 文件使用 kebab-case（例如 `queue-validation.ts`）
 
-## Step 6: Provide Feedback
+## 步骤 6：提供反馈
 
-For each issue found:
-1. **Location**: File and line number
-2. **Issue**: What's wrong and why it matters
-3. **Fix**: How to correct it (with code example if helpful)
-4. **Severity**: Critical / Warning / Suggestion
+对于发现的每个问题：
+1. **位置**：文件和行号
+2. **问题**：什么是错误的以及为什么重要
+3. **修复**：如何纠正它（如果有帮助，提供代码示例）
+4. **严重程度**：关键 / 警告 / 建议
 
-### Severity Definitions
-- **Critical**: Will cause bugs, crashes, data loss, or security issues
-- **Warning**: Code smell, inconsistent pattern, or potential future issue
-- **Suggestion**: Style improvement or minor enhancement
+### 严重程度定义
+- **关键**：会导致错误、崩溃、数据丢失或安全问题
+- **警告**：代码异味、不一致的模式或潜在的未来问题
+- **建议**：样式改进或小的增强
 
-Summarize with:
-- Total issues by severity
-- Overall assessment (Ready to commit / Needs fixes / Needs discussion)
+总结：
+- 按严重程度分类的问题总数
+- 总体评估（准备提交 / 需要修复 / 需要讨论）
 
 ---
 
-Now review the current changes.
+现在审查当前更改。

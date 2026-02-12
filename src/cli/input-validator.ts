@@ -12,48 +12,48 @@ interface ValidationResult {
   path?: string;
 }
 
-// Helper function: Validate web URL
+// 辅助函数：验证 web URL
 export function validateWebUrl(url: string): ValidationResult {
   try {
     const parsed = new URL(url);
     if (!['http:', 'https:'].includes(parsed.protocol)) {
-      return { valid: false, error: 'Web URL must use HTTP or HTTPS protocol' };
+      return { valid: false, error: 'Web URL 必须使用 HTTP 或 HTTPS 协议' };
     }
     if (!parsed.hostname) {
-      return { valid: false, error: 'Web URL must have a valid hostname' };
+      return { valid: false, error: 'Web URL 必须有有效的主机名' };
     }
     return { valid: true };
   } catch {
-    return { valid: false, error: 'Invalid web URL format' };
+    return { valid: false, error: '无效的 web URL 格式' };
   }
 }
 
-// Helper function: Validate local repository path
+// 辅助函数：验证本地仓库路径
 export async function validateRepoPath(repoPath: string): Promise<ValidationResult> {
   try {
-    // Check if path exists
+    // 检查路径是否存在
     if (!(await fs.pathExists(repoPath))) {
-      return { valid: false, error: 'Repository path does not exist' };
+      return { valid: false, error: '仓库路径不存在' };
     }
 
-    // Check if it's a directory
+    // 检查是否为目录
     const stats = await fs.stat(repoPath);
     if (!stats.isDirectory()) {
-      return { valid: false, error: 'Repository path must be a directory' };
+      return { valid: false, error: '仓库路径必须是目录' };
     }
 
-    // Check if it's readable
+    // 检查是否可读
     try {
       await fs.access(repoPath, fs.constants.R_OK);
     } catch {
-      return { valid: false, error: 'Repository path is not readable' };
+      return { valid: false, error: '仓库路径不可读' };
     }
 
-    // Convert to absolute path
+    // 转换为绝对路径
     const absolutePath = path.resolve(repoPath);
     return { valid: true, path: absolutePath };
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error);
-    return { valid: false, error: `Invalid repository path: ${errMsg}` };
+    return { valid: false, error: `无效的仓库路径: ${errMsg}` };
   }
 }

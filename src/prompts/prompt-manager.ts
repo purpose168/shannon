@@ -21,10 +21,10 @@ interface IncludeReplacement {
   content: string;
 }
 
-// Pure function: Build complete login instructions from config
+// 纯函数：从配置构建完整的登录说明
 async function buildLoginInstructions(authentication: Authentication): Promise<string> {
   try {
-    // Load the login instructions template
+    // 加载登录说明模板
     const loginInstructionsPath = path.join(import.meta.dirname, '..', '..', 'prompts', 'shared', 'login-instructions.txt');
 
     if (!await fs.pathExists(loginInstructionsPath)) {
@@ -38,37 +38,37 @@ async function buildLoginInstructions(authentication: Authentication): Promise<s
 
     const fullTemplate = await fs.readFile(loginInstructionsPath, 'utf8');
 
-    // Helper function to extract sections based on markers
+    // 基于标记提取部分的辅助函数
     const getSection = (content: string, sectionName: string): string => {
       const regex = new RegExp(`<!-- BEGIN:${sectionName} -->([\\s\\S]*?)<!-- END:${sectionName} -->`, 'g');
       const match = regex.exec(content);
       return match ? match[1]!.trim() : '';
     };
 
-    // Extract sections based on login type
+    // 基于登录类型提取部分
     const loginType = authentication.login_type?.toUpperCase();
     let loginInstructions = '';
 
-    // Build instructions with only relevant sections
+    // 使用只有相关部分的构建说明
     const commonSection = getSection(fullTemplate, 'COMMON');
-    const authSection = loginType ? getSection(fullTemplate, loginType) : ''; // FORM or SSO
+    const authSection = loginType ? getSection(fullTemplate, loginType) : ''; // FORM 或 SSO
     const verificationSection = getSection(fullTemplate, 'VERIFICATION');
 
-    // Fallback to full template if markers are missing (backward compatibility)
+    // 如果标记缺失，回退到完整模板（向后兼容）
     if (!commonSection && !authSection && !verificationSection) {
       console.log(chalk.yellow('⚠️ Section markers not found, using full login instructions template'));
       loginInstructions = fullTemplate;
     } else {
-      // Combine relevant sections
+      // 组合相关部分
       loginInstructions = [commonSection, authSection, verificationSection]
-        .filter(section => section) // Remove empty sections
+        .filter(section => section) // 移除空部分
         .join('\n\n');
     }
 
-    // Replace the user instructions placeholder with the login flow from config
+    // 用配置中的登录流程替换用户说明占位符
     let userInstructions = (authentication.login_flow ?? []).join('\n');
 
-    // Replace credential placeholders within the user instructions
+    // 在用户说明中替换凭证占位符
     if (authentication.credentials) {
       if (authentication.credentials.username) {
         userInstructions = userInstructions.replace(/\$username/g, authentication.credentials.username);
@@ -81,11 +81,11 @@ async function buildLoginInstructions(authentication: Authentication): Promise<s
       }
     }
 
-    loginInstructions = loginInstructions.replace(/{{user_instructions}}/g, userInstructions);
+    loginInstructions = loginInstructions.replace(/\{\{user_instructions\}\}/g, userInstructions);
 
-    // Replace TOTP secret placeholder if present in template
+    // 如果模板中存在 TOTP 密钥占位符，则替换
     if (authentication.credentials?.totp_secret) {
-      loginInstructions = loginInstructions.replace(/{{totp_secret}}/g, authentication.credentials.totp_secret);
+      loginInstructions = loginInstructions.replace(/\{\{totp_secret\}\}/g, authentication.credentials.totp_secret);
     }
 
     return loginInstructions;
@@ -103,10 +103,10 @@ async function buildLoginInstructions(authentication: Authentication): Promise<s
   }
 }
 
-// Pure function: Process @include() directives
+// 纯函数：处理 @include() 指令
 async function processIncludes(content: string, baseDir: string): Promise<string> {
   const includeRegex = /@include\(([^)]+)\)/g;
-  // Use a Promise.all to handle all includes concurrently
+  // 使用 Promise.all 并发处理所有包含
   const replacements: IncludeReplacement[] = await Promise.all(
     Array.from(content.matchAll(includeRegex)).map(async (match) => {
       const includePath = path.join(baseDir, match[1]!);
@@ -124,7 +124,7 @@ async function processIncludes(content: string, baseDir: string): Promise<string
   return content;
 }
 
-// Pure function: Variable interpolation
+// 纯函数：变量插值
 async function interpolateVariables(
   template: string,
   variables: PromptVariables,
@@ -150,17 +150,17 @@ async function interpolateVariables(
     }
 
     let result = template
-      .replace(/{{WEB_URL}}/g, variables.webUrl)
-      .replace(/{{REPO_PATH}}/g, variables.repoPath)
-      .replace(/{{MCP_SERVER}}/g, variables.MCP_SERVER || 'playwright-agent1');
+      .replace(/\{\{WEB_URL\}\}/g, variables.webUrl)
+      .replace(/\{\{REPO_PATH\}\}/g, variables.repoPath)
+      .replace(/\{\{MCP_SERVER\}\}/g, variables.MCP_SERVER || 'playwright-agent1');
 
     if (config) {
-      // Handle rules section - if both are empty, use cleaner messaging
+      // 处理规则部分 - 如果两者都为空，使用更简洁的消息
       const hasAvoidRules = config.avoid && config.avoid.length > 0;
       const hasFocusRules = config.focus && config.focus.length > 0;
 
       if (!hasAvoidRules && !hasFocusRules) {
-        // Replace the entire rules section with a clean message
+        // 用简洁消息替换整个规则部分
         const cleanRulesSection = '<rules>\nNo specific rules or focus areas provided for this test.\n</rules>';
         result = result.replace(/<rules>[\s\S]*?<\/rules>/g, cleanRulesSection);
       } else {
@@ -168,25 +168,25 @@ async function interpolateVariables(
         const focusRules = hasFocusRules ? config.focus!.map(r => `- ${r.description}`).join('\n') : 'None';
 
         result = result
-          .replace(/{{RULES_AVOID}}/g, avoidRules)
-          .replace(/{{RULES_FOCUS}}/g, focusRules);
+          .replace(/\{\{RULES_AVOID\}\}/g, avoidRules)
+          .replace(/\{\{RULES_FOCUS\}\}/g, focusRules);
       }
 
-      // Extract and inject login instructions from config
+      // 从配置中提取并注入登录说明
       if (config.authentication?.login_flow) {
         const loginInstructions = await buildLoginInstructions(config.authentication);
-        result = result.replace(/{{LOGIN_INSTRUCTIONS}}/g, loginInstructions);
+        result = result.replace(/\{\{LOGIN_INSTRUCTIONS\}\}/g, loginInstructions);
       } else {
-        result = result.replace(/{{LOGIN_INSTRUCTIONS}}/g, '');
+        result = result.replace(/\{\{LOGIN_INSTRUCTIONS\}\}/g, '');
       }
     } else {
-      // Replace the entire rules section with a clean message when no config provided
+      // 当没有提供配置时，用简洁消息替换整个规则部分
       const cleanRulesSection = '<rules>\nNo specific rules or focus areas provided for this test.\n</rules>';
       result = result.replace(/<rules>[\s\S]*?<\/rules>/g, cleanRulesSection);
-      result = result.replace(/{{LOGIN_INSTRUCTIONS}}/g, '');
+      result = result.replace(/\{\{LOGIN_INSTRUCTIONS\}\}/g, '');
     }
 
-    // Validate that all placeholders have been replaced (excluding instructional text)
+    // 验证所有占位符都已被替换（不包括指导文本）
     const remainingPlaceholders = result.match(/\{\{[^}]+\}\}/g);
     if (remainingPlaceholders) {
       console.log(chalk.yellow(`⚠️ Warning: Found unresolved placeholders in prompt: ${remainingPlaceholders.join(', ')}`));
@@ -207,7 +207,7 @@ async function interpolateVariables(
   }
 }
 
-// Pure function: Load and interpolate prompt template
+// 纯函数：加载并插值提示模板
 export async function loadPrompt(
   promptName: string,
   variables: PromptVariables,
@@ -215,17 +215,17 @@ export async function loadPrompt(
   pipelineTestingMode: boolean = false
 ): Promise<string> {
   try {
-    // Use pipeline testing prompts if pipeline testing mode is enabled
+    // 如果启用了管道测试模式，使用管道测试提示
     const baseDir = pipelineTestingMode ? 'prompts/pipeline-testing' : 'prompts';
     const promptsDir = path.join(import.meta.dirname, '..', '..', baseDir);
     const promptPath = path.join(promptsDir, `${promptName}.txt`);
 
-    // Debug message for pipeline testing mode
+    // 管道测试模式的调试消息
     if (pipelineTestingMode) {
       console.log(chalk.yellow(`⚡ Using pipeline testing prompt: ${promptPath}`));
     }
 
-    // Check if file exists first
+    // 首先检查文件是否存在
     if (!await fs.pathExists(promptPath)) {
       throw new PentestError(
         `Prompt file not found: ${promptPath}`,
@@ -235,23 +235,23 @@ export async function loadPrompt(
       );
     }
 
-    // Add MCP server assignment to variables
+    // 向变量添加 MCP 服务器分配
     const enhancedVariables: PromptVariables = { ...variables };
 
-    // Assign MCP server based on prompt name (agent name)
+    // 基于提示名称（智能体名称）分配 MCP 服务器
     const mcpServer = MCP_AGENT_MAPPING[promptName as keyof typeof MCP_AGENT_MAPPING];
     if (mcpServer) {
       enhancedVariables.MCP_SERVER = mcpServer;
       console.log(chalk.gray(`    🎭 Assigned ${promptName} → ${enhancedVariables.MCP_SERVER}`));
     } else {
-      // Fallback for unknown agents
+      // 未知智能体的回退
       enhancedVariables.MCP_SERVER = 'playwright-agent1';
       console.log(chalk.yellow(`    🎭 Unknown agent ${promptName}, using fallback → ${enhancedVariables.MCP_SERVER}`));
     }
 
     let template = await fs.readFile(promptPath, 'utf8');
 
-    // Pre-process the template to handle @include directives
+    // 预处理模板以处理 @include 指令
     template = await processIncludes(template, promptsDir);
 
     return await interpolateVariables(template, enhancedVariables, config);
