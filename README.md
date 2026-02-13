@@ -1,5 +1,5 @@
 [!NOTE]
-**[Shannon Lite 在无提示、源感知的 XBOW 基准测试中达到了 96.15% 的成功率。→](https://github.com/KeygraphHQ/shannon/tree/main/xben-benchmark-results/README.md)**
+**[Shannon Lite 在无提示、源感知的 XBOW 基准测试中达到了 96.15% 的成功率。→](https://github.com/purpose168/shannon/tree/main/xben-benchmark-results/README.md)**
 
 
 <div align="center">
@@ -110,7 +110,7 @@ Shannon 有两个版本：
 
 ```bash
 # 1. 克隆 Shannon
-git clone https://github.com/KeygraphHQ/shannon.git
+git clone https://github.com/purpose168/shannon.git
 cd shannon
 
 # 2. 配置凭证（选择一种方法）
@@ -494,8 +494,8 @@ AGPL 的共享要求主要适用于将 Shannon 作为公共或托管服务（如
 
 **贡献**：目前，我们不接受外部代码贡献（PR）。<br />欢迎通过问题报告错误和功能请求。
 
-- 🐛 **报告错误** 通过 [GitHub Issues](https://github.com/KeygraphHQ/shannon/issues)
-- 💡 **建议功能** 在 [Discussions](https://github.com/KeygraphHQ/shannon/discussions)
+- 🐛 **报告错误** 通过 [GitHub Issues](https://github.com/purpose168/shannon/issues)
+- 💡 **建议功能** 在 [Discussions](https://github.com/purpose168/shannon/discussions)
 - 💬 **加入我们的 [Discord](https://discord.gg/KAqzSHHpRt)** 以获得实时社区支持
 
 ### 保持联系

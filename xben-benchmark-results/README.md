@@ -4,11 +4,11 @@ Shannon Lite, our open-source AI pentester, achieved a **96.15% success rate (10
 
 For context, previously reported XBOW results for leading AI agents and expert human penetration testers achieved around 85% success on the original benchmark in *black-box mode*. Because Shannon was evaluated with full access to source code on a cleaned, hint-free variant, these results are not *apples-to-apples*, but they do highlight Shannon’s ability to perform deep, code-level reasoning in a realistic internal security review setting.
 
-**Shannon Github:** [github.com/KeygraphHQ/shannon](https://github.com/KeygraphHQ/shannon)
+**Shannon Github:** [github.com/purpose168/shannon](https://github.com/purpose168/shannon)
 
-**Cleaned Benchmark**: [xbow-validation-benchmarks](https://github.com/KeygraphHQ/xbow-validation-benchmarks)
+**Cleaned Benchmark**: [xbow-validation-benchmarks](https://github.com/purpose168/xbow-validation-benchmarks)
 
-**Benchmark Results, with detailed turn by turn agentic logs and full pentest report for each challenge**: [View Full Results](https://github.com/KeygraphHQ/shannon/blob/main/xben-benchmark-results/)
+**Benchmark Results, with detailed turn by turn agentic logs and full pentest report for each challenge**: [View Full Results](https://github.com/purpose168/shannon/blob/main/xben-benchmark-results/)
 
 ![XBOW Performance Comparison](../assets/xbow-performance-comparison.png)
 
@@ -104,7 +104,7 @@ This "proof by exploitation" approach ensures every finding is:
 
 Shannon utilizes specialized agents for different vulnerability classes, running analysis and exploitation in parallel for efficiency. The system integrates industry-standard tools (Nmap, Subfinder, WhatWeb, Schemathesis) with custom browser automation and code analysis.
 
-**For the complete technical breakdown,** see our article [Proof by Exploitation: Shannon's Approach to Autonomous Penetration Testing](https://medium.com/@parathan/proof-by-exploitation-shannons-approach-to-autonomous-penetration-testing-010eac3588d3) and the [GitHub repository](https://github.com/KeygraphHQ/shannon).
+**For the complete technical breakdown,** see our article [Proof by Exploitation: Shannon's Approach to Autonomous Penetration Testing](https://medium.com/@parathan/proof-by-exploitation-shannons-approach-to-autonomous-penetration-testing-010eac3588d3) and the [GitHub repository](https://github.com/purpose168/shannon).
 
 ---
 
@@ -136,7 +136,7 @@ We're releasing everything needed for independent validation:
 
 - All 104 challenges with hints systematically removed
 - Enables reproducible, unbiased agent evaluation
-- **Available at:** [KeygraphHQ/xbow-validation-benchmarks](https://github.com/KeygraphHQ/xbow-validation-benchmarks)
+- **Available at:** [KeygraphHQ/xbow-validation-benchmarks](https://github.com/purpose168/xbow-validation-benchmarks)
 
 **2. Complete Shannon Results Package**
 
@@ -150,7 +150,7 @@ These resources record the benchmark configuration and complete results for all 
 
 ## Join the Community
 
-- **GitHub:** [KeygraphHQ/shannon](https://github.com/KeygraphHQ/shannon)
+- **GitHub:** [KeygraphHQ/shannon](https://github.com/purpose168/shannon)
 - **Discord:** [Join our Discord](https://discord.gg/KAqzSHHpRt)
 - **Twitter/X:** [@KeygraphHQ](https://x.com/KeygraphHQ)
 - **Enterprise inquiries:** [shannon@keygraph.io](mailto:shannon@keygraph.io)
