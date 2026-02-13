@@ -53,13 +53,13 @@ function summarizeTodoUpdate(input: ToolCallInput | undefined): string | null {
   // 显示最近完成的任务
   if (completed.length > 0) {
     const recent = completed[completed.length - 1];
-    return `✅ ${recent.content}`;
+    return `✅ ${recent?.content || ''}`;
   }
 
   // 显示当前进行中的任务
   if (inProgress.length > 0) {
     const current = inProgress[0];
-    return `🔄 ${current.content}`;
+    return `🔄 ${current?.content || ''}`;
   }
 
   return null;
